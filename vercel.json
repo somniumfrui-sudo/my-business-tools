@@ -14,8 +14,7 @@
       "source": "/app-idea-app-maker",
       "destination": "https://app-idea-app-maker.vercel.app/",
       "permanent": true
-
-　  },
+    },
     {
       "source": "/sns-resize",
       "destination": "https://sns-resize.vercel.app/",
