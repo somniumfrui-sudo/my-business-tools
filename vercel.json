@@ -9,7 +9,7 @@
       "destination": "https://idea-business-maker.vercel.app/:path*"
     },
     {
-      "source": "/app-idea-maker/:path*",
+      "source": "/app-idea-app-maker/:path*",
       "destination": "https://app-idea-app-maker.vercel.app/:path*"
     }
   ]
