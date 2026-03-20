@@ -1,24 +1,20 @@
 {
-  "redirects": [
+  "rewrites": [
     {
       "source": "/word-runner",
-      "destination": "https://long-word-runner-somniumfrui-3054s-projects.vercel.app/",
-      "permanent": true
+      "destination": "https://long-word-runner-somniumfrui-3054s-projects.vercel.app/"
     },
     {
       "source": "/business-maker",
-      "destination": "https://idea-business-maker.vercel.app/",
-      "permanent": true
+      "destination": "https://idea-business-maker.vercel.app/"
     },
     {
       "source": "/app-idea-app-maker",
-      "destination": "https://app-idea-app-maker.vercel.app/",
-      "permanent": true
+      "destination": "https://app-idea-app-maker.vercel.app/"
     },
     {
       "source": "/sns-resize",
-      "destination": "https://sns-resize.vercel.app/",
-      "permanent": true
+      "destination": "https://sns-resize.vercel.app/"
     }
   ]
 }
