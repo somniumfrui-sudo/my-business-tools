@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNS広告 損益分岐点シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --off: #f7f8fa;
+  --border: #e4e7ec;
+  --text: #111318;
+  --muted: #6b7280;
+  --light: #9ca3af;
+  --accent: #0057ff;
+  --accent-light: #e8efff;
+  --green: #059669;
+  --green-light: #d1fae5;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --yellow: #d97706;
+  --yellow-light: #fef3c7;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow: 0 4px 16px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  background: var(--off);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 80px;
+}
+
+/* ── Header ── */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.header-text h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.header-text p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* ── Main layout ── */
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 16px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .main { grid-template-columns: 1fr; padding: 20px 12px 0; }
+}
+
+/* ── Card ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.card-icon.blue  { background: var(--accent-light); }
+.card-icon.green { background: var(--green-light); }
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-body { padding: 20px; }
+
+/* ── Field ── */
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+
+label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 7px;
+  letter-spacing: 0.02em;
+}
+
+label .hint {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--light);
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix, .input-suffix {
+  position: absolute;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 400;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-prefix { left: 12px; }
+.input-suffix { right: 12px; }
+
+input[type="number"] {
+  width: 100%;
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 40px 10px 32px;
+  outline: none;
+  transition: border-color .18s, background .18s, box-shadow .18s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input[type="number"]:focus {
+  border-color: var(--accent);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(0,87,255,.10);
+}
+
+/* ── Range slider ── */
+.range-group { margin-top: 10px; }
+
+.range-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.range-label-row span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.range-label-row strong {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct, 50%), var(--border) var(--pct, 50%), var(--border) 100%);
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ── Result panel (right column, spans if needed) ── */
+.result-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── BEP Badge ── */
+.bep-badge {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 20px;
+  text-align: center;
+  transition: all .25s;
+}
+
+.bep-badge.profit  { border-color: #86efac; background: #f0fdf4; }
+.bep-badge.loss    { border-color: #fca5a5; background: #fef2f2; }
+.bep-badge.neutral { border-color: #fcd34d; background: #fffbeb; }
+
+.bep-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.bep-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.bep-number span { font-size: 22px; font-weight: 600; margin-left: 4px; }
+
+.bep-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.bep-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  margin-top: 12px;
+}
+
+.bep-status.profit  { background: var(--green-light);  color: var(--green); }
+.bep-status.loss    { background: var(--red-light);    color: var(--red); }
+.bep-status.neutral { background: var(--yellow-light); color: var(--yellow); }
+
+/* ── Metrics grid ── */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metric {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--light);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.metric-value.green { color: var(--green); }
+.metric-value.red   { color: var(--red); }
+.metric-value.blue  { color: var(--accent); }
+
+/* ── Scenario bar ── */
+.scenario-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.scenario-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scenario-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.scenario-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sc-label { font-size: 12px; color: var(--muted); min-width: 60px; }
+.sc-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.sc-fill { height: 100%; border-radius: 4px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+.sc-fill.blue  { background: var(--accent); }
+.sc-fill.green { background: var(--green); }
+.sc-fill.red   { background: var(--red); }
+.sc-val { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; min-width: 52px; text-align: right; color: var(--text); }
+
+/* ── Table ── */
+.table-card {
+  grid-column: 1 / -1;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  background: var(--off);
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+th:first-child { text-align: left; }
+
+td {
+  padding: 10px 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+tr:last-child td { border-bottom: none; }
+
+tr.highlight-row td { background: var(--accent-light); }
+tr.highlight-row td:first-child { color: var(--accent); font-weight: 700; }
+tr.profit-row td { background: #f0fdf4; }
+tr.loss-row td   { background: #fef2f2; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+.pill.green { background: var(--green-light); color: var(--green); }
+.pill.red   { background: var(--red-light);   color: var(--red); }
+.pill.blue  { background: var(--accent-light); color: var(--accent); }
+
+/* ── Footer note ── */
+.note {
+  max-width: 900px;
+  margin: 20px auto 0;
+  padding: 0 16px;
+  font-size: 11px;
+  color: var(--light);
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">📊</div>
+  <div class="header-text">
+    <h1>SNS広告 損益分岐点シミュレーター</h1>
+    <p>広告費・商品情報を入力して、黒字転換に必要な販売数を即計算</p>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ===== LEFT: INPUT ===== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">💰</div>
+      <div class="card-title">コスト・広告設定</div>
+    </div>
+    <div class="card-body">
+
+      <div class="field">
+        <label>販売価格（1個あたり） <span class="hint">税込可</span></label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="price" value="3980" min="1" oninput="calc()">
+          <span class="input-suffix">円</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>原価（1個あたり）</label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="cost" value="1200" min="0" oninput="calc()">
+          <span class="input-suffix">円</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>その他変動費（配送・決済手数料など）</label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="var_cost" value="300" min="0" oninput="calc()">
+          <span class="input-suffix">円/個</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>SNS広告費（月額）</label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="ad_budget" value="100000" min="0" oninput="calc()">
+          <span class="input-suffix">円</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>固定費（家賃・人件費など）</label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="fixed" value="50000" min="0" oninput="calc()">
+          <span class="input-suffix">円/月</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>広告のクリック単価（CPC）</label>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="number" id="cpc" value="80" min="1" oninput="calc()">
+          <span class="input-suffix">円/クリック</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ランディングページ転換率（CVR）</label>
+        <div class="range-group">
+          <div class="range-label-row">
+            <span>0.5%</span>
+            <strong id="cvr-display">2.0%</strong>
+            <span>15%</span>
+          </div>
+          <input type="range" id="cvr" min="0.5" max="15" step="0.1" value="2.0"
+            oninput="updateRange(this,'cvr-display','%'); calc()">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== RIGHT: RESULTS ===== -->
+  <div class="result-col">
+
+    <!-- BEP Badge -->
+    <div class="bep-badge" id="bep-badge">
+      <div class="bep-label">損益分岐点（月間販売数）</div>
+      <div class="bep-number" id="bep-num">—<span>個</span></div>
+      <div class="bep-sub" id="bep-sub">—</div>
+      <div class="bep-status" id="bep-status">計算中…</div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">1個あたり粗利</div>
+        <div class="metric-value blue" id="m-margin">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">粗利率</div>
+        <div class="metric-value blue" id="m-margin-rate">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">広告からの見込み流入</div>
+        <div class="metric-value" id="m-clicks">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">見込み成約数（CVR換算）</div>
+        <div class="metric-value" id="m-cv">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">CPA（1件獲得コスト）</div>
+        <div class="metric-value" id="m-cpa">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ROAS</div>
+        <div class="metric-value" id="m-roas">—</div>
+      </div>
+    </div>
+
+    <!-- Scenario bar -->
+    <div class="scenario-card">
+      <div class="scenario-header">📈 広告からの見込み損益</div>
+      <div class="scenario-body" id="scenario-body">
+        <div style="text-align:center;padding:12px 0;font-size:12px;color:var(--light)">入力すると表示されます</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== TABLE ===== -->
+  <div class="table-card">
+    <div class="table-header">🧮 販売数別 損益シミュレーション</div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>販売数</th>
+            <th>売上</th>
+            <th>原価合計</th>
+            <th>広告費+固定費</th>
+            <th>営業利益</th>
+            <th>ROI</th>
+            <th>状態</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--light)">値を入力すると表示されます</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  ※ 本ツールはシミュレーション目的です。実際の広告効果・CVRは媒体・クリエイティブ・ターゲティングにより異なります。<br>
+  ※ ROAS（Return on Ad Spend）= 広告売上 ÷ 広告費 × 100。ROI（Return on Investment）= 営業利益 ÷ 総コスト × 100。
+</div>
+
+<script>
+function updateRange(el, displayId, suffix) {
+  const val = parseFloat(el.value);
+  document.getElementById(displayId).textContent = val.toFixed(1) + suffix;
+  const min = parseFloat(el.min), max = parseFloat(el.max);
+  const pct = ((val - min) / (max - min) * 100).toFixed(1) + '%';
+  el.style.setProperty('--pct', pct);
+}
+
+function fmt(n) {
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtN(n) {
+  return Math.round(n).toLocaleString('ja-JP');
+}
+
+function calc() {
+  const price    = parseFloat(document.getElementById('price').value)    || 0;
+  const cost     = parseFloat(document.getElementById('cost').value)     || 0;
+  const varCost  = parseFloat(document.getElementById('var_cost').value) || 0;
+  const adBudget = parseFloat(document.getElementById('ad_budget').value)|| 0;
+  const fixed    = parseFloat(document.getElementById('fixed').value)    || 0;
+  const cpc      = parseFloat(document.getElementById('cpc').value)      || 1;
+  const cvr      = parseFloat(document.getElementById('cvr').value)      / 100;
+
+  const unitMargin = price - cost - varCost;
+  const totalFixed = adBudget + fixed;
+  const bep = unitMargin > 0 ? Math.ceil(totalFixed / unitMargin) : null;
+
+  // Clicks & CVs
+  const clicks = cpc > 0 ? Math.floor(adBudget / cpc) : 0;
+  const cv     = Math.floor(clicks * cvr);
+  const cpa    = cv > 0 ? adBudget / cv : null;
+  const roas   = adBudget > 0 ? (cv * price) / adBudget * 100 : null;
+  const marginRate = price > 0 ? (unitMargin / price * 100) : 0;
+
+  // BEP badge
+  const badge = document.getElementById('bep-badge');
+  const bepNum = document.getElementById('bep-num');
+  const bepSub = document.getElementById('bep-sub');
+  const bepStatus = document.getElementById('bep-status');
+
+  if (unitMargin <= 0) {
+    bepNum.innerHTML = '∞<span>個</span>';
+    bepSub.textContent = '粗利がマイナスのため損益分岐に到達しません';
+    bepStatus.className = 'bep-status loss';
+    bepStatus.textContent = '⚠ 価格または原価を見直してください';
+    badge.className = 'bep-badge loss';
+  } else {
+    bepNum.innerHTML = fmtN(bep) + '<span>個</span>';
+    bepSub.textContent = `月間 ${fmtN(bep)} 個売れば赤字ゼロ · 売上 ${fmt(bep * price)}`;
+
+    if (cv >= bep) {
+      badge.className = 'bep-badge profit';
+      bepStatus.className = 'bep-status profit';
+      bepStatus.innerHTML = '✓ 広告だけで黒字化できる見込みです';
+    } else if (cv >= bep * 0.7) {
+      badge.className = 'bep-badge neutral';
+      bepStatus.className = 'bep-status neutral';
+      bepStatus.innerHTML = '△ リピートやSNS流入で補えば黒字圏内';
+    } else {
+      badge.className = 'bep-badge';
+      bepStatus.className = 'bep-status neutral';
+      bepStatus.innerHTML = '📌 広告以外の施策も合わせて検討を';
+    }
+  }
+
+  // Metrics
+  document.getElementById('m-margin').textContent      = fmt(unitMargin);
+  document.getElementById('m-margin-rate').textContent = marginRate.toFixed(1) + '%';
+  document.getElementById('m-clicks').textContent      = fmtN(clicks) + ' 人';
+  document.getElementById('m-cv').textContent          = fmtN(cv) + ' 件';
+  document.getElementById('m-cpa').textContent         = cpa != null ? fmt(cpa) : '—';
+  document.getElementById('m-roas').textContent        = roas != null ? roas.toFixed(0) + '%' : '—';
+
+  // Scenario bar
+  const adRevenue = cv * price;
+  const adVarCost = cv * (cost + varCost);
+  const adProfit  = adRevenue - adVarCost - adBudget;
+  const maxVal    = Math.max(adRevenue, adVarCost + adBudget, 1);
+
+  document.getElementById('scenario-body').innerHTML = `
+    <div class="scenario-row">
+      <span class="sc-label">広告売上</span>
+      <div class="sc-track"><div class="sc-fill blue" style="width:${Math.min(adRevenue/maxVal*100,100).toFixed(1)}%"></div></div>
+      <span class="sc-val">${fmt(adRevenue)}</span>
+    </div>
+    <div class="scenario-row">
+      <span class="sc-label">変動費計</span>
+      <div class="sc-track"><div class="sc-fill red" style="width:${Math.min(adVarCost/maxVal*100,100).toFixed(1)}%"></div></div>
+      <span class="sc-val">${fmt(adVarCost)}</span>
+    </div>
+    <div class="scenario-row">
+      <span class="sc-label">広告費</span>
+      <div class="sc-track"><div class="sc-fill red" style="width:${Math.min(adBudget/maxVal*100,100).toFixed(1)}%"></div></div>
+      <span class="sc-val">${fmt(adBudget)}</span>
+    </div>
+    <div class="scenario-row">
+      <span class="sc-label">${adProfit >= 0 ? '広告利益' : '広告損失'}</span>
+      <div class="sc-track"><div class="sc-fill ${adProfit >= 0 ? 'green' : 'red'}" style="width:${Math.min(Math.abs(adProfit)/maxVal*100,100).toFixed(1)}%"></div></div>
+      <span class="sc-val" style="color:${adProfit >= 0 ? 'var(--green)' : 'var(--red)'}">${adProfit >= 0 ? '+' : ''}${fmt(adProfit)}</span>
+    </div>
+  `;
+
+  // Table
+  if (unitMargin <= 0 || !bep) {
+    document.getElementById('table-body').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--light)">粗利がマイナスのため計算できません</td></tr>';
+    return;
+  }
+
+  // Generate rows around BEP
+  const steps = [
+    Math.max(1, Math.round(bep * 0.3)),
+    Math.max(1, Math.round(bep * 0.5)),
+    Math.max(1, Math.round(bep * 0.7)),
+    Math.max(1, Math.round(bep * 0.9)),
+    bep,
+    Math.round(bep * 1.2),
+    Math.round(bep * 1.5),
+    Math.round(bep * 2.0),
+    Math.round(bep * 3.0),
+  ];
+
+  const unique = [...new Set(steps)].sort((a, b) => a - b);
+
+  const rows = unique.map(q => {
+    const rev    = q * price;
+    const vc     = q * (cost + varCost);
+    const profit = rev - vc - totalFixed;
+    const roi    = ((profit / (vc + totalFixed)) * 100);
+    const isBEP  = q === bep;
+    const cls    = isBEP ? 'highlight-row' : (profit >= 0 ? 'profit-row' : 'loss-row');
+
+    return `<tr class="${cls}">
+      <td>${fmtN(q)} 個${isBEP ? ' 🎯' : ''}</td>
+      <td>${fmt(rev)}</td>
+      <td>${fmt(vc)}</td>
+      <td>${fmt(totalFixed)}</td>
+      <td style="font-weight:600;color:${profit >= 0 ? 'var(--green)' : 'var(--red)'}">${profit >= 0 ? '+' : ''}${fmt(profit)}</td>
+      <td style="color:${roi >= 0 ? 'var(--green)' : 'var(--red)'}">${roi.toFixed(1)}%</td>
+      <td>
+        <span class="pill ${isBEP ? 'blue' : profit >= 0 ? 'green' : 'red'}">
+          ${isBEP ? '🎯 分岐点' : profit >= 0 ? '✓ 黒字' : '✗ 赤字'}
+        </span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-body').innerHTML = rows;
+}
+
+// Initialize range display
+document.querySelectorAll('input[type="range"]').forEach(el => {
+  const displayId = el.id + '-display';
+  if (document.getElementById(displayId)) updateRange(el, displayId, '%');
+});
+
+// Initial calculation
+calc();
+</script>
+</body>
+</html>
