@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ダークモード対応・シンプルToDoリスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --surface:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#9ca3af;
+  --accent:#0057ff;
+  --accent-light:rgba(0,87,255,.08);
+  --done-text:#9ca3af;
+  --shadow:0 1px 4px rgba(0,0,0,.07);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.09);
+  --red:#dc2626;
+  --green:#059669;
+  --trans:.18s ease;
+}
+
+[data-theme="dark"]{
+  --bg:#0f1013;
+  --surface:#1a1b1f;
+  --border:#2a2c33;
+  --text:#eef0f6;
+  --muted:#6b7280;
+  --light:#4b5563;
+  --accent:#4f8fff;
+  --accent-light:rgba(79,143,255,.1);
+  --done-text:#4b5563;
+  --shadow:0 1px 4px rgba(0,0,0,.3);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.4);
+}
+
+html{transition:background var(--trans)}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:40px 16px 100px;
+  transition:background var(--trans),color var(--trans);
+}
+
+.wrap{max-width:520px;margin:0 auto}
+
+/* ── Header ── */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:28px;
+}
+
+.header-left h1{
+  font-family:'Outfit',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--text);
+  transition:color var(--trans);
+}
+
+.header-left p{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+  transition:color var(--trans);
+}
+
+/* ── Theme toggle ── */
+.theme-btn{
+  width:40px;height:40px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  cursor:pointer;
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color var(--trans),background var(--trans),transform .1s;
+  flex-shrink:0;
+  box-shadow:var(--shadow);
+}
+.theme-btn:hover{transform:scale(1.08)}
+.theme-btn:active{transform:scale(.95)}
+
+/* ── Input area ── */
+.input-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:20px;
+}
+
+.input-row input{
+  flex:1;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:14px;
+  font-weight:300;
+  padding:11px 14px;
+  outline:none;
+  transition:border-color var(--trans),background var(--trans),box-shadow var(--trans);
+  box-shadow:var(--shadow);
+}
+
+.input-row input::placeholder{color:var(--light)}
+
+.input-row input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-light),var(--shadow);
+}
+
+.btn-add{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  width:44px;height:44px;
+  font-size:22px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:opacity .15s,transform .1s;
+  box-shadow:var(--shadow);
+}
+.btn-add:hover{opacity:.88}
+.btn-add:active{transform:scale(.94)}
+
+/* ── Filter tabs ── */
+.filter-row{
+  display:flex;
+  gap:6px;
+  margin-bottom:16px;
+}
+
+.filter-btn{
+  padding:5px 14px;
+  border-radius:100px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  color:var(--muted);
+  font-family:'Outfit',sans-serif;
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  transition:all var(--trans);
+}
+
+.filter-btn.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+
+.filter-btn:not(.active):hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+/* ── Todo list ── */
+.todo-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:40px;
+}
+
+/* ── Todo item ── */
+.todo-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  box-shadow:var(--shadow);
+  transition:border-color var(--trans),background var(--trans),box-shadow var(--trans),opacity .2s,transform .2s;
+  animation:slideIn .2s ease both;
+}
+
+.todo-item:hover{box-shadow:var(--shadow-lg)}
+.todo-item.done{opacity:.6}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Checkbox */
+.check{
+  width:20px;height:20px;
+  border-radius:6px;
+  border:2px solid var(--border);
+  background:transparent;
+  cursor:pointer;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color var(--trans),background var(--trans);
+  position:relative;
+}
+
+.check:hover{border-color:var(--accent)}
+
+.check.checked{
+  background:var(--accent);
+  border-color:var(--accent);
+}
+
+.check.checked::after{
+  content:'';
+  width:10px;height:7px;
+  border-left:2px solid #fff;
+  border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translateY(-1px);
+}
+
+/* Text */
+.todo-text{
+  flex:1;
+  font-size:14px;
+  line-height:1.5;
+  color:var(--text);
+  transition:color var(--trans);
+  word-break:break-word;
+  cursor:pointer;
+  outline:none;
+}
+
+.todo-item.done .todo-text{
+  text-decoration:line-through;
+  color:var(--done-text);
+}
+
+/* Edit mode */
+.todo-text[contenteditable="true"]{
+  border-bottom:1.5px dashed var(--accent);
+  padding-bottom:1px;
+}
+
+/* Delete btn */
+.btn-del{
+  background:none;
+  border:none;
+  color:var(--light);
+  cursor:pointer;
+  font-size:16px;
+  padding:2px 4px;
+  border-radius:4px;
+  flex-shrink:0;
+  transition:color var(--trans),background var(--trans);
+  line-height:1;
+}
+.btn-del:hover{color:var(--red);background:rgba(220,38,38,.08)}
+
+/* Drag handle */
+.drag-handle{
+  color:var(--light);
+  cursor:grab;
+  font-size:14px;
+  flex-shrink:0;
+  padding:0 2px;
+  line-height:1;
+  transition:color var(--trans);
+}
+.drag-handle:hover{color:var(--muted)}
+.todo-item.dragging{opacity:.4;box-shadow:none}
+.todo-item.drag-over{border-color:var(--accent);border-style:dashed}
+
+/* ── Empty state ── */
+.empty{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--light);
+  font-size:13px;
+  line-height:1.8;
+  transition:color var(--trans);
+}
+.empty-icon{font-size:36px;margin-bottom:12px;display:block}
+
+/* ── Footer bar ── */
+.footer-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:20px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+  transition:border-color var(--trans);
+}
+
+.footer-info{
+  font-size:12px;
+  color:var(--muted);
+  transition:color var(--trans);
+}
+
+.btn-clear-done{
+  font-size:12px;
+  color:var(--muted);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 8px;
+  border-radius:6px;
+  transition:color var(--trans),background var(--trans);
+}
+.btn-clear-done:hover{color:var(--red);background:rgba(220,38,38,.07)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>✅ ToDoリスト</h1>
+      <p id="save-note">データはブラウザに自動保存されます</p>
+    </div>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="テーマ切り替え">🌙</button>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="new-todo" placeholder="新しいタスクを入力…" onkeydown="if(event.key==='Enter')addTodo()">
+    <button class="btn-add" onclick="addTodo()" title="追加">+</button>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
+    <button class="filter-btn"        onclick="setFilter('active',this)">未完了</button>
+    <button class="filter-btn"        onclick="setFilter('done',this)">完了</button>
+  </div>
+
+  <div class="todo-list" id="todo-list"></div>
+
+  <div class="footer-bar">
+    <span class="footer-info" id="footer-info"></span>
+    <button class="btn-clear-done" onclick="clearDone()">完了済みを削除</button>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+let todos  = JSON.parse(localStorage.getItem('todos-v1') || '[]');
+let filter = 'all';
+let dragSrc = null;
+
+// ── Theme ──
+const saved = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+document.getElementById('theme-btn').textContent = saved === 'dark' ? '☀️' : '🌙';
+
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('theme', next);
+}
+
+// ── Save ──
+function save(){
+  localStorage.setItem('todos-v1', JSON.stringify(todos));
+}
+
+// ── Add ──
+function addTodo(){
+  const inp = document.getElementById('new-todo');
+  const text = inp.value.trim();
+  if(!text) return;
+  todos.unshift({ id: Date.now(), text, done: false });
+  save();
+  render();
+  inp.value = '';
+  inp.focus();
+}
+
+// ── Toggle ──
+function toggle(id){
+  const t = todos.find(t=>t.id===id);
+  if(t) t.done = !t.done;
+  save(); render();
+}
+
+// ── Delete ──
+function del(id){
+  todos = todos.filter(t=>t.id!==id);
+  save(); render();
+}
+
+// ── Clear done ──
+function clearDone(){
+  todos = todos.filter(t=>!t.done);
+  save(); render();
+}
+
+// ── Filter ──
+function setFilter(f, el){
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ── Inline edit ──
+function startEdit(el, id){
+  el.contentEditable = 'true';
+  el.focus();
+  // move cursor to end
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+
+  el.onblur = ()=>{
+    el.contentEditable = 'false';
+    const t = todos.find(t=>t.id===id);
+    if(t){ t.text = el.textContent.trim() || t.text; save(); render(); }
+  };
+  el.onkeydown = e=>{
+    if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+    if(e.key==='Escape'){ el.contentEditable='false'; render(); }
+  };
+}
+
+// ── Drag & drop ──
+function onDragStart(e, id){
+  dragSrc = id;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e, el){
+  e.preventDefault();
+  document.querySelectorAll('.todo-item').forEach(i=>i.classList.remove('drag-over'));
+  el.classList.add('drag-over');
+}
+function onDrop(e, id){
+  e.preventDefault();
+  if(dragSrc === id) return;
+  const fromIdx = todos.findIndex(t=>t.id===dragSrc);
+  const toIdx   = todos.findIndex(t=>t.id===id);
+  const [item]  = todos.splice(fromIdx,1);
+  todos.splice(toIdx,0,item);
+  save(); render();
+}
+function onDragEnd(){
+  dragSrc = null;
+  document.querySelectorAll('.todo-item').forEach(i=>{
+    i.classList.remove('dragging','drag-over');
+  });
+}
+
+// ── Render ──
+function render(){
+  const list = document.getElementById('todo-list');
+  const visible = todos.filter(t=>
+    filter==='all'    ? true :
+    filter==='active' ? !t.done :
+                        t.done
+  );
+
+  if(visible.length === 0){
+    const msgs = {
+      all:    '<span class="empty-icon">📝</span>タスクがありません<br>上の入力欄から追加してください',
+      active: '<span class="empty-icon">🎉</span>未完了のタスクはありません！',
+      done:   '<span class="empty-icon">🔲</span>完了したタスクはまだありません',
+    };
+    list.innerHTML = `<div class="empty">${msgs[filter]}</div>`;
+  } else {
+    list.innerHTML = visible.map(t => `
+      <div class="todo-item${t.done?' done':''}"
+        draggable="true"
+        ondragstart="onDragStart(event,${t.id})"
+        ondragover="onDragOver(event,this)"
+        ondrop="onDrop(event,${t.id})"
+        ondragend="onDragEnd()">
+        <span class="drag-handle" title="ドラッグで並び替え">⠿</span>
+        <div class="check${t.done?' checked':''}" onclick="toggle(${t.id})"></div>
+        <div class="todo-text" ondblclick="startEdit(this,${t.id})">${escHtml(t.text)}</div>
+        <button class="btn-del" onclick="del(${t.id})" title="削除">✕</button>
+      </div>`
+    ).join('');
+  }
+
+  // Footer
+  const total  = todos.length;
+  const active = todos.filter(t=>!t.done).length;
+  const done   = total - active;
+  document.getElementById('footer-info').textContent =
+    total === 0 ? '' : `${active} 件残り · ${done} 件完了`;
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+render();
+</script>
+</body>
+</html>
