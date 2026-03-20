@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アイ・ケアタイマー｜20-20-20ルール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f0f6ff;
+  --white:#ffffff;
+  --border:#dde8f5;
+  --text:#0f1f3d;
+  --muted:#5a7399;
+  --light:#a8bcd4;
+  --accent:#1a6fff;
+  --accent2:#0d4fd4;
+  --rest:#06b96f;
+  --rest2:#049a5e;
+  --warn:#f59e0b;
+  --shadow:0 2px 8px rgba(26,111,255,.08);
+  --shadow-lg:0 8px 32px rgba(26,111,255,.14);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:32px 16px;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:radial-gradient(circle,rgba(26,111,255,.08) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+
+.header-icon{
+  font-size:48px;display:block;margin-bottom:10px;
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.header h1{
+  font-family:'Outfit',sans-serif;
+  font-size:24px;font-weight:800;letter-spacing:-.02em;
+  color:var(--text);margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Notif bar ── */
+.notif-bar{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);
+  border-radius:10px;padding:10px 14px;font-size:12px;color:var(--warn);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:12px;
+}
+.notif-bar button{
+  background:var(--warn);color:#fff;border:none;border-radius:6px;
+  font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;flex-shrink:0;
+}
+
+/* ── Main card ── */
+.card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:24px;padding:36px 28px;
+  box-shadow:var(--shadow-lg);text-align:center;
+  margin-bottom:14px;position:relative;overflow:hidden;
+  transition:all .4s ease;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),#60a5fa,var(--accent));
+  background-size:200%;animation:shimmer 2s linear infinite;
+}
+.card.resting::before{
+  background:linear-gradient(90deg,var(--rest),#34d399,var(--rest));
+  background-size:200%;
+}
+@keyframes shimmer{from{background-position:0%}to{background-position:200%}}
+
+/* ── Ring ── */
+.ring-wrap{position:relative;width:190px;height:190px;margin:0 auto 22px}
+
+.ring-svg{width:190px;height:190px;transform:rotate(-90deg);display:block}
+.ring-bg{fill:none;stroke:#e2edf8;stroke-width:9}
+.ring-fill{
+  fill:none;stroke:url(#rg);stroke-width:9;stroke-linecap:round;
+  stroke-dasharray:534;stroke-dashoffset:0;
+  transition:stroke-dashoffset .8s ease;
+}
+
+.ring-center{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.ring-time{
+  font-family:'Outfit',sans-serif;
+  font-size:46px;font-weight:800;letter-spacing:-.03em;
+  color:var(--text);line-height:1;transition:color .3s;
+}
+.ring-time.resting{color:var(--rest)}
+.ring-label{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* ── State text ── */
+.state-msg{
+  font-size:15px;font-weight:500;color:var(--text);
+  margin-bottom:5px;min-height:24px;transition:color .3s;
+}
+.state-msg.resting{color:var(--rest)}
+.state-sub{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:22px;min-height:18px}
+
+/* ── Buttons ── */
+.btn-primary{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:12px;font-family:'Outfit',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:.02em;
+  padding:14px;cursor:pointer;
+  transition:background .18s,transform .1s,box-shadow .18s;
+  box-shadow:0 4px 14px rgba(26,111,255,.28);
+}
+.btn-primary:hover{background:var(--accent2);box-shadow:0 6px 20px rgba(26,111,255,.38)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary.resting{background:var(--rest);box-shadow:0 4px 14px rgba(6,185,111,.28)}
+.btn-primary.resting:hover{background:var(--rest2)}
+
+.btn-secondary{
+  width:100%;background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:12px;
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:10px;cursor:pointer;margin-top:8px;
+  transition:color .18s,border-color .18s;
+}
+.btn-secondary:hover{color:var(--text);border-color:var(--light)}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+
+.stat{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 10px;text-align:center;box-shadow:var(--shadow);
+}
+.stat-num{
+  font-family:'Outfit',sans-serif;
+  font-size:24px;font-weight:800;letter-spacing:-.02em;
+  color:var(--accent);line-height:1;margin-bottom:3px;
+}
+.stat-label{font-size:10px;color:var(--light);letter-spacing:.05em}
+
+/* ── Rule card ── */
+.rule-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);
+}
+.rule-title{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.rule-items{display:flex;flex-direction:column;gap:8px}
+.rule-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.rule-badge{
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;color:var(--accent);
+  background:rgba(26,111,255,.08);border-radius:8px;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ── Rest overlay ── */
+#rest-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,150,105,.97);z-index:100;
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:32px;
+  animation:overlayIn .4s ease;
+}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+#rest-overlay.show{display:flex}
+
+.ov-icon{font-size:72px;margin-bottom:16px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+.ov-title{font-family:'Outfit',sans-serif;font-size:32px;font-weight:800;color:#fff;margin-bottom:8px}
+.ov-sub{font-size:14px;color:rgba(255,255,255,.85);line-height:1.7;max-width:300px;margin-bottom:28px}
+.ov-count{font-family:'Outfit',sans-serif;font-size:80px;font-weight:800;color:#fff;line-height:1}
+.ov-count-label{font-size:12px;color:rgba(255,255,255,.65);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
+
+.btn-ov{
+  background:#fff;color:var(--rest);border:none;border-radius:12px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  padding:14px 32px;cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.btn-ov:hover{opacity:.9}
+.btn-ov:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+
+<!-- Rest overlay -->
+<div id="rest-overlay">
+  <div class="ov-icon">👁️</div>
+  <div class="ov-title">目を休めてください</div>
+  <div class="ov-sub">約6m（20フィート）先の<br>遠くを<strong style="color:#fff">20秒間</strong>ぼんやり見つめましょう。</div>
+  <div class="ov-count" id="ov-count">20</div>
+  <div class="ov-count-label">秒</div>
+  <button class="btn-ov" onclick="skipRest()">✓ 完了</button>
+</div>
+
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-icon">👁️</span>
+    <h1>アイ・ケアタイマー</h1>
+    <p>20分作業 → 20秒休憩で眼精疲労を防ぐ<br>「20-20-20ルール」をサポートします。</p>
+  </div>
+
+  <div class="notif-bar" id="notif-bar" style="display:none">
+    <span>🔔 通知を許可すると画面を閉じても知らせます</span>
+    <button onclick="requestNotif()">許可する</button>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 190 190">
+        <defs>
+          <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#1a6fff"/>
+            <stop offset="100%" stop-color="#60a5fa"/>
+          </linearGradient>
+          <linearGradient id="rg2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#06b96f"/>
+            <stop offset="100%" stop-color="#34d399"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="95" cy="95" r="80"/>
+        <circle class="ring-fill" id="ring" cx="95" cy="95" r="80"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-time" id="ring-time">20:00</div>
+        <div class="ring-label" id="ring-label">作業時間</div>
+      </div>
+    </div>
+
+    <div class="state-msg" id="state-msg">準備できたら開始してください</div>
+    <div class="state-sub" id="state-sub">20分後に目の休憩をお知らせします</div>
+
+    <button class="btn-primary" id="btn-main" onclick="handleMain()">▶ 開始する</button>
+    <button class="btn-secondary" id="btn-reset" onclick="reset()" style="display:none">↺ リセット</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="st-sessions">0</div>
+      <div class="stat-label">セッション</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-rests">0</div>
+      <div class="stat-label">休憩回数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-mins">0</div>
+      <div class="stat-label">集中(分)</div>
+    </div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-title">20-20-20 ルールとは</div>
+    <div class="rule-items">
+      <div class="rule-item"><div class="rule-badge">20</div><span>20分ごとに画面から目を離す</span></div>
+      <div class="rule-item"><div class="rule-badge">20</div><span>約6m（20フィート）先を見る</span></div>
+      <div class="rule-item"><div class="rule-badge">20</div><span>20秒間、遠くをぼんやり見つめる</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const WORK_SEC = 20 * 60;
+const REST_SEC = 20;
+const CIRC     = 2 * Math.PI * 80; // r=80 → ≈502
+
+let timer    = null;
+let restTmr  = null;
+let remaining = WORK_SEC;
+let restLeft  = REST_SEC;
+let phase     = 'idle'; // idle | work | pause | rest
+let sessions  = +localStorage.getItem('ec-sessions')||0;
+let rests     = +localStorage.getItem('ec-rests')||0;
+
+updateStats();
+
+if('Notification' in window && Notification.permission === 'default'){
+  document.getElementById('notif-bar').style.display = 'flex';
+}
+
+function requestNotif(){
+  Notification.requestPermission();
+  document.getElementById('notif-bar').style.display = 'none';
+}
+
+/* ── Audio ── */
+function tone(freq, dur, delay=0){
+  try{
+    const ctx  = new (window.AudioContext||window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = freq;
+    const t = ctx.currentTime + delay/1000;
+    gain.gain.setValueAtTime(.3, t);
+    gain.gain.exponentialRampToValueAtTime(.001, t + dur);
+    osc.start(t); osc.stop(t + dur + .05);
+  }catch(e){}
+}
+const chimeWork = ()=>{ tone(523,.25,0); tone(659,.25,150); tone(784,.4,300); };
+const chimeRest = ()=>{ tone(784,.25,0); tone(659,.25,150); tone(523,.4,300); };
+
+/* ── Helpers ── */
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0') }
+
+function setRing(pct, resting){
+  const r  = document.getElementById('ring');
+  const offset = CIRC * (1 - Math.max(0, Math.min(1, pct)));
+  r.style.strokeDashoffset = offset;
+  r.setAttribute('stroke', resting ? 'url(#rg2)' : 'url(#rg)');
+}
+
+function updateStats(){
+  document.getElementById('st-sessions').textContent = sessions;
+  document.getElementById('st-rests').textContent    = rests;
+  document.getElementById('st-mins').textContent     = sessions * 20;
+}
+
+function setUI(p){
+  const card  = document.getElementById('main-card');
+  const rtime = document.getElementById('ring-time');
+  const rlbl  = document.getElementById('ring-label');
+  const smsg  = document.getElementById('state-msg');
+  const ssub  = document.getElementById('state-sub');
+  const btnM  = document.getElementById('btn-main');
+  const btnR  = document.getElementById('btn-reset');
+
+  card.className  = 'card' + (p==='rest'?' resting':'');
+  rtime.className = 'ring-time' + (p==='rest'?' resting':'');
+  smsg.className  = 'state-msg' + (p==='rest'?' resting':'');
+
+  const cfg = {
+    idle:  { lbl:'作業時間', msg:'準備できたら開始してください',    sub:'20分後に目の休憩をお知らせします', btn:'▶ 開始する',   cls:'btn-primary',         reset:false },
+    work:  { lbl:'作業時間', msg:'集中してください 💪',             sub:'20分後に目の休憩をお知らせします', btn:'⏸ 一時停止', cls:'btn-primary',         reset:true  },
+    pause: { lbl:'一時停止', msg:'一時停止中…',                    sub:'再開するときはボタンを押してください', btn:'▶ 再開する', cls:'btn-primary',         reset:true  },
+    rest:  { lbl:'休憩中',   msg:'目を休めてください 👁️',          sub:'遠くをぼんやり20秒見つめましょう',    btn:'✓ 休憩完了', cls:'btn-primary resting', reset:false },
+  };
+  const c = cfg[p] || cfg.idle;
+  rlbl.textContent   = c.lbl;
+  smsg.textContent   = c.msg;
+  ssub.textContent   = c.sub;
+  btnM.textContent   = c.btn;
+  btnM.className     = c.cls;
+  btnR.style.display = c.reset ? 'block' : 'none';
+}
+
+/* ── Controls ── */
+function handleMain(){
+  if(phase==='idle')  startWork();
+  else if(phase==='work')  pauseWork();
+  else if(phase==='pause') resumeWork();
+  else if(phase==='rest')  skipRest();
+}
+
+function startWork(){
+  phase = 'work'; remaining = WORK_SEC;
+  sessions++; localStorage.setItem('ec-sessions', sessions); updateStats();
+  setUI('work'); tick();
+  timer = setInterval(tick, 1000);
+}
+
+function pauseWork(){
+  phase = 'pause'; clearInterval(timer); setUI('pause');
+}
+
+function resumeWork(){
+  phase = 'work'; setUI('work');
+  timer = setInterval(tick, 1000);
+}
+
+function reset(){
+  clearInterval(timer); clearInterval(restTmr);
+  phase = 'idle'; remaining = WORK_SEC;
+  setUI('idle');
+  document.getElementById('ring-time').textContent = '20:00';
+  setRing(1, false);
+  document.getElementById('rest-overlay').classList.remove('show');
+}
+
+function tick(){
+  document.getElementById('ring-time').textContent = fmt(remaining);
+  setRing(remaining / WORK_SEC, false);
+  if(remaining <= 0){ clearInterval(timer); triggerRest(); return; }
+  remaining--;
+}
+
+function triggerRest(){
+  phase = 'rest'; chimeWork(); setUI('rest');
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('👁️ 目を休めてください！', {
+      body:'20フィート先を20秒間見つめましょう（20-20-20ルール）'
+    });
+  }
+  restLeft = REST_SEC;
+  document.getElementById('ov-count').textContent = restLeft;
+  document.getElementById('rest-overlay').classList.add('show');
+  restTmr = setInterval(()=>{
+    restLeft--;
+    document.getElementById('ov-count').textContent = Math.max(0, restLeft);
+    if(restLeft <= 0){ clearInterval(restTmr); endRest(); }
+  }, 1000);
+}
+
+function endRest(){
+  chimeRest();
+  rests++; localStorage.setItem('ec-rests', rests); updateStats();
+  document.getElementById('rest-overlay').classList.remove('show');
+  phase = 'idle'; startWork();
+}
+
+function skipRest(){
+  clearInterval(restTmr); endRest();
+}
+
+// Init ring
+setRing(1, false);
+</script>
+</body>
+</html>
