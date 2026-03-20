@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デジタルデトックス計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0e0e0e;
+  --surface:#161616;
+  --border:#2a2a2a;
+  --text:#f0ede8;
+  --muted:#6b6b6b;
+  --dim:#3a3a3a;
+  --red:#ff3b30;
+  --orange:#ff9500;
+  --yellow:#ffd60a;
+  --green:#30d158;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── scanline texture ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.15) 2px,
+    rgba(0,0,0,.15) 4px
+  );
+  pointer-events:none;
+  z-index:999;
+  opacity:.4;
+}
+
+.wrap{
+  max-width:700px;
+  margin:0 auto;
+  padding:48px 20px 100px;
+}
+
+/* ── Header ── */
+.header{
+  text-align:center;
+  margin-bottom:48px;
+  animation:fadeUp .5s ease both;
+}
+
+.header-eyebrow{
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+.header h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(48px,10vw,88px);
+  line-height:.95;
+  letter-spacing:.02em;
+  color:var(--text);
+  margin-bottom:16px;
+}
+
+.header h1 em{
+  font-style:normal;
+  color:var(--red);
+  display:block;
+}
+
+.header-sub{
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.7;
+  max-width:420px;
+  margin:0 auto;
+}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:32px;
+  margin-bottom:24px;
+  animation:fadeUp .5s .1s ease both;
+}
+
+.input-label{
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+.slider-group{
+  margin-bottom:28px;
+}
+
+.slider-group:last-child{margin-bottom:0}
+
+.slider-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:8px;
+}
+
+.slider-name{
+  font-size:14px;
+  color:var(--text);
+  font-weight:400;
+}
+
+.slider-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  color:var(--text);
+  letter-spacing:.04em;
+  line-height:1;
+}
+
+.slider-val span{
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:13px;
+  font-weight:300;
+  color:var(--muted);
+  margin-left:3px;
+}
+
+input[type=range]{
+  width:100%;
+  height:3px;
+  border-radius:2px;
+  appearance:none;
+  -webkit-appearance:none;
+  background:var(--dim);
+  outline:none;
+  cursor:pointer;
+  transition:background .2s;
+}
+
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:18px;height:18px;
+  border-radius:50%;
+  background:var(--text);
+  border:2px solid var(--bg);
+  cursor:pointer;
+  transition:transform .15s,background .15s;
+  box-shadow:0 0 0 0 rgba(255,255,255,.2);
+}
+
+input[type=range]::-webkit-slider-thumb:hover{
+  transform:scale(1.2);
+  box-shadow:0 0 0 6px rgba(255,255,255,.08);
+}
+
+input[type=range].sns{
+  background:linear-gradient(to right,var(--red) 0%,var(--red) var(--pct,30%),var(--dim) var(--pct,30%));
+}
+input[type=range].sleep{
+  background:linear-gradient(to right,#5ac8fa 0%,#5ac8fa var(--pct,33%),var(--dim) var(--pct,33%));
+}
+input[type=range].work{
+  background:linear-gradient(to right,var(--orange) 0%,var(--orange) var(--pct,37%),var(--dim) var(--pct,37%));
+}
+
+/* ── Calc button ── */
+.btn{
+  width:100%;
+  background:var(--red);
+  color:#fff;
+  border:none;
+  border-radius:3px;
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:.06em;
+  padding:15px;
+  cursor:pointer;
+  margin-top:24px;
+  transition:opacity .15s,transform .1s;
+}
+.btn:hover{opacity:.88}
+.btn:active{transform:scale(.99)}
+
+/* ── Results ── */
+#results{display:none}
+
+.result-hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:32px;
+  margin-bottom:16px;
+  text-align:center;
+  animation:fadeUp .4s ease both;
+  position:relative;
+  overflow:hidden;
+}
+
+.result-hero::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--red),var(--orange),var(--yellow));
+}
+
+.free-time-label{
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.free-time-pct{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(72px,16vw,120px);
+  line-height:1;
+  letter-spacing:.02em;
+  animation:countUp .6s ease both;
+}
+
+.free-time-sub{
+  font-size:14px;
+  color:var(--muted);
+  margin-top:8px;
+  line-height:1.6;
+}
+
+/* Color coding */
+.pct-low  {color:var(--green)}
+.pct-mid  {color:var(--yellow)}
+.pct-high {color:var(--orange)}
+.pct-crit {color:var(--red)}
+
+/* ── Stats grid ── */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:16px;
+  animation:fadeUp .4s .1s ease both;
+}
+
+@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}}
+
+.stat-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:18px 16px;
+  text-align:center;
+}
+
+.stat-period{
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+.stat-hours{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:36px;
+  line-height:1;
+  color:var(--text);
+  letter-spacing:.03em;
+}
+
+.stat-hours span{
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:12px;
+  font-weight:300;
+  color:var(--muted);
+}
+
+.stat-days{
+  font-size:11px;
+  color:var(--dim);
+  margin-top:4px;
+}
+
+/* ── Skill cards ── */
+.skills-section{
+  animation:fadeUp .4s .2s ease both;
+}
+
+.skills-header{
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.skills-header::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--border);
+}
+
+.skill-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+@media(max-width:400px){.skill-grid{grid-template-columns:1fr}}
+
+.skill-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color .2s;
+}
+
+.skill-card:hover{border-color:var(--dim)}
+
+.skill-card::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:2px;
+  background:var(--c,var(--red));
+}
+
+.skill-icon{font-size:20px;margin-bottom:6px}
+.skill-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.skill-time{font-size:11px;color:var(--muted);line-height:1.5}
+
+.skill-verdict{
+  font-size:11px;
+  font-weight:500;
+  margin-top:6px;
+  padding:3px 8px;
+  border-radius:2px;
+  display:inline-block;
+}
+
+.verdict-ok   {background:rgba(48,209,88,.12); color:var(--green)}
+.verdict-half {background:rgba(255,214,10,.12); color:var(--yellow)}
+.verdict-no   {background:rgba(255,59,48,.12);  color:var(--red)}
+
+/* ── Shuffle button ── */
+.btn-shuffle{
+  width:100%;
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--border);
+  border-radius:3px;
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:12px;
+  letter-spacing:.06em;
+  padding:10px;
+  cursor:pointer;
+  transition:color .2s,border-color .2s;
+  margin-bottom:16px;
+}
+.btn-shuffle:hover{color:var(--text);border-color:var(--dim)}
+
+/* ── Warning bar ── */
+.warning-bar{
+  background:rgba(255,59,48,.08);
+  border:1px solid rgba(255,59,48,.2);
+  border-radius:4px;
+  padding:16px 20px;
+  font-size:13px;
+  color:rgba(240,237,232,.7);
+  line-height:1.7;
+  text-align:center;
+  animation:fadeUp .4s .3s ease both;
+}
+
+.warning-bar strong{color:var(--red)}
+
+/* ── Animations ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes countUp{
+  from{opacity:0;transform:scale(.85)}
+  to{opacity:1;transform:scale(1)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">Digital Detox Calculator</div>
+    <h1>デジタル<em>デトックス</em>計算機</h1>
+    <p class="header-sub">SNSに使っている時間が、人生のどれくらいを奪っているか計算します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="input-label">あなたの1日を入力</div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-name">📱 SNS・動画の利用時間</span>
+        <span class="slider-val" id="val-sns">1<span>時間</span></span>
+      </div>
+      <input type="range" class="sns" id="sl-sns" min="0.5" max="12" step="0.5" value="1"
+        oninput="syncSlider(this,'val-sns','時間');calc()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-name">😴 睡眠時間</span>
+        <span class="slider-val" id="val-sleep">7<span>時間</span></span>
+      </div>
+      <input type="range" class="sleep" id="sl-sleep" min="4" max="12" step="0.5" value="7"
+        oninput="syncSlider(this,'val-sleep','時間');calc()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-name">💼 仕事・学校の時間</span>
+        <span class="slider-val" id="val-work">8<span>時間</span></span>
+      </div>
+      <input type="range" class="work" id="sl-work" min="0" max="16" step="0.5" value="8"
+        oninput="syncSlider(this,'val-work','時間');calc()">
+    </div>
+
+    <button class="btn" onclick="showResults()">🔍 損失を計算する</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="result-hero">
+      <div class="free-time-label">自由時間のSNS消費率</div>
+      <div class="free-time-pct" id="pct-display">—</div>
+      <div class="free-time-sub" id="hero-sub">—</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-period">1年</div>
+        <div class="stat-hours" id="stat-1y">—<span>時間</span></div>
+        <div class="stat-days" id="stat-1y-d">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-period">5年</div>
+        <div class="stat-hours" id="stat-5y">—<span>時間</span></div>
+        <div class="stat-days" id="stat-5y-d">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-period">10年</div>
+        <div class="stat-hours" id="stat-10y">—<span>時間</span></div>
+        <div class="stat-days" id="stat-10y-d">—</div>
+      </div>
+    </div>
+
+    <div class="skills-section">
+      <div class="skills-header">その時間で習得できたはずのスキル</div>
+      <div class="skill-grid" id="skill-grid"></div>
+      <button class="btn-shuffle" onclick="renderSkills()">🔀 別のスキルを見る</button>
+    </div>
+
+    <div class="warning-bar" id="warning-bar">—</div>
+
+  </div>
+</div>
+
+<script>
+// ── Skill database ──
+const SKILLS = [
+  {icon:'💻', name:'プログラミング（Python）',  hours:200,  color:'#0a84ff'},
+  {icon:'🗣', name:'英会話（日常会話レベル）',    hours:300,  color:'#30d158'},
+  {icon:'🎸', name:'ギター（弾き語りレベル）',    hours:250,  color:'#ff9500'},
+  {icon:'✍️', name:'WEBライティング',           hours:150,  color:'#bf5af2'},
+  {icon:'📐', name:'Figma UIデザイン',          hours:180,  color:'#ff375f'},
+  {icon:'📊', name:'Excel/スプレッドシート',    hours:100,  color:'#ffd60a'},
+  {icon:'🎥', name:'動画編集（Premiere Pro）', hours:200,  color:'#ff6961'},
+  {icon:'📈', name:'株・投資の基礎',            hours:120,  color:'#30d158'},
+  {icon:'🧘', name:'瞑想・マインドフルネス',    hours:50,   color:'#5ac8fa'},
+  {icon:'🍳', name:'料理（家庭料理マスター）',  hours:100,  color:'#ff9500'},
+  {icon:'🇰🇷', name:'韓国語（TOPIK 2級）',     hours:500,  color:'#ff375f'},
+  {icon:'🇨🇳', name:'中国語（HSK 3級）',       hours:600,  color:'#ffd60a'},
+  {icon:'🎨', name:'イラスト（デジタル）',      hours:300,  color:'#bf5af2'},
+  {icon:'🏋️', name:'筋トレ習慣の定着',         hours:60,   color:'#ff6961'},
+  {icon:'📝', name:'ブログ記事100本',           hours:200,  color:'#0a84ff'},
+  {icon:'🎙', name:'ポッドキャスト制作',        hours:150,  color:'#30d158'},
+  {icon:'📱', name:'アプリ開発（React Native）',hours:400,  color:'#5ac8fa'},
+  {icon:'🔐', name:'情報セキュリティ基礎',      hours:80,   color:'#ff9500'},
+];
+
+let sns=1, sleep=7, work=8, totalHours1y=0;
+
+function syncSlider(el, valId, unit){
+  const v = parseFloat(el.value);
+  const min = parseFloat(el.min), max = parseFloat(el.max);
+  const pct = ((v - min)/(max - min)*100).toFixed(1)+'%';
+  el.style.setProperty('--pct', pct);
+  document.getElementById(valId).innerHTML = v + `<span>${unit}</span>`;
+}
+
+function calc(){
+  sns   = parseFloat(document.getElementById('sl-sns').value);
+  sleep = parseFloat(document.getElementById('sl-sleep').value);
+  work  = parseFloat(document.getElementById('sl-work').value);
+  totalHours1y = sns * 365;
+}
+
+function showResults(){
+  calc();
+  const freeHours = Math.max(0, 24 - sleep - work);
+  const pct = freeHours > 0 ? Math.round(sns / freeHours * 100) : 100;
+
+  // Color
+  let cls='pct-low', msg='';
+  if(pct >= 80){ cls='pct-crit'; }
+  else if(pct >= 50){ cls='pct-high'; }
+  else if(pct >= 30){ cls='pct-mid'; }
+
+  // Hero
+  const pctEl = document.getElementById('pct-display');
+  pctEl.textContent = pct + '%';
+  pctEl.className = 'free-time-pct ' + cls;
+
+  document.getElementById('hero-sub').textContent =
+    `1日の自由時間 ${freeHours.toFixed(1)} 時間のうち、SNSに ${sns} 時間（${pct}%）を使っています`;
+
+  // Stats
+  const y1 = Math.round(sns * 365);
+  const y5 = y1 * 5;
+  const y10= y1 * 10;
+  const fmt = n => n.toLocaleString('ja-JP');
+
+  document.getElementById('stat-1y').innerHTML   = fmt(y1)  + '<span>時間</span>';
+  document.getElementById('stat-5y').innerHTML   = fmt(y5)  + '<span>時間</span>';
+  document.getElementById('stat-10y').innerHTML  = fmt(y10) + '<span>時間</span>';
+  document.getElementById('stat-1y-d').textContent  = '≈ ' + (y1/24).toFixed(1)  + '日分';
+  document.getElementById('stat-5y-d').textContent  = '≈ ' + (y5/24).toFixed(1)  + '日分';
+  document.getElementById('stat-10y-d').textContent = '≈ ' + (y10/24).toFixed(1) + '日分';
+
+  renderSkills();
+
+  // Warning
+  const warns = [
+    `1年間のSNS時間 <strong>${fmt(y1)}時間</strong> は、週40時間労働換算で <strong>${(y1/40).toFixed(1)}週間分</strong> の労働時間です。`,
+    `10年後には <strong>${fmt(y10)}時間</strong>、つまり <strong>${(y10/24/365).toFixed(1)}年分</strong> の時間がSNSに消えます。`,
+    `1日の自由時間の <strong>${pct}%</strong> がSNSです。あなたの余暇の ${pct > 50 ? '半分以上' : 'かなりの部分'} が画面の中に消えています。`,
+  ];
+  document.getElementById('warning-bar').innerHTML = warns[Math.floor(Math.random()*warns.length)];
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderSkills(){
+  calc();
+  const y1 = sns * 365;
+  const shuffled = [...SKILLS].sort(()=>Math.random()-.5).slice(0,4);
+  const grid = document.getElementById('skill-grid');
+
+  grid.innerHTML = shuffled.map(s => {
+    const ratio = y1 / s.hours;
+    let verdict, vclass;
+    if(ratio >= 1){
+      verdict = `✅ ${(ratio).toFixed(1)}回 習得できる`;
+      vclass  = 'verdict-ok';
+    } else if(ratio >= 0.5){
+      verdict = `⚡ あと${Math.ceil(s.hours - y1)}時間で習得`;
+      vclass  = 'verdict-half';
+    } else {
+      verdict = `📌 1年分でも ${Math.round(ratio*100)}% しか届かない`;
+      vclass  = 'verdict-no';
+    }
+    return `<div class="skill-card" style="--c:${s.color}" onclick="renderSkills()">
+      <div class="skill-icon">${s.icon}</div>
+      <div class="skill-name">${s.name}</div>
+      <div class="skill-time">習得目安 <strong>${s.hours.toLocaleString()}</strong> 時間</div>
+      <div class="skill-verdict ${vclass}">${verdict}</div>
+    </div>`;
+  }).join('');
+}
+
+// Init sliders on load
+['sl-sns','sl-sleep','sl-work'].forEach(id => {
+  const el = document.getElementById(id);
+  const valMap = {'sl-sns':'val-sns','sl-sleep':'val-sleep','sl-work':'val-work'};
+  syncSlider(el, valMap[id], '時間');
+});
+calc();
+</script>
+</body>
+</html>
