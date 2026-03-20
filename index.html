@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All AI Toolbox | 100種類以上の無料AIツール集</title>
+    <meta name="description" content="自作の便利で楽しいAIツールをまとめたポータルサイトです。起業、効率化、エンタメなど多種多様なツールを無料で提供中。">
+    <style>
+        :root { --primary: #0070f3; --text: #333; --bg: #ffffff; --card-bg: #f9f9f9; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); margin: 0; padding: 0; line-height: 1.5; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        
+        /* ヘッダー */
+        header { text-align: center; margin-bottom: 50px; border-bottom: 1px solid #eee; padding-bottom: 30px; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; color: #000; }
+        .subtitle { font-size: 1.2rem; color: #666; font-weight: 500; }
+
+        /* ツールグリッド（タイル状） */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        
+        /* カードデザイン */
+        .card { border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; background: var(--card-bg); text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--primary); }
+        
+        /* プレビュー画面（ホーム画面のイメージ） */
+        .preview { width: 100%; height: 160px; background: #ddd; display: flex; align-items: center; justify-content: center; font-size: 3rem; background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        
+        /* テキストエリア */
+        .content { padding: 15px; flex-grow: 1; border-top: 1px solid #eee; background: #fff; }
+        .content h2 { margin: 0 0 8px 0; font-size: 1.1rem; color: var(--primary); }
+        .content p { margin: 0; font-size: 0.85rem; color: #666; line-height: 1.4; }
+
+        footer { text-align: center; margin-top: 60px; padding: 20px; color: #999; font-size: 0.8rem; }
+
+        @media (max-width: 600px) { h1 { font-size: 1.8rem; } .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>All AI Toolbox</h1>
+        <p class="subtitle">100種類以上の楽しくて便利な無料AIツールを提供しています。</p>
+    </header>
+
+    <main class="grid">
+        <a href="/word-runner" class="card">
+            <div class="preview">🏃</div>
+            <div class="content">
+                <h2>ロングワードランナー</h2>
+                <p>長い単語やフレーズを管理・生成する、シンプルながら強力なユーティリティツールです。</p>
+            </div>
+        </a>
+
+        <a href="/business-maker" class="card">
+            <div class="preview">💡</div>
+            <div class="content">
+                <h2>ビジネスアイデアメーカー</h2>
+                <p>12の思考フレームワークを使い、新しいビジネスの種を数秒で生み出すアイデア支援機です。</p>
+            </div>
+        </a>
+
+        <a href="/app-idea-maker" class="card">
+            <div class="preview">📱</div>
+            <div class="content">
+                <h2>アプリアイデアメーカー</h2>
+                <p>開発のヒントになる具体的なアプリの企画案を提案。次なる開発のインスピレーションに。</p>
+            </div>
+        </a>
+        
+        </main>
+
+    <footer>
+        <p>&copy; 2026 All AI Toolbox - ポータルサイト</p>
+    </footer>
+</div>
+
+</body>
+</html>
