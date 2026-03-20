@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文字数＆ハッシュタグ・カウンター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#9ca3af;
+  --x:#000000;
+  --ig:#e1306c;
+  --green:#059669;
+  --yellow:#d97706;
+  --red:#dc2626;
+  --blue:#1d9bf0;
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:40px 16px 80px;
+}
+
+.wrap{max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{margin-bottom:28px}
+
+.header h1{
+  font-family:'Outfit',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  color:var(--text);
+  letter-spacing:-.01em;
+  margin-bottom:4px;
+}
+
+.header p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+/* ── Platform tabs ── */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:16px;
+}
+
+.tab{
+  padding:7px 16px;
+  border-radius:100px;
+  font-family:'Outfit',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  border:1.5px solid var(--border);
+  background:var(--white);
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .15s;
+}
+
+.tab.active-x  {background:#000;border-color:#000;color:#fff}
+.tab.active-ig {background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-color:transparent;color:#fff}
+.tab.active-th {background:#0070ff;border-color:#0070ff;color:#fff}
+
+/* ── Textarea ── */
+.textarea-wrap{position:relative;margin-bottom:16px}
+
+textarea{
+  width:100%;
+  min-height:180px;
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;
+  font-weight:300;
+  line-height:1.7;
+  padding:16px;
+  outline:none;
+  resize:vertical;
+  transition:border-color .18s,box-shadow .18s;
+}
+
+textarea:focus{
+  border-color:#1d9bf0;
+  box-shadow:0 0 0 3px rgba(29,155,240,.1);
+}
+
+textarea::placeholder{color:var(--light)}
+
+/* ── Progress bar ── */
+.progress-wrap{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:18px 20px;
+  margin-bottom:16px;
+}
+
+.progress-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.progress-platform{
+  font-family:'Outfit',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+.progress-count{
+  font-family:'Outfit',sans-serif;
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  line-height:1;
+}
+
+.progress-count .limit{
+  font-size:13px;
+  font-weight:400;
+  color:var(--light);
+}
+
+.bar-track{
+  width:100%;
+  height:6px;
+  background:var(--bg);
+  border-radius:3px;
+  overflow:hidden;
+  margin-bottom:6px;
+}
+
+.bar-fill{
+  height:100%;
+  border-radius:3px;
+  transition:width .15s ease,background .2s;
+  background:var(--green);
+}
+
+.bar-fill.warn  {background:var(--yellow)}
+.bar-fill.over  {background:var(--red)}
+
+.progress-note{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.progress-note.ok   {color:var(--green)}
+.progress-note.warn {color:var(--yellow)}
+.progress-note.over {color:var(--red); font-weight:500}
+
+/* ── Stats grid ── */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+
+@media(max-width:440px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+.stat{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:14px 12px;
+  text-align:center;
+}
+
+.stat-num{
+  font-family:'Outfit',sans-serif;
+  font-size:28px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  color:var(--text);
+  line-height:1;
+  margin-bottom:4px;
+}
+
+.stat-label{
+  font-size:11px;
+  color:var(--light);
+  letter-spacing:.03em;
+}
+
+/* ── Hashtag list ── */
+.hashtag-section{
+  background:var(--white);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:16px 20px;
+  margin-bottom:16px;
+  min-height:52px;
+}
+
+.hashtag-section-label{
+  font-size:11px;
+  color:var(--light);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+  font-weight:500;
+}
+
+.hashtag-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.hashtag-pill{
+  font-size:13px;
+  font-weight:500;
+  color:var(--blue);
+  background:rgba(29,155,240,.08);
+  border:1px solid rgba(29,155,240,.15);
+  border-radius:100px;
+  padding:3px 10px;
+  cursor:pointer;
+  transition:background .15s;
+  user-select:none;
+}
+
+.hashtag-pill:hover{background:rgba(29,155,240,.14)}
+.hashtag-pill.ig-color{color:var(--ig);background:rgba(225,48,108,.07);border-color:rgba(225,48,108,.15)}
+.hashtag-pill.ig-color:hover{background:rgba(225,48,108,.13)}
+
+.hashtag-empty{font-size:13px;color:var(--light)}
+
+/* ── Platform limits info ── */
+.limits-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.limit-badge{
+  font-size:11px;
+  font-weight:500;
+  padding:4px 10px;
+  border-radius:100px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  background:var(--white);
+}
+
+/* ── Clear button ── */
+.btn-clear{
+  width:100%;
+  background:transparent;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  color:var(--muted);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:13px;
+  padding:10px;
+  cursor:pointer;
+  transition:color .15s,border-color .15s;
+  margin-top:4px;
+}
+
+.btn-clear:hover{color:var(--red);border-color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>文字数＆ハッシュタグ・カウンター</h1>
+    <p>テキストを入力すると、文字数・ハッシュタグ数・プラットフォーム別の制限をリアルタイム表示します。</p>
+  </div>
+
+  <!-- Platform tabs -->
+  <div class="tabs">
+    <button class="tab active-x"  onclick="setPlat('x',this)">𝕏 Twitter</button>
+    <button class="tab"           onclick="setPlat('ig',this)">📸 Instagram</button>
+    <button class="tab"           onclick="setPlat('th',this)">🧵 Threads</button>
+  </div>
+
+  <!-- Textarea -->
+  <div class="textarea-wrap">
+    <textarea id="input" placeholder="ここに投稿文を入力してください…" oninput="update()"></textarea>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span class="progress-platform" id="prog-platform">X（Twitter）</span>
+      <span class="progress-count" id="prog-count">0 <span class="limit">/ 280</span></span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="bar-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-note ok" id="prog-note">あと 280 文字入力できます</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="s-chars">0</div>
+      <div class="stat-label">文字数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="s-lines">0</div>
+      <div class="stat-label">改行数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="s-hash">0</div>
+      <div class="stat-label">ハッシュタグ</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="s-words">0</div>
+      <div class="stat-label">単語数</div>
+    </div>
+  </div>
+
+  <!-- Hashtag pills -->
+  <div class="hashtag-section">
+    <div class="hashtag-section-label">検出されたハッシュタグ</div>
+    <div class="hashtag-pills" id="hashtag-pills">
+      <span class="hashtag-empty">まだハッシュタグがありません</span>
+    </div>
+  </div>
+
+  <!-- Platform limit badges -->
+  <div class="limits-row" style="margin-bottom:16px">
+    <span class="limit-badge">𝕏 無料: 280字</span>
+    <span class="limit-badge">𝕏 Blue: 25,000字</span>
+    <span class="limit-badge">📸 Instagram: 2,200字・#30個</span>
+    <span class="limit-badge">🧵 Threads: 500字</span>
+  </div>
+
+  <button class="btn-clear" onclick="clearAll()">✕ クリア</button>
+
+</div>
+
+<script>
+const PLAT = {
+  x:  { label:'X（Twitter）',  limit:280,   hashLimit:null },
+  ig: { label:'Instagram',     limit:2200,  hashLimit:30 },
+  th: { label:'Threads',       limit:500,   hashLimit:null },
+};
+
+let currentPlat = 'x';
+
+function setPlat(key, el){
+  currentPlat = key;
+  document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+  el.classList.add('active-' + key);
+  update();
+}
+
+function update(){
+  const text  = document.getElementById('input').value;
+  const plat  = PLAT[currentPlat];
+  const limit = plat.limit;
+
+  // Counts
+  const chars  = text.length;
+  const lines  = text === '' ? 0 : (text.match(/\n/g)||[]).length;
+  const words  = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  const tags   = (text.match(/#[\w\u3000-\u9fff\uff00-\uffef]+/g)||[]);
+
+  document.getElementById('s-chars').textContent = chars.toLocaleString();
+  document.getElementById('s-lines').textContent = lines;
+  document.getElementById('s-hash').textContent  = tags.length;
+  document.getElementById('s-words').textContent = words;
+
+  // Progress
+  const pct  = Math.min(chars / limit * 100, 100);
+  const left = limit - chars;
+  const bar  = document.getElementById('bar-fill');
+  const note = document.getElementById('prog-note');
+
+  document.getElementById('prog-platform').textContent = plat.label;
+  document.getElementById('prog-count').innerHTML =
+    chars.toLocaleString() + ' <span class="limit">/ ' + limit.toLocaleString() + '</span>';
+
+  bar.style.width = pct + '%';
+
+  if(chars > limit){
+    bar.className = 'bar-fill over';
+    note.className = 'progress-note over';
+    note.textContent = '⚠ ' + (chars - limit).toLocaleString() + ' 文字オーバーしています';
+  } else if(pct >= 80){
+    bar.className = 'bar-fill warn';
+    note.className = 'progress-note warn';
+    note.textContent = 'あと ' + left.toLocaleString() + ' 文字（残り ' + (100-pct).toFixed(0) + '%）';
+  } else {
+    bar.className = 'bar-fill';
+    note.className = 'progress-note ok';
+    note.textContent = left === limit
+      ? 'まだ何も入力されていません'
+      : 'あと ' + left.toLocaleString() + ' 文字入力できます';
+  }
+
+  // Hashtag pills
+  const pillsEl = document.getElementById('hashtag-pills');
+  const igClass = currentPlat === 'ig' ? ' ig-color' : '';
+
+  if(tags.length === 0){
+    pillsEl.innerHTML = '<span class="hashtag-empty">まだハッシュタグがありません</span>';
+  } else {
+    let html = '';
+    const limit30 = plat.hashLimit;
+    tags.forEach((t,i) => {
+      const over = limit30 && i >= limit30;
+      html += `<span class="hashtag-pill${igClass}" style="${over?'opacity:.4;text-decoration:line-through':''}"
+        title="${over?'Instagramは30個まで':''}">${t}</span>`;
+    });
+    if(limit30 && tags.length > limit30){
+      html += `<span style="font-size:12px;color:var(--red);align-self:center;margin-left:4px">⚠ ${tags.length - limit30}個オーバー</span>`;
+    }
+    pillsEl.innerHTML = html;
+  }
+}
+
+function clearAll(){
+  document.getElementById('input').value = '';
+  update();
+}
+
+// init
+update();
+</script>
+</body>
+</html>
