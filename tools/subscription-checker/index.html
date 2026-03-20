@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サブスク・コスト断捨離チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#fafafa;
+  --white:#ffffff;
+  --border:#e8eaed;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#ff4500;
+  --accent-light:rgba(255,69,0,.07);
+  --green:#059669;
+  --green-light:rgba(5,150,105,.08);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:48px 16px 100px;
+}
+
+.wrap{max-width:580px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:36px}
+
+.header h1{
+  font-family:'Outfit',sans-serif;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:var(--text);
+  margin-bottom:6px;
+}
+
+.header p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.7;
+}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px;
+  margin-bottom:20px;
+  box-shadow:var(--shadow);
+}
+
+.card-label{
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--light);
+  margin-bottom:18px;
+}
+
+/* service name input */
+.field{margin-bottom:16px}
+
+.field label{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.field input{
+  width:100%;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;
+  padding:10px 14px;
+  outline:none;
+  transition:border-color .18s,box-shadow .18s;
+}
+
+.field input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-light);
+  background:var(--white);
+}
+
+.field input::placeholder{color:var(--light)}
+
+/* Price input with ¥ */
+.price-wrap{position:relative}
+.price-wrap .prefix{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-size:15px;color:var(--muted);pointer-events:none;
+}
+.price-wrap input{padding-left:28px}
+
+/* Quick presets */
+.presets{
+  display:flex;flex-wrap:wrap;gap:6px;
+  margin-top:8px;
+}
+
+.preset{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:100px;
+  border:1px solid var(--border);
+  background:var(--white);
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .15s;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Calc button */
+.btn-calc{
+  width:100%;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-family:'Outfit',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.04em;
+  padding:14px;
+  cursor:pointer;
+  margin-top:4px;
+  transition:opacity .15s,transform .1s;
+}
+.btn-calc:hover{opacity:.9}
+.btn-calc:active{transform:scale(.99)}
+
+/* ── Results ── */
+#results{display:none}
+
+/* Hero result */
+.result-hero{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+
+.result-hero::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--accent),#ffab40);
+}
+
+.hero-service{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.hero-label{
+  font-size:11px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--light);
+  margin-bottom:10px;
+}
+
+.hero-amount{
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(48px,12vw,80px);
+  font-weight:800;
+  letter-spacing:-.03em;
+  line-height:1;
+  color:var(--accent);
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+@keyframes popIn{
+  from{opacity:0;transform:scale(.8)}
+  to{opacity:1;transform:scale(1)}
+}
+
+.hero-sub{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:8px;
+}
+
+/* ── Stats row ── */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.stat{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 12px;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+
+.stat-period{
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--light);
+  margin-bottom:6px;
+}
+
+.stat-amount{
+  font-family:'Outfit',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  color:var(--text);
+  line-height:1.1;
+}
+
+.stat-amount small{
+  font-size:12px;
+  font-weight:400;
+  color:var(--muted);
+}
+
+/* ── Buy section ── */
+.buy-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:24px 28px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+
+.buy-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+
+.buy-title{
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.btn-shuffle{
+  font-size:12px;
+  padding:5px 12px;
+  border-radius:100px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .15s;
+}
+.btn-shuffle:hover{border-color:var(--accent);color:var(--accent)}
+
+.buy-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+@media(max-width:400px){.buy-grid{grid-template-columns:1fr}}
+
+.buy-item{
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  animation:fadeUp .3s ease both;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.buy-icon{font-size:24px;line-height:1}
+.buy-name{font-size:13px;font-weight:500;color:var(--text)}
+.buy-price{font-size:11px;color:var(--muted)}
+
+.buy-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:11px;font-weight:500;
+  padding:2px 8px;border-radius:100px;
+  margin-top:2px;
+  align-self:flex-start;
+}
+
+.badge-ok  {background:var(--green-light);color:var(--green)}
+.badge-pct {background:rgba(255,69,0,.08);color:var(--accent)}
+
+/* ── Motivate bar ── */
+.motivate{
+  background:linear-gradient(135deg,#fff8f5,#fff3ed);
+  border:1px solid rgba(255,69,0,.15);
+  border-radius:12px;
+  padding:18px 20px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.75;
+  text-align:center;
+}
+.motivate strong{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🗑 サブスク・コスト断捨離チェッカー</h1>
+    <p>月額サービスを1つ解約したら、何年後にいくら浮いて何が買えるか可視化します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="card-label">解約するサブスクを入力</div>
+
+    <div class="field">
+      <label>サービス名（任意）</label>
+      <input type="text" id="service-name" placeholder="例：Netflix、Spotify、Adobe CC…">
+    </div>
+
+    <div class="field">
+      <label>月額料金</label>
+      <div class="price-wrap">
+        <span class="prefix">¥</span>
+        <input type="number" id="monthly-price" placeholder="1500" min="1" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="presets">
+        <button class="preset" onclick="setPrice(580)">Spotify ¥580</button>
+        <button class="preset" onclick="setPrice(990)">Netflix ¥990</button>
+        <button class="preset" onclick="setPrice(1280)">Amazon ¥1,280</button>
+        <button class="preset" onclick="setPrice(3280)">Adobe CC ¥3,280</button>
+        <button class="preset" onclick="setPrice(980)">ChatGPT ¥980</button>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">💰 解約したら何が買える？</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="result-hero">
+      <div class="hero-service" id="hero-service"></div>
+      <div class="hero-label">10年間で浮くお金</div>
+      <div class="hero-amount" id="hero-amount">¥0</div>
+      <div class="hero-sub" id="hero-sub"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-period">1年</div>
+        <div class="stat-amount" id="stat-1y">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-period">5年</div>
+        <div class="stat-amount" id="stat-5y">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-period">10年</div>
+        <div class="stat-amount" id="stat-10y">—</div>
+      </div>
+    </div>
+
+    <div class="buy-card">
+      <div class="buy-header">
+        <span class="buy-title">その代わりに買えるもの（10年分）</span>
+        <button class="btn-shuffle" onclick="renderBuy()">🔀 シャッフル</button>
+      </div>
+      <div class="buy-grid" id="buy-grid"></div>
+    </div>
+
+    <div class="motivate" id="motivate"></div>
+
+  </div>
+</div>
+
+<script>
+const ITEMS = [
+  {icon:'📱', name:'iPhone 16 Pro',          price:189800},
+  {icon:'✈️', name:'ハワイ旅行（2泊4日）',    price:150000},
+  {icon:'🥩', name:'高級焼肉（1人前）',       price:15000},
+  {icon:'💻', name:'MacBook Air M3',          price:198800},
+  {icon:'🎮', name:'PlayStation 5',           price:79980},
+  {icon:'⌚', name:'Apple Watch Series 10',   price:59800},
+  {icon:'🏨', name:'高級旅館（1泊2食）',      price:50000},
+  {icon:'🍣', name:'銀座の高級寿司',          price:30000},
+  {icon:'👟', name:'Nike スニーカー（限定）', price:25000},
+  {icon:'📷', name:'SONY α7C ミラーレス',    price:250000},
+  {icon:'🛋', name:'ブランドソファ',          price:120000},
+  {icon:'🏋️', name:'ジム1年会員',            price:60000},
+  {icon:'📚', name:'ビジネス書100冊',         price:200000},
+  {icon:'🎸', name:'エレキギター（入門セット）',price:35000},
+  {icon:'🚗', name:'車検費用',               price:100000},
+  {icon:'💆', name:'高級スパ（5回分）',       price:50000},
+  {icon:'🧳', name:'高品質スーツケース',      price:40000},
+  {icon:'☕', name:'エスプレッソマシン',      price:55000},
+  {icon:'🎫', name:'ライブチケット（10回分）',price:80000},
+  {icon:'🌏', name:'台湾旅行（2泊3日）',      price:80000},
+];
+
+let total10y = 0;
+
+function setPrice(p){
+  document.getElementById('monthly-price').value = p;
+}
+
+function fmt(n){
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+
+function calculate(){
+  const price = parseFloat(document.getElementById('monthly-price').value);
+  if(!price || price <= 0){ alert('月額料金を入力してください'); return; }
+
+  const name = document.getElementById('service-name').value.trim() || 'このサブスク';
+
+  const y1  = price * 12;
+  const y5  = price * 12 * 5;
+  const y10 = price * 12 * 10;
+  total10y  = y10;
+
+  document.getElementById('hero-service').textContent = '「' + name + '」を解約すると…';
+  document.getElementById('hero-amount').textContent  = fmt(y10);
+  document.getElementById('hero-sub').textContent     = `月 ${fmt(price)} × 12ヶ月 × 10年間`;
+
+  document.getElementById('stat-1y').innerHTML  = fmt(y1).replace('¥','<small>¥</small>');
+  document.getElementById('stat-5y').innerHTML  = fmt(y5).replace('¥','<small>¥</small>');
+  document.getElementById('stat-10y').innerHTML = fmt(y10).replace('¥','<small>¥</small>');
+
+  renderBuy();
+
+  const lines = [
+    `<strong>${name}</strong>を解約するだけで、10年後には <strong>${fmt(y10)}</strong> が手元に残ります。`,
+    `1日あたりに換算すると <strong>${fmt(price*12/365)}</strong>。毎日缶コーヒー1本分が積み重なっています。`,
+    `5年間でも <strong>${fmt(y5)}</strong>。「たった月${fmt(price)}」が、いかに大きいかわかりますか？`,
+  ];
+  document.getElementById('motivate').innerHTML = lines[Math.floor(Math.random()*lines.length)];
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderBuy(){
+  const shuffled = [...ITEMS].sort(()=>Math.random()-.5).slice(0, 4);
+  document.getElementById('buy-grid').innerHTML = shuffled.map((item, i) => {
+    const times = total10y / item.price;
+    let badge, cls;
+    if(times >= 1){
+      badge = `✅ ${Math.floor(times)}個 買える`;
+      cls   = 'badge-ok';
+    } else {
+      badge = `📌 ${Math.round(times*100)}% 分しか届かない`;
+      cls   = 'badge-pct';
+    }
+    return `<div class="buy-item" style="animation-delay:${i*.06}s">
+      <span class="buy-icon">${item.icon}</span>
+      <span class="buy-name">${item.name}</span>
+      <span class="buy-price">${fmt(item.price)}</span>
+      <span class="buy-badge ${cls}">${badge}</span>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
