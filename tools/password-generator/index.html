@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パスワード・ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --yellow:#d97706;
+  --yellow-l:rgba(217,119,6,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.08);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  font-weight:300;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:48px 16px 100px;
+}
+
+.wrap{max-width:520px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:32px}
+.header h1{
+  font-family:'Outfit',sans-serif;
+  font-size:23px;font-weight:800;letter-spacing:-.02em;
+  color:var(--text);margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+.header-secure{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;color:var(--green);
+  background:var(--green-l);border:1px solid rgba(5,150,105,.15);
+  border-radius:100px;padding:4px 12px;margin-bottom:14px;
+}
+
+/* ── Output card ── */
+.output-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px;margin-bottom:16px;
+  box-shadow:var(--shadow-md);
+}
+
+.pw-display{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(16px,4vw,22px);
+  font-weight:600;
+  letter-spacing:.04em;
+  color:var(--text);
+  word-break:break-all;
+  line-height:1.5;
+  min-height:36px;
+  margin-bottom:16px;
+  transition:opacity .15s;
+}
+
+.pw-display .char-upper{color:#0057ff}
+.pw-display .char-lower{color:#111318}
+.pw-display .char-num  {color:#059669}
+.pw-display .char-sym  {color:#dc2626}
+
+/* Strength bar */
+.strength-row{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.strength-track{
+  flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;
+}
+.strength-fill{
+  height:100%;border-radius:3px;
+  transition:width .3s ease,background .3s ease;
+}
+.strength-label{
+  font-size:11px;font-weight:500;
+  min-width:44px;text-align:right;
+}
+
+/* Action buttons */
+.action-row{display:flex;gap:8px}
+
+.btn-copy{
+  flex:1;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:12px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn-copy:hover{opacity:.9}
+.btn-copy:active{transform:scale(.98)}
+.btn-copy.copied{background:var(--green)}
+
+.btn-regen{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:10px;
+  font-size:18px;width:46px;cursor:pointer;
+  transition:border-color .15s,color .15s,transform .3s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-regen:hover{border-color:var(--accent);color:var(--accent)}
+.btn-regen.spin{transform:rotate(360deg)}
+
+/* ── Settings card ── */
+.settings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px;margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:18px;
+}
+
+/* Length slider */
+.length-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:8px;
+}
+.length-name{font-size:13px;color:var(--text)}
+.length-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;
+  color:var(--accent);letter-spacing:-.01em;line-height:1;
+}
+
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+  margin-bottom:18px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;
+  border-radius:50%;background:var(--accent);
+  border:2.5px solid var(--white);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,87,255,.3);
+  transition:transform .15s,box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{
+  transform:scale(1.15);box-shadow:0 2px 8px rgba(0,87,255,.4);
+}
+
+.divider{height:1px;background:var(--border);margin:4px 0 16px}
+
+/* Toggle options */
+.options{display:flex;flex-direction:column;gap:10px}
+
+.option{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;
+  user-select:none;
+}
+.option:hover{border-color:var(--accent);background:#f0f4ff}
+.option.active{border-color:var(--accent);background:var(--accent-l)}
+
+.option-left{display:flex;align-items:center;gap:10px}
+.option-icon{font-size:18px;width:24px;text-align:center}
+.option-text{font-size:13px;color:var(--text)}
+.option-sample{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--muted);margin-top:1px;
+}
+
+/* Toggle switch */
+.toggle{
+  width:36px;height:20px;border-radius:10px;
+  background:var(--border);position:relative;
+  transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--accent)}
+.toggle::after{
+  content:'';position:absolute;
+  top:2px;left:2px;width:16px;height:16px;
+  border-radius:50%;background:#fff;
+  transition:transform .2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle.on::after{transform:translateX(16px)}
+
+/* ── History ── */
+.history-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px 24px;box-shadow:var(--shadow);
+}
+.history-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;
+}
+.history-title{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+}
+.btn-clear-hist{
+  font-size:11px;color:var(--light);background:none;border:none;
+  cursor:pointer;transition:color .15s;
+}
+.btn-clear-hist:hover{color:var(--red)}
+
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 12px;background:var(--bg);border-radius:8px;
+}
+.hist-pw{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--muted);
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.hist-copy{
+  font-size:11px;color:var(--light);background:none;border:none;
+  cursor:pointer;padding:2px 6px;border-radius:4px;
+  transition:color .15s,background .15s;flex-shrink:0;
+}
+.hist-copy:hover{color:var(--accent);background:var(--accent-l)}
+
+.hist-empty{font-size:12px;color:var(--light);text-align:center;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-secure">🔒 サーバー送信なし・完全ローカル生成</div>
+    <h1>🔑 パスワード・ジェネレーター</h1>
+    <p>強力なパスワードを1秒で生成。すべてブラウザ内で完結するので安全です。</p>
+  </div>
+
+  <!-- Output -->
+  <div class="output-card">
+    <div class="pw-display" id="pw-display">パスワードを生成してください</div>
+    <div class="strength-row">
+      <div class="strength-track">
+        <div class="strength-fill" id="str-fill" style="width:0%;background:var(--border)"></div>
+      </div>
+      <span class="strength-label" id="str-label" style="color:var(--light)">—</span>
+    </div>
+    <div class="action-row">
+      <button class="btn-copy" id="btn-copy" onclick="copyPw()">コピーする</button>
+      <button class="btn-regen" id="btn-regen" onclick="generate()" title="再生成">↻</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings-card">
+    <div class="card-label">設定</div>
+
+    <div class="length-row">
+      <span class="length-name">文字数</span>
+      <span class="length-val" id="len-val">16</span>
+    </div>
+    <input type="range" id="sl-len" min="6" max="64" value="16" oninput="onLen()">
+
+    <div class="divider"></div>
+
+    <div class="options">
+      <div class="option active" id="opt-upper" onclick="toggle('upper')">
+        <div class="option-left">
+          <span class="option-icon">🔠</span>
+          <div>
+            <div class="option-text">大文字 (A–Z)</div>
+            <div class="option-sample">ABCDEFG…</div>
+          </div>
+        </div>
+        <div class="toggle on" id="tgl-upper"></div>
+      </div>
+      <div class="option active" id="opt-lower" onclick="toggle('lower')">
+        <div class="option-left">
+          <span class="option-icon">🔡</span>
+          <div>
+            <div class="option-text">小文字 (a–z)</div>
+            <div class="option-sample">abcdefg…</div>
+          </div>
+        </div>
+        <div class="toggle on" id="tgl-lower"></div>
+      </div>
+      <div class="option active" id="opt-num" onclick="toggle('num')">
+        <div class="option-left">
+          <span class="option-icon">🔢</span>
+          <div>
+            <div class="option-text">数字 (0–9)</div>
+            <div class="option-sample">0123456789</div>
+          </div>
+        </div>
+        <div class="toggle on" id="tgl-num"></div>
+      </div>
+      <div class="option active" id="opt-sym" onclick="toggle('sym')">
+        <div class="option-left">
+          <span class="option-icon">✳️</span>
+          <div>
+            <div class="option-text">記号</div>
+            <div class="option-sample">!@#$%^&*…</div>
+          </div>
+        </div>
+        <div class="toggle on" id="tgl-sym"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate button -->
+  <button class="btn-copy" style="width:100%;margin-bottom:16px;padding:14px;font-size:15px" onclick="generate()">
+    ⚡ パスワードを生成する
+  </button>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-header">
+      <span class="history-title">生成履歴（このセッションのみ）</span>
+      <button class="btn-clear-hist" onclick="clearHist()">クリア</button>
+    </div>
+    <div class="hist-list" id="hist-list">
+      <div class="hist-empty">まだ生成されていません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const NUMS  = '0123456789';
+const SYMS  = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+
+let opts = { upper:true, lower:true, num:true, sym:true };
+let history = [];
+let currentPw = '';
+
+function onLen(){
+  document.getElementById('len-val').textContent = document.getElementById('sl-len').value;
+}
+
+function toggle(key){
+  // Prevent disabling all
+  const active = Object.values(opts).filter(Boolean).length;
+  if(opts[key] && active <= 1) return;
+
+  opts[key] = !opts[key];
+  const opt = document.getElementById('opt-'+key);
+  const tgl = document.getElementById('tgl-'+key);
+  opt.classList.toggle('active', opts[key]);
+  tgl.classList.toggle('on', opts[key]);
+  if(currentPw) generate();
+}
+
+function getCharset(){
+  let cs = '';
+  if(opts.upper) cs += UPPER;
+  if(opts.lower) cs += LOWER;
+  if(opts.num)   cs += NUMS;
+  if(opts.sym)   cs += SYMS;
+  return cs;
+}
+
+function generate(){
+  const len = parseInt(document.getElementById('sl-len').value);
+  const cs  = getCharset();
+  if(!cs) return;
+
+  // Guarantee at least one char from each enabled set
+  let pw = [];
+  if(opts.upper) pw.push(randChar(UPPER));
+  if(opts.lower) pw.push(randChar(LOWER));
+  if(opts.num)   pw.push(randChar(NUMS));
+  if(opts.sym)   pw.push(randChar(SYMS));
+
+  // Fill remaining
+  const arr = new Uint32Array(len - pw.length);
+  crypto.getRandomValues(arr);
+  for(let i=0; i < arr.length; i++) pw.push(cs[arr[i] % cs.length]);
+
+  // Fisher-Yates shuffle
+  for(let i=pw.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [pw[i],pw[j]]=[pw[j],pw[i]];
+  }
+
+  currentPw = pw.join('');
+  renderPw(currentPw);
+  renderStrength(currentPw);
+  addHistory(currentPw);
+
+  // Spin regen btn
+  const btn = document.getElementById('btn-regen');
+  btn.classList.remove('spin');
+  void btn.offsetWidth;
+  btn.classList.add('spin');
+  setTimeout(()=>btn.classList.remove('spin'), 300);
+
+  // Reset copy button
+  const cp = document.getElementById('btn-copy');
+  cp.textContent = 'コピーする';
+  cp.className = 'btn-copy';
+}
+
+function randChar(str){
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return str[arr[0] % str.length];
+}
+
+function renderPw(pw){
+  const el = document.getElementById('pw-display');
+  el.innerHTML = pw.split('').map(c=>{
+    if(UPPER.includes(c)) return `<span class="char-upper">${c}</span>`;
+    if(NUMS.includes(c))  return `<span class="char-num">${c}</span>`;
+    if(SYMS.includes(c))  return `<span class="char-sym">${c}</span>`;
+    return `<span class="char-lower">${c}</span>`;
+  }).join('');
+}
+
+function renderStrength(pw){
+  let score = 0;
+  if(pw.length >= 8)  score++;
+  if(pw.length >= 12) score++;
+  if(pw.length >= 16) score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[a-z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const levels = [
+    {w:'14%',  bg:'var(--red)',    label:'危険',   color:'var(--red)'},
+    {w:'28%',  bg:'#f97316',      label:'弱い',   color:'#f97316'},
+    {w:'42%',  bg:'var(--yellow)',label:'普通',   color:'var(--yellow)'},
+    {w:'57%',  bg:'#84cc16',      label:'良好',   color:'#84cc16'},
+    {w:'71%',  bg:'var(--green)', label:'強い',   color:'var(--green)'},
+    {w:'85%',  bg:'var(--green)', label:'強い',   color:'var(--green)'},
+    {w:'100%', bg:'#0284c7',      label:'最強',   color:'#0284c7'},
+  ];
+  const lv = levels[Math.min(score, levels.length-1)];
+  const fill  = document.getElementById('str-fill');
+  const label = document.getElementById('str-label');
+  fill.style.width      = lv.w;
+  fill.style.background = lv.bg;
+  label.textContent     = lv.label;
+  label.style.color     = lv.color;
+}
+
+function copyPw(){
+  if(!currentPw) return;
+  navigator.clipboard.writeText(currentPw).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ コピーしました！';
+    btn.className = 'btn-copy copied';
+    setTimeout(()=>{btn.textContent='コピーする';btn.className='btn-copy';}, 2000);
+  });
+}
+
+function addHistory(pw){
+  history.unshift(pw);
+  if(history.length > 8) history.pop();
+  renderHist();
+}
+
+function renderHist(){
+  const el = document.getElementById('hist-list');
+  if(history.length === 0){
+    el.innerHTML = '<div class="hist-empty">まだ生成されていません</div>';
+    return;
+  }
+  el.innerHTML = history.map((pw,i)=>`
+    <div class="hist-item">
+      <span class="hist-pw">${pw}</span>
+      <button class="hist-copy" onclick="copyHistPw('${pw.replace(/'/g,"\\'")}',this)">コピー</button>
+    </div>`).join('');
+}
+
+function copyHistPw(pw, btn){
+  navigator.clipboard.writeText(pw).then(()=>{
+    btn.textContent = '✓';
+    setTimeout(()=>btn.textContent='コピー', 1500);
+  });
+}
+
+function clearHist(){
+  history = [];
+  renderHist();
+}
+
+// Auto-generate on load
+generate();
+</script>
+</body>
+</html>
