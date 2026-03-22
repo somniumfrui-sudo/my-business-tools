@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外食 vs 自炊 貯金シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --eat:#e85d3a;
+  --eat-l:rgba(232,93,58,.07);
+  --cook:#059669;
+  --cook-l:rgba(5,150,105,.07);
+  --save:#0057ff;
+  --save-l:rgba(0,87,255,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:560px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Preset chips ── */
+.presets{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;justify-content:center;
+}
+.preset-chip{
+  font-size:12px;padding:5px 14px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.preset-chip:hover{border-color:var(--text);color:var(--text)}
+.preset-chip.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:16px;
+}
+
+.input-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:400px){.input-pair{grid-template-columns:1fr}}
+
+.input-col label{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;margin-bottom:6px;
+}
+.lbl-eat {color:var(--eat)}
+.lbl-cook{color:var(--cook)}
+
+.input-wrap{position:relative}
+.input-wrap .pre{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+.input-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  padding:10px 12px 10px 26px;outline:none;
+  -moz-appearance:textfield;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.input-wrap input::-webkit-inner-spin-button,
+.input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.col-eat  .input-wrap input:focus{border-color:var(--eat); background:var(--white);box-shadow:0 0 0 3px var(--eat-l)}
+.col-cook .input-wrap input:focus{border-color:var(--cook);background:var(--white);box-shadow:0 0 0 3px var(--cook-l)}
+
+/* Frequency */
+.freq-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.freq-label{font-size:12px;color:var(--muted)}
+.freq-tabs{display:flex;gap:4px}
+.freq-tab{
+  padding:5px 12px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.freq-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* Investment toggle */
+.inv-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--save-l);
+  border:1.5px solid rgba(0,87,255,.12);border-radius:10px;
+  margin-bottom:14px;cursor:pointer;
+}
+.inv-label{font-size:12px;color:var(--save);font-weight:500}
+.inv-sub{font-size:11px;color:var(--muted)}
+.toggle{
+  width:36px;height:20px;border-radius:10px;
+  background:var(--border);position:relative;transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--save)}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:16px;height:16px;border-radius:50%;background:#fff;
+  transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle.on::after{transform:translateX(16px)}
+
+.btn-calc{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn-calc:hover{opacity:.88}
+.btn-calc:active{transform:scale(.99)}
+
+/* ── Results ── */
+#results{display:none}
+
+/* Hero */
+.hero-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px;margin-bottom:12px;
+  box-shadow:var(--shadow-md);text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--cook),#34d399,#0057ff);
+}
+.hero-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:10px}
+.hero-amount{
+  font-family:'Outfit',sans-serif;font-size:clamp(48px,12vw,80px);
+  font-weight:800;letter-spacing:-.03em;line-height:1;
+  color:var(--cook);animation:popIn .35s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.hero-sub{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* Timeline bars */
+.timeline{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.tl-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:16px}
+
+.tl-rows{display:flex;flex-direction:column;gap:12px}
+
+.tl-row{display:flex;align-items:center;gap:10px}
+.tl-period{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  color:var(--muted);min-width:36px;
+}
+.tl-track{flex:1;height:20px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative}
+.tl-fill{
+  height:100%;border-radius:4px;
+  display:flex;align-items:center;padding-left:8px;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  color:#fff;white-space:nowrap;overflow:hidden;
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+  min-width:4px;
+}
+.fill-base{background:linear-gradient(90deg,#34d399,#059669)}
+.fill-inv {background:linear-gradient(90deg,#0057ff,#60a5fa)}
+.tl-val{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;
+  color:var(--text);min-width:80px;text-align:right;
+}
+
+/* Breakdown */
+.breakdown{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;
+}
+.bk-box{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.bk-label{font-size:10px;color:var(--light);letter-spacing:.06em;margin-bottom:5px}
+.bk-val{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;
+  letter-spacing:-.01em;color:var(--text);
+}
+.bk-val.green{color:var(--cook)}
+.bk-val.red  {color:var(--eat)}
+.bk-val.blue {color:var(--save)}
+
+/* Motivation */
+.motivation{
+  background:linear-gradient(135deg,#f0fdf8,#ecfdf5);
+  border:1px solid rgba(5,150,105,.15);border-radius:12px;
+  padding:16px 18px;font-size:13px;color:var(--muted);
+  line-height:1.75;text-align:center;
+}
+.motivation strong{color:var(--cook)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🍱 外食 vs 自炊 貯金シミュレーター</h1>
+    <p>小さな習慣の差が、30年後にどれだけの資産差になるか計算します。</p>
+  </div>
+
+  <!-- Presets -->
+  <div class="presets">
+    <button class="preset-chip active" onclick="setPreset(this,700,100,'毎日')">☕ コンビニコーヒー</button>
+    <button class="preset-chip" onclick="setPreset(this,900,300,'毎日')">🍱 コンビニ弁当</button>
+    <button class="preset-chip" onclick="setPreset(this,1200,400,'毎日')">🍜 ランチ外食</button>
+    <button class="preset-chip" onclick="setPreset(this,3500,800,'週3回')">🍺 居酒屋</button>
+    <button class="preset-chip" onclick="setPreset(this,5000,1500,'週1回')">🥩 ディナー外食</button>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="card-label">支出を入力</div>
+
+    <div class="input-pair">
+      <div class="input-col col-eat">
+        <label class="lbl-eat">🍔 外食・現在の支出</label>
+        <div class="input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" id="eat-price" value="700" min="0" oninput="liveCalc()">
+        </div>
+      </div>
+      <div class="input-col col-cook">
+        <label class="lbl-cook">🍳 自炊・代替後の支出</label>
+        <div class="input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" id="cook-price" value="100" min="0" oninput="liveCalc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="freq-row">
+      <span class="freq-label">頻度</span>
+      <div class="freq-tabs" id="freq-tabs">
+        <button class="freq-tab active" onclick="setFreq(this,'毎日',365)">毎日</button>
+        <button class="freq-tab" onclick="setFreq(this,'週5回',260)">週5回</button>
+        <button class="freq-tab" onclick="setFreq(this,'週3回',156)">週3回</button>
+        <button class="freq-tab" onclick="setFreq(this,'週1回',52)">週1回</button>
+      </div>
+    </div>
+
+    <div class="inv-row" onclick="toggleInv()">
+      <div>
+        <div class="inv-label">📈 差額を年利5%で運用した場合も計算</div>
+        <div class="inv-sub">複利投資シミュレーション（目安）</div>
+      </div>
+      <div class="toggle" id="inv-toggle"></div>
+    </div>
+
+    <button class="btn-calc" onclick="calc()">💰 計算する</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="hero-card">
+      <div class="hero-label">30年間の節約総額</div>
+      <div class="hero-amount" id="hero-amt">¥0</div>
+      <div class="hero-sub" id="hero-sub">—</div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-label">期間別シミュレーション</div>
+      <div class="tl-rows" id="tl-rows"></div>
+    </div>
+
+    <div class="breakdown">
+      <div class="bk-box">
+        <div class="bk-label">1回あたりの節約</div>
+        <div class="bk-val green" id="bk-per">—</div>
+      </div>
+      <div class="bk-box">
+        <div class="bk-label">月間節約額</div>
+        <div class="bk-val green" id="bk-month">—</div>
+      </div>
+      <div class="bk-box">
+        <div class="bk-label">年間節約額</div>
+        <div class="bk-val green" id="bk-year">—</div>
+      </div>
+      <div class="bk-box">
+        <div class="bk-label" id="bk-inv-label">10年後（複利込み）</div>
+        <div class="bk-val blue" id="bk-inv">—</div>
+      </div>
+    </div>
+
+    <div class="motivation" id="motivation">—</div>
+
+  </div>
+</div>
+
+<script>
+let freqPerYear = 365;
+let freqLabel   = '毎日';
+let useInv      = false;
+
+function setPreset(el, eat, cook, freq){
+  document.querySelectorAll('.preset-chip').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('eat-price').value  = eat;
+  document.getElementById('cook-price').value = cook;
+  // Set freq tab
+  const map = {'毎日':365,'週5回':260,'週3回':156,'週1回':52};
+  freqPerYear = map[freq] || 365;
+  freqLabel   = freq;
+  document.querySelectorAll('.freq-tab').forEach(b=>{
+    b.classList.toggle('active', b.textContent === freq);
+  });
+  liveCalc();
+}
+
+function setFreq(el, label, n){
+  freqPerYear = n; freqLabel = label;
+  document.querySelectorAll('.freq-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  liveCalc();
+}
+
+function toggleInv(){
+  useInv = !useInv;
+  document.getElementById('inv-toggle').classList.toggle('on', useInv);
+  liveCalc();
+}
+
+function fmt(n){
+  if(n >= 100000000) return (n/100000000).toFixed(1) + '億円';
+  if(n >= 10000)     return (n/10000).toFixed(1) + '万円';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+
+function fmtFull(n){
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+
+// Compound calc: monthly investment at rate r for years y
+function compound(monthlyAmt, years, rate=0.05){
+  const r = rate / 12;
+  const n = years * 12;
+  return monthlyAmt * (Math.pow(1+r, n) - 1) / r;
+}
+
+function liveCalc(){
+  const eat  = parseFloat(document.getElementById('eat-price').value)  || 0;
+  const cook = parseFloat(document.getElementById('cook-price').value) || 0;
+  if(eat > 0 && cook >= 0 && document.getElementById('results').style.display !== 'none') calc();
+}
+
+function calc(){
+  const eat  = parseFloat(document.getElementById('eat-price').value)  || 0;
+  const cook = parseFloat(document.getElementById('cook-price').value) || 0;
+  if(eat <= 0){ alert('外食の金額を入力してください'); return; }
+
+  const diffPerTime  = eat - cook;
+  const diffPerMonth = diffPerTime * freqPerYear / 12;
+  const diffPerYear  = diffPerTime * freqPerYear;
+  const diff5y  = diffPerYear * 5;
+  const diff10y = diffPerYear * 10;
+  const diff30y = diffPerYear * 30;
+
+  // Compound
+  const inv5y  = compound(diffPerMonth, 5);
+  const inv10y = compound(diffPerMonth, 10);
+  const inv30y = compound(diffPerMonth, 30);
+
+  // Hero
+  document.getElementById('hero-amt').textContent = fmt(diff30y);
+  document.getElementById('hero-sub').textContent =
+    `${freqLabel} ¥${eat.toLocaleString()} → ¥${cook.toLocaleString()} に変えるだけで`;
+
+  // Timeline
+  const periods = [
+    {label:'1ヶ月', base: diffPerMonth,              inv: diffPerMonth,             },
+    {label:'1年',   base: diffPerYear,               inv: compound(diffPerMonth,1)  },
+    {label:'5年',   base: diff5y,                    inv: inv5y                     },
+    {label:'10年',  base: diff10y,                   inv: inv10y                    },
+    {label:'30年',  base: diff30y,                   inv: inv30y                    },
+  ];
+
+  const maxVal = useInv ? inv30y : diff30y;
+  const tlRows = document.getElementById('tl-rows');
+  tlRows.innerHTML = periods.map(p => {
+    const baseW = Math.max((p.base / maxVal * 100), 2).toFixed(1);
+    const invW  = Math.max((p.inv  / maxVal * 100), 2).toFixed(1);
+    const shown = useInv ? p.inv : p.base;
+    const showInvBar = useInv && p.inv > p.base;
+
+    return `<div class="tl-row">
+      <span class="tl-period">${p.label}</span>
+      <div class="tl-track">
+        <div class="tl-fill fill-base" style="width:${baseW}%">${p.base >= 10000 ? fmt(p.base) : ''}</div>
+        ${showInvBar ? `<div class="tl-fill fill-inv" style="position:absolute;top:0;left:0;width:${invW}%;opacity:.55"></div>` : ''}
+      </div>
+      <span class="tl-val">${fmt(shown)}${useInv && p.inv > p.base ? '<span style="font-size:10px;color:#0057ff;margin-left:3px">📈</span>' : ''}</span>
+    </div>`;
+  }).join('');
+
+  // Breakdown
+  document.getElementById('bk-per').textContent   = fmtFull(diffPerTime) + '/回';
+  document.getElementById('bk-month').textContent = fmt(diffPerMonth) + '/月';
+  document.getElementById('bk-year').textContent  = fmt(diffPerYear) + '/年';
+  document.getElementById('bk-inv-label').textContent = useInv ? '10年後（年利5%運用）' : '10年間の節約';
+  document.getElementById('bk-inv').textContent   = fmt(useInv ? inv10y : diff10y);
+
+  // Motivation
+  const motiv = [
+    `${freqLabel}の習慣を変えるだけで、10年後に <strong>${fmt(useInv?inv10y:diff10y)}</strong> の差が生まれます。`,
+    `1回 <strong>${fmtFull(diffPerTime)}</strong> の節約が、30年で <strong>${fmt(diff30y)}</strong> になります。`,
+    `月 <strong>${fmt(diffPerMonth)}</strong> の差額を積み立てると、老後資金の一部になります。`,
+  ];
+  document.getElementById('motivation').innerHTML = motiv[Math.floor(Math.random()*motiv.length)];
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
