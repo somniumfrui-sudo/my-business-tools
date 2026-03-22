@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI & 適正体重計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+
+  /* BMI zone colors */
+  --thin:  #60a5fa;
+  --good:  #059669;
+  --over1: #f59e0b;
+  --over2: #f97316;
+  --over3: #dc2626;
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:480px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px 22px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:18px;
+}
+
+.input-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:380px){.input-pair{grid-template-columns:1fr}}
+
+.field label{
+  display:block;font-size:12px;color:var(--muted);
+  margin-bottom:6px;letter-spacing:.02em;
+}
+.input-wrap{position:relative}
+.input-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;
+  padding:10px 40px 10px 13px;outline:none;
+  -moz-appearance:textfield;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.input-wrap input::-webkit-inner-spin-button,
+.input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.input-wrap input:focus{
+  border-color:#0057ff;background:var(--white);
+  box-shadow:0 0 0 3px rgba(0,87,255,.08);
+}
+.input-wrap .suf{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+
+/* Sex selector */
+.sex-row{margin-bottom:16px}
+.sex-row label{font-size:12px;color:var(--muted);display:block;margin-bottom:7px}
+.sex-tabs{display:flex;gap:6px}
+.sex-tab{
+  flex:1;padding:8px;border-radius:10px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;
+}
+.sex-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* Age */
+.age-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.age-row label{font-size:12px;color:var(--muted);white-space:nowrap}
+.age-row input{
+  width:90px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  padding:8px 12px;outline:none;-moz-appearance:textfield;
+  transition:border-color .18s;
+}
+.age-row input::-webkit-inner-spin-button{-webkit-appearance:none}
+.age-row input:focus{border-color:#0057ff}
+.age-hint{font-size:11px;color:var(--light)}
+
+.btn-calc{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn-calc:hover{opacity:.88}
+.btn-calc:active{transform:scale(.99)}
+
+/* ── Results ── */
+#results{display:none}
+
+/* BMI hero */
+.bmi-hero{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px;margin-bottom:12px;
+  box-shadow:var(--shadow-md);text-align:center;
+  position:relative;overflow:hidden;
+}
+.bmi-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--zone-color, #059669);transition:background .4s;
+}
+.bmi-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--light);margin-bottom:10px}
+.bmi-number{
+  font-family:'Outfit',sans-serif;font-size:72px;font-weight:800;
+  letter-spacing:-.04em;line-height:1;
+  color:var(--zone-color,#059669);
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+.bmi-zone-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;
+  padding:6px 16px;border-radius:100px;
+  margin-top:10px;border:1.5px solid;
+  transition:all .3s;
+}
+
+/* ── BMI scale bar ── */
+.scale-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.scale-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:12px}
+
+.scale-bar{
+  position:relative;height:12px;border-radius:6px;
+  background:linear-gradient(to right,
+    var(--thin)  0%,  var(--thin)  24%,
+    var(--good)  24%, var(--good)  44%,
+    var(--over1) 44%, var(--over1) 60%,
+    var(--over2) 60%, var(--over2) 76%,
+    var(--over3) 76%, var(--over3) 100%
+  );
+  margin-bottom:6px;
+}
+.scale-pointer{
+  position:absolute;top:-4px;
+  width:6px;height:20px;
+  background:var(--text);border-radius:3px;
+  transform:translateX(-50%);
+  transition:left .5s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.scale-labels{
+  display:flex;justify-content:space-between;
+  font-family:'Outfit',sans-serif;font-size:10px;color:var(--light);
+}
+
+.zones{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+.zone-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-radius:7px;font-size:12px;
+}
+.zone-row.current{font-weight:500}
+.zone-dot{width:8px;height:8px;border-radius:50%;margin-right:8px;flex-shrink:0}
+.zone-name{flex:1;color:var(--muted)}
+.zone-range{font-family:'Outfit',sans-serif;font-size:11px;color:var(--light)}
+.zone-you{
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;
+  padding:2px 7px;border-radius:100px;margin-left:6px;
+}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.metric-label{font-size:11px;color:var(--light);margin-bottom:4px;letter-spacing:.03em}
+.metric-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;
+  letter-spacing:-.02em;color:var(--text);line-height:1.1;
+}
+.metric-val.green{color:var(--good)}
+.metric-val.blue {color:var(--thin)}
+.metric-val.orange{color:var(--over1)}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── Advice card ── */
+.advice-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);font-size:13px;
+  color:var(--muted);line-height:1.75;
+}
+.advice-card strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>⚖️ BMI & 適正体重計算機</h1>
+    <p>身長・体重を入力するだけで、BMI・肥満度・適正体重との差を即計算します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="card-label">あなたの情報</div>
+
+    <div class="input-pair">
+      <div class="field">
+        <label>身長</label>
+        <div class="input-wrap">
+          <input type="number" id="height" placeholder="170" min="100" max="250" oninput="liveCalc()">
+          <span class="suf">cm</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>体重</label>
+        <div class="input-wrap">
+          <input type="number" id="weight" placeholder="65" min="20" max="300" step="0.1" oninput="liveCalc()">
+          <span class="suf">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sex-row">
+      <label>性別（適正体重の計算に使用）</label>
+      <div class="sex-tabs">
+        <button class="sex-tab active" id="sex-m" onclick="setSex('m',this)">男性</button>
+        <button class="sex-tab"        id="sex-f" onclick="setSex('f',this)">女性</button>
+      </div>
+    </div>
+
+    <div class="age-row">
+      <label>年齢（任意）</label>
+      <input type="number" id="age" placeholder="30" min="10" max="100" oninput="liveCalc()">
+      <span class="age-hint">入力すると基礎代謝も表示</span>
+    </div>
+
+    <button class="btn-calc" onclick="calc()">📊 計算する</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- BMI hero -->
+    <div class="bmi-hero" id="bmi-hero">
+      <div class="bmi-label">あなたのBMI</div>
+      <div class="bmi-number" id="bmi-number">—</div>
+      <div><span class="bmi-zone-badge" id="bmi-badge">—</span></div>
+    </div>
+
+    <!-- Scale bar -->
+    <div class="scale-card">
+      <div class="scale-title">BMIスケール</div>
+      <div class="scale-bar">
+        <div class="scale-pointer" id="scale-ptr" style="left:0%"></div>
+      </div>
+      <div class="scale-labels">
+        <span>16</span><span>18.5</span><span>22</span><span>25</span><span>30</span><span>35</span><span>40</span>
+      </div>
+      <div class="zones" id="zones"></div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">適正体重（BMI 22）</div>
+        <div class="metric-val green" id="m-ideal">—</div>
+        <div class="metric-sub" id="m-diff">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">標準体重の範囲</div>
+        <div class="metric-val blue" id="m-range">—</div>
+        <div class="metric-sub">BMI 18.5〜24.9</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">体格指数（BMI）</div>
+        <div class="metric-val" id="m-bmi">—</div>
+        <div class="metric-sub" id="m-zone-name">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">推定基礎代謝</div>
+        <div class="metric-val orange" id="m-bmr">—</div>
+        <div class="metric-sub" id="m-bmr-sub">年齢を入力すると表示</div>
+      </div>
+    </div>
+
+    <!-- Advice -->
+    <div class="advice-card" id="advice-card">—</div>
+
+  </div>
+</div>
+
+<script>
+let sex = 'm';
+
+function setSex(s, el){
+  sex = s;
+  document.querySelectorAll('.sex-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(document.getElementById('results').style.display !== 'none') calc();
+}
+
+function liveCalc(){
+  const h = parseFloat(document.getElementById('height').value);
+  const w = parseFloat(document.getElementById('weight').value);
+  if(h > 100 && w > 10) calc();
+}
+
+const ZONES = [
+  {min:0,    max:18.5, label:'低体重',      color:'#60a5fa', emoji:'💙', advice:'やや体重が少ない状態です。栄養バランスのよい食事を意識しましょう。'},
+  {min:18.5, max:25,   label:'普通体重',    color:'#059669', emoji:'💚', advice:'理想的な範囲です！この状態を維持しましょう。'},
+  {min:25,   max:30,   label:'肥満（1度）', color:'#f59e0b', emoji:'💛', advice:'やや肥満気味です。有酸素運動と食事改善で適正体重を目指しましょう。'},
+  {min:30,   max:35,   label:'肥満（2度）', color:'#f97316', emoji:'🧡', advice:'肥満の状態です。生活習慣の見直しと、かかりつけ医への相談をお勧めします。'},
+  {min:35,   max:999,  label:'肥満（3度以上）',color:'#dc2626',emoji:'❤️',advice:'高度肥満の状態です。生活習慣病のリスクが高まります。医療機関への相談を検討してください。'},
+];
+
+function getZone(bmi){ return ZONES.find(z=>bmi>=z.min&&bmi<z.max)||ZONES[ZONES.length-1] }
+
+function fmt1(n){ return n.toFixed(1) }
+
+// BMI scale position: map BMI 16–40 → 0–100%
+function bmiToPos(bmi){ return Math.min(Math.max((bmi-16)/(40-16)*100, 2), 98) }
+
+function calc(){
+  const h = parseFloat(document.getElementById('height').value);
+  const w = parseFloat(document.getElementById('weight').value);
+  const age = parseInt(document.getElementById('age').value) || null;
+
+  if(!h || !w || h < 100 || w < 10){
+    alert('身長・体重を正しく入力してください'); return;
+  }
+
+  const hm    = h / 100;
+  const bmi   = w / (hm * hm);
+  const zone  = getZone(bmi);
+
+  // Ideal weight (BMI 22)
+  const ideal = 22 * hm * hm;
+  const diff  = w - ideal;
+
+  // Normal range
+  const low  = 18.5 * hm * hm;
+  const high = 24.9 * hm * hm;
+
+  // BMR (Mifflin-St Jeor)
+  let bmr = null;
+  if(age){
+    bmr = sex === 'm'
+      ? 10*w + 6.25*h - 5*age + 5
+      : 10*w + 6.25*h - 5*age - 161;
+  }
+
+  // ── Hero ──
+  const hero = document.getElementById('bmi-hero');
+  hero.style.setProperty('--zone-color', zone.color);
+
+  const numEl = document.getElementById('bmi-number');
+  numEl.textContent = fmt1(bmi);
+  numEl.style.color = zone.color;
+
+  // Remove old animation
+  numEl.style.animation = 'none';
+  void numEl.offsetWidth;
+  numEl.style.animation = '';
+
+  const badge = document.getElementById('bmi-badge');
+  badge.textContent  = zone.emoji + ' ' + zone.label;
+  badge.style.color  = zone.color;
+  badge.style.borderColor = zone.color + '44';
+  badge.style.background  = zone.color + '12';
+
+  // ── Scale pointer ──
+  document.getElementById('scale-ptr').style.left = bmiToPos(bmi) + '%';
+
+  // ── Zone rows ──
+  const zonesEl = document.getElementById('zones');
+  zonesEl.innerHTML = ZONES.map(z=>{
+    const isCur = bmi >= z.min && bmi < z.max;
+    return `<div class="zone-row ${isCur?'current':''}" style="${isCur?`background:${z.color}12;`:''}">
+      <div class="zone-dot" style="background:${z.color}"></div>
+      <span class="zone-name">${z.label}</span>
+      <span class="zone-range">${z.min} 〜 ${z.max === 999 ? '35+' : z.max}</span>
+      ${isCur?`<span class="zone-you" style="background:${z.color}18;color:${z.color}">あなた</span>`:''}
+    </div>`;
+  }).join('');
+
+  // ── Metrics ──
+  document.getElementById('m-ideal').textContent = fmt1(ideal) + ' kg';
+  const diffText = diff > 0
+    ? `適正より ${fmt1(Math.abs(diff))} kg 多い`
+    : diff < 0
+    ? `適正まで あと ${fmt1(Math.abs(diff))} kg`
+    : '適正体重ちょうど！';
+  document.getElementById('m-diff').textContent  = diffText;
+  document.getElementById('m-range').textContent = fmt1(low) + '〜' + fmt1(high);
+  document.getElementById('m-bmi').textContent   = fmt1(bmi);
+  document.getElementById('m-bmi').style.color   = zone.color;
+  document.getElementById('m-zone-name').textContent = zone.label;
+
+  if(bmr){
+    document.getElementById('m-bmr').textContent     = Math.round(bmr).toLocaleString() + ' kcal';
+    document.getElementById('m-bmr-sub').textContent = '安静時に消費するカロリー';
+  } else {
+    document.getElementById('m-bmr').textContent     = '—';
+    document.getElementById('m-bmr-sub').textContent = '年齢を入力すると表示';
+  }
+
+  // ── Advice ──
+  const diffKg = Math.abs(diff).toFixed(1);
+  let adviceText = zone.advice;
+  if(bmi >= 18.5 && bmi < 25){
+    adviceText = `BMI ${fmt1(bmi)} は<strong>理想的な範囲</strong>です！適正体重 ${fmt1(ideal)}kg との差は <strong>${fmt1(Math.abs(diff))}kg</strong>。この状態をキープしましょう。`;
+  } else if(diff > 0){
+    adviceText = `適正体重 <strong>${fmt1(ideal)}kg</strong> まであと <strong>${diffKg}kg</strong> の減量が目標です。${zone.advice}`;
+  } else {
+    adviceText = `適正体重 <strong>${fmt1(ideal)}kg</strong> まであと <strong>${diffKg}kg</strong> の増量が目安です。${zone.advice}`;
+  }
+  document.getElementById('advice-card').innerHTML = adviceText;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
