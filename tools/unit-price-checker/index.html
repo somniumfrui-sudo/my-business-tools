@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>どっちがお得？単位価格計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --win:#059669;
+  --win-l:rgba(5,150,105,.08);
+  --win-b:rgba(5,150,105,.18);
+  --lose:#6b7280;
+  --lose-l:#f7f8fa;
+  --red:#dc2626;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:540px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Unit selector ── */
+.unit-row{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;margin-bottom:20px;
+}
+.unit-label{font-size:12px;color:var(--muted)}
+.unit-tabs{display:flex;gap:4px}
+.unit-tab{
+  padding:5px 14px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.unit-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* ── Product cards ── */
+.products{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+
+@media(max-width:420px){
+  .products{grid-template-columns:1fr}
+}
+
+.prod-card{
+  background:var(--white);border:2px solid var(--border);
+  border-radius:16px;padding:20px 18px;
+  box-shadow:var(--shadow);transition:border-color .25s,box-shadow .25s,background .25s;
+}
+
+.prod-card.winner{
+  border-color:#059669;
+  background:linear-gradient(160deg,#f0fdf8 0%,#ecfdf5 100%);
+  box-shadow:0 4px 20px rgba(5,150,105,.12);
+}
+
+.prod-card.loser{
+  opacity:.75;
+}
+
+.prod-label{
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.prod-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.dot-a{background:#0057ff}
+.dot-b{background:#f97316}
+
+.prod-name{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text);
+}
+
+/* Inputs */
+.field{margin-bottom:10px}
+.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:.02em}
+
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-wrap .pre,.input-wrap .suf{
+  position:absolute;font-size:13px;color:var(--muted);pointer-events:none;
+}
+.input-wrap .pre{left:11px}
+.input-wrap .suf{right:11px}
+
+.input-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;
+  padding:9px 36px 9px 26px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+  -moz-appearance:textfield;
+}
+.input-wrap input::-webkit-inner-spin-button,
+.input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.input-wrap input:focus{
+  border-color:#0057ff;background:var(--white);
+  box-shadow:0 0 0 3px rgba(0,87,255,.09);
+}
+
+/* Result inside card */
+.prod-result{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+  display:none;
+}
+.prod-result.show{display:block}
+
+.unit-price{
+  font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);line-height:1;
+}
+.unit-price.green{color:var(--win)}
+.unit-per{font-size:12px;color:var(--muted);margin-top:2px}
+
+.winner-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+  color:var(--win);background:var(--win-l);border:1px solid var(--win-b);
+  border-radius:100px;padding:3px 10px;margin-top:7px;
+}
+
+/* ── VS divider ── */
+.vs{
+  display:none;
+  text-align:center;margin-bottom:12px;
+}
+.vs.show{display:block}
+
+.vs-inner{
+  display:inline-block;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 24px;box-shadow:var(--shadow-md);
+}
+
+.vs-diff{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;
+  color:var(--win);margin-bottom:2px;
+}
+.vs-detail{font-size:12px;color:var(--muted)}
+
+/* ── Compare button ── */
+.btn-compare{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:12px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:.02em;
+  padding:14px;cursor:pointer;margin-bottom:14px;
+  transition:opacity .15s,transform .1s;
+}
+.btn-compare:hover{opacity:.88}
+.btn-compare:active{transform:scale(.99)}
+
+/* ── History ── */
+.hist-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);
+}
+.hist-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.hist-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.btn-clr{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .15s}
+.btn-clr:hover{color:var(--red)}
+
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:var(--bg);border-radius:8px;font-size:12px;
+}
+.hist-names{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-winner{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;
+  color:var(--win);flex-shrink:0;margin-left:8px;
+}
+.hist-empty{font-size:12px;color:var(--light);text-align:center;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🛒 どっちがお得？単位価格計算機</h1>
+    <p>価格と容量を入れるだけで、本当にお得な方を瞬時に判定します。</p>
+  </div>
+
+  <!-- Unit selector -->
+  <div class="unit-row">
+    <span class="unit-label">単位：</span>
+    <div class="unit-tabs">
+      <button class="unit-tab active" onclick="setUnit('g',this)">g / ml</button>
+      <button class="unit-tab" onclick="setUnit('個',this)">個</button>
+      <button class="unit-tab" onclick="setUnit('枚',this)">枚</button>
+      <button class="unit-tab" onclick="setUnit('回',this)">回</button>
+    </div>
+  </div>
+
+  <!-- Product cards -->
+  <div class="products">
+
+    <!-- A -->
+    <div class="prod-card" id="card-a">
+      <div class="prod-label">
+        <div class="prod-dot dot-a"></div>
+        <span class="prod-name">商品 A</span>
+      </div>
+      <div class="field">
+        <label>価格</label>
+        <div class="input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" id="a-price" placeholder="198" min="0" oninput="liveCalc()">
+          <span class="suf">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>容量・個数</label>
+        <div class="input-wrap">
+          <input type="number" id="a-qty" placeholder="500" min="0" style="padding-left:12px" oninput="liveCalc()">
+          <span class="suf" id="suf-a">g</span>
+        </div>
+      </div>
+      <div class="prod-result" id="res-a">
+        <div class="unit-price" id="a-unitprice">—</div>
+        <div class="unit-per" id="a-per">100gあたり</div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="prod-card" id="card-b">
+      <div class="prod-label">
+        <div class="prod-dot dot-b"></div>
+        <span class="prod-name">商品 B</span>
+      </div>
+      <div class="field">
+        <label>価格</label>
+        <div class="input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" id="b-price" placeholder="298" min="0" oninput="liveCalc()">
+          <span class="suf">円</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>容量・個数</label>
+        <div class="input-wrap">
+          <input type="number" id="b-qty" placeholder="900" min="0" style="padding-left:12px" oninput="liveCalc()">
+          <span class="suf" id="suf-b">g</span>
+        </div>
+      </div>
+      <div class="prod-result" id="res-b">
+        <div class="unit-price" id="b-unitprice">—</div>
+        <div class="unit-per" id="b-per">100gあたり</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VS result bar -->
+  <div class="vs" id="vs-bar">
+    <div class="vs-inner">
+      <div class="vs-diff" id="vs-diff">—</div>
+      <div class="vs-detail" id="vs-detail">—</div>
+    </div>
+  </div>
+
+  <button class="btn-compare" onclick="compare()">⚖️ 比較する</button>
+
+  <!-- History -->
+  <div class="hist-card">
+    <div class="hist-header">
+      <span class="hist-title">比較履歴</span>
+      <button class="btn-clr" onclick="clearHist()">クリア</button>
+    </div>
+    <div class="hist-list" id="hist-list">
+      <div class="hist-empty">まだ比較されていません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let unit = 'g';
+let history = [];
+
+function setUnit(u, el){
+  unit = u;
+  document.querySelectorAll('.unit-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  // Update suffixes
+  const suf = u === 'g' ? 'g / ml' : u;
+  document.getElementById('suf-a').textContent = suf;
+  document.getElementById('suf-b').textContent = suf;
+  if(document.getElementById('a-price').value && document.getElementById('a-qty').value) liveCalc();
+}
+
+function getVals(){
+  const ap = parseFloat(document.getElementById('a-price').value);
+  const aq = parseFloat(document.getElementById('a-qty').value);
+  const bp = parseFloat(document.getElementById('b-price').value);
+  const bq = parseFloat(document.getElementById('b-qty').value);
+  return {ap,aq,bp,bq};
+}
+
+function unitLabel(){
+  return unit === 'g' ? '100g（ml）' : `1${unit}`;
+}
+
+function calcUnitPrice(price, qty){
+  if(!price || !qty || qty===0) return null;
+  return unit === 'g' ? (price / qty * 100) : (price / qty);
+}
+
+function fmt(n){
+  return n < 10 ? n.toFixed(2) : n.toFixed(1);
+}
+
+function liveCalc(){
+  const {ap,aq,bp,bq} = getVals();
+  const ua = calcUnitPrice(ap,aq);
+  const ub = calcUnitPrice(bp,bq);
+
+  // Show individual results as user types
+  if(ua !== null){
+    document.getElementById('res-a').classList.add('show');
+    document.getElementById('a-unitprice').textContent = '¥' + fmt(ua);
+    document.getElementById('a-per').textContent = unitLabel() + 'あたり';
+  }
+  if(ub !== null){
+    document.getElementById('res-b').classList.add('show');
+    document.getElementById('b-unitprice').textContent = '¥' + fmt(ub);
+    document.getElementById('b-per').textContent = unitLabel() + 'あたり';
+  }
+
+  if(ua !== null && ub !== null) showResult(ua, ub, ap, aq, bp, bq);
+}
+
+function compare(){
+  const {ap,aq,bp,bq} = getVals();
+  if(!ap||!aq||!bp||!bq){ alert('すべての項目を入力してください'); return; }
+  const ua = calcUnitPrice(ap,aq);
+  const ub = calcUnitPrice(bp,bq);
+  showResult(ua, ub, ap, aq, bp, bq);
+  addHist(ua, ub, ap, aq, bp, bq);
+}
+
+function showResult(ua, ub, ap, aq, bp, bq){
+  const cardA = document.getElementById('card-a');
+  const cardB = document.getElementById('card-b');
+  const uPA   = document.getElementById('a-unitprice');
+  const uPB   = document.getElementById('b-unitprice');
+  const badgeA = document.getElementById('res-a');
+  const badgeB = document.getElementById('res-b');
+  const vsBar  = document.getElementById('vs-bar');
+  const vsDiff = document.getElementById('vs-diff');
+  const vsDet  = document.getElementById('vs-detail');
+
+  // Reset
+  cardA.className = 'prod-card';
+  cardB.className = 'prod-card';
+  uPA.className   = 'unit-price';
+  uPB.className   = 'unit-price';
+
+  // Remove old badges
+  document.querySelectorAll('.winner-badge').forEach(b=>b.remove());
+
+  const diff = Math.abs(ua - ub);
+  const pct  = (diff / Math.max(ua,ub) * 100).toFixed(1);
+
+  if(ua < ub){
+    // A wins
+    cardA.className = 'prod-card winner';
+    cardB.className = 'prod-card loser';
+    uPA.className   = 'unit-price green';
+    const badge = mkBadge(`🏆 ${pct}%お得`);
+    badgeA.appendChild(badge);
+    vsDiff.innerHTML = `<span style="color:#0057ff;font-weight:800">A</span> が <span style="color:var(--win)">${pct}%</span> お得！`;
+    vsDet.textContent = `差額 ¥${fmt(diff)} / ${unitLabel()}`;
+  } else if(ub < ua){
+    // B wins
+    cardB.className = 'prod-card winner';
+    cardA.className = 'prod-card loser';
+    uPB.className   = 'unit-price green';
+    const badge = mkBadge(`🏆 ${pct}%お得`);
+    badgeB.appendChild(badge);
+    vsDiff.innerHTML = `<span style="color:#f97316;font-weight:800">B</span> が <span style="color:var(--win)">${pct}%</span> お得！`;
+    vsDet.textContent = `差額 ¥${fmt(diff)} / ${unitLabel()}`;
+  } else {
+    vsDiff.textContent = '🤝 ほぼ同じ価格です';
+    vsDet.textContent  = '単価はほぼ同じです';
+  }
+
+  vsBar.classList.add('show');
+}
+
+function mkBadge(text){
+  const el = document.createElement('div');
+  el.className = 'winner-badge';
+  el.textContent = text;
+  return el;
+}
+
+function addHist(ua, ub, ap, aq, bp, bq){
+  const winner = ua < ub ? `A が${((Math.abs(ua-ub)/Math.max(ua,ub))*100).toFixed(1)}%お得` :
+                 ub < ua ? `B が${((Math.abs(ua-ub)/Math.max(ua,ub))*100).toFixed(1)}%お得` : '同価格';
+  history.unshift({
+    a:`¥${ap} / ${aq}${unit}`,
+    b:`¥${bp} / ${bq}${unit}`,
+    winner
+  });
+  if(history.length > 6) history.pop();
+  renderHist();
+}
+
+function renderHist(){
+  const el = document.getElementById('hist-list');
+  if(history.length === 0){
+    el.innerHTML='<div class="hist-empty">まだ比較されていません</div>'; return;
+  }
+  el.innerHTML = history.map(h=>`
+    <div class="hist-row">
+      <span class="hist-names">A: ${h.a} ／ B: ${h.b}</span>
+      <span class="hist-winner">${h.winner}</span>
+    </div>`).join('');
+}
+
+function clearHist(){
+  history = [];
+  renderHist();
+}
+</script>
+</body>
+</html>
