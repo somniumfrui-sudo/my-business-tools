@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水飲みリマインダー・トラッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f0f8ff;
+  --white:#ffffff;
+  --border:#d4e8f8;
+  --text:#0c1e30;
+  --muted:#5a7a94;
+  --light:#9bbdd4;
+  --blue:#1a8fff;
+  --blue-d:#0070e0;
+  --blue-l:rgba(26,143,255,.08);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --shadow:0 1px 4px rgba(12,30,48,.07);
+  --shadow-md:0 4px 20px rgba(12,30,48,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:44px 16px 100px;
+}
+
+/* soft wave bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 100%, rgba(26,143,255,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(26,143,255,.06) 0%, transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:400px}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);margin-bottom:4px;
+}
+.header-date{font-size:12px;color:var(--muted);letter-spacing:.04em}
+
+/* ── Main glass card ── */
+.glass-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:24px;padding:28px 24px;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+  text-align:center;position:relative;overflow:hidden;
+}
+
+/* animated fill bg */
+.glass-card::before{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(0deg,rgba(26,143,255,.10) 0%,transparent 100%);
+  height:var(--fill-h,0%);
+  transition:height .6s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;z-index:0;
+}
+
+.glass-inner{position:relative;z-index:1}
+
+/* Big cup visual */
+.cup-wrap{
+  position:relative;
+  width:110px;height:130px;
+  margin:0 auto 20px;
+}
+
+.cup-svg{width:110px;height:130px}
+
+.cup-water{
+  transition:height .5s cubic-bezier(.4,0,.2,1), y .5s cubic-bezier(.4,0,.2,1);
+}
+
+.cup-amount{
+  font-family:'Outfit',sans-serif;font-size:36px;font-weight:800;
+  letter-spacing:-.03em;color:var(--blue);line-height:1;margin-bottom:3px;
+}
+.cup-amount span{font-size:16px;font-weight:400;color:var(--muted);margin-left:2px}
+
+.cup-goal{font-size:12px;color:var(--muted);margin-bottom:16px}
+
+/* Progress arc */
+.arc-wrap{
+  width:160px;height:80px;margin:0 auto 16px;
+  position:relative;overflow:hidden;
+}
+.arc-svg{width:160px;height:160px;margin-top:-80px}
+.arc-bg{fill:none;stroke:var(--border);stroke-width:12;stroke-linecap:round}
+.arc-fill{
+  fill:none;stroke:url(#arcGrad);stroke-width:12;stroke-linecap:round;
+  stroke-dasharray:251;stroke-dashoffset:251;
+  transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1);
+}
+.arc-pct{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;
+  color:var(--blue);letter-spacing:-.02em;line-height:1;
+}
+
+/* Status message */
+.status-msg{
+  font-size:14px;font-weight:500;color:var(--text);
+  margin-bottom:20px;min-height:22px;
+  transition:color .3s;
+}
+.status-msg.done{color:var(--green)}
+
+/* ── Drink button ── */
+.btn-drink{
+  width:100%;background:var(--blue);color:#fff;border:none;
+  border-radius:14px;font-family:'Outfit',sans-serif;
+  font-size:16px;font-weight:800;padding:16px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(26,143,255,.28);
+  transition:transform .1s,box-shadow .15s,background .15s;
+  position:relative;overflow:hidden;
+}
+.btn-drink:hover{background:var(--blue-d);box-shadow:0 6px 20px rgba(26,143,255,.38)}
+.btn-drink:active{transform:scale(.97)}
+.btn-drink:disabled{opacity:.5;cursor:default;transform:none}
+
+/* ripple */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.35);
+  transform:scale(0);animation:ripple .5s ease-out;
+  pointer-events:none;
+}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+.btn-undo{
+  width:100%;background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:12px;
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:10px;cursor:pointer;margin-top:8px;
+  transition:color .15s,border-color .15s;
+}
+.btn-undo:hover{color:var(--text);border-color:var(--light)}
+.btn-undo:disabled{opacity:.35;cursor:default}
+
+/* ── Cup grid ── */
+.cups-grid{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:18px 16px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+  text-align:center;
+}
+.cups-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.cups-icons{
+  display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+}
+.cup-icon{
+  font-size:22px;transition:transform .2s,filter .2s;
+  line-height:1;
+}
+.cup-icon.done{animation:dropIn .25s cubic-bezier(.34,1.56,.64,1) both}
+.cup-icon.empty{filter:grayscale(1);opacity:.25}
+@keyframes dropIn{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+
+/* ── Settings card ── */
+.settings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.settings-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.goal-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.goal-tabs{display:flex;gap:5px;flex-wrap:wrap}
+.goal-tab{
+  padding:5px 12px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.goal-tab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ── Stats row ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 8px;text-align:center;box-shadow:var(--shadow);
+}
+.stat-num{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--blue);line-height:1;margin-bottom:3px;
+}
+.stat-label{font-size:10px;color:var(--light);letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>💧 水飲みトラッカー</h1>
+    <div class="header-date" id="today-date"></div>
+  </div>
+
+  <!-- Main card -->
+  <div class="glass-card" id="glass-card">
+    <div class="glass-inner">
+
+      <!-- Arc progress -->
+      <div class="arc-wrap">
+        <svg class="arc-svg" viewBox="0 0 160 160">
+          <defs>
+            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#1a8fff"/>
+              <stop offset="100%" stop-color="#60c8ff"/>
+            </linearGradient>
+          </defs>
+          <path class="arc-bg"   d="M20,130 A70,70 0 0,1 140,130"/>
+          <path class="arc-fill" id="arc-fill" d="M20,130 A70,70 0 0,1 140,130"/>
+        </svg>
+        <div class="arc-pct" id="arc-pct">0%</div>
+      </div>
+
+      <!-- Amount -->
+      <div class="cup-amount" id="cup-amount">0<span>ml</span></div>
+      <div class="cup-goal" id="cup-goal">目標 2000ml まであと 2000ml</div>
+
+      <!-- Status -->
+      <div class="status-msg" id="status-msg">今日の水分補給を始めましょう 💧</div>
+
+      <!-- Buttons -->
+      <button class="btn-drink" id="btn-drink" onclick="drink(event)">
+        💧 コップ1杯飲んだ（+200ml）
+      </button>
+      <button class="btn-undo" id="btn-undo" onclick="undo()" disabled>↩ 1回取り消す</button>
+
+    </div>
+  </div>
+
+  <!-- Cup grid -->
+  <div class="cups-grid">
+    <div class="cups-label">今日の記録</div>
+    <div class="cups-icons" id="cups-icons"></div>
+  </div>
+
+  <!-- Goal setting -->
+  <div class="settings-card">
+    <div class="settings-label">1日の目標水分量</div>
+    <div class="goal-row">
+      <div class="goal-tabs" id="goal-tabs">
+        <button class="goal-tab" onclick="setGoal(this,1500)">1500ml</button>
+        <button class="goal-tab active" onclick="setGoal(this,2000)">2000ml</button>
+        <button class="goal-tab" onclick="setGoal(this,2500)">2500ml</button>
+        <button class="goal-tab" onclick="setGoal(this,3000)">3000ml</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="st-streak">0</div>
+      <div class="stat-label">連続達成日</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-total">0</div>
+      <div class="stat-label">累計達成日</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-cups">0</div>
+      <div class="stat-label">今日のコップ数</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ML_PER_CUP = 200;
+const KEY_DAY    = 'water-day';
+const KEY_GOAL   = 'water-goal';
+const KEY_STREAK = 'water-streak';
+const KEY_LAST   = 'water-last';
+const KEY_TOTAL  = 'water-total';
+
+let goal   = parseInt(localStorage.getItem(KEY_GOAL) || '2000');
+let cups   = 0;
+let streak = parseInt(localStorage.getItem(KEY_STREAK) || '0');
+let total  = parseInt(localStorage.getItem(KEY_TOTAL)  || '0');
+
+const ARC_LEN = 251; // half-circle arc dasharray
+
+// ── Init ──
+function todayStr(){
+  return new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
+}
+
+function init(){
+  document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+  // Restore goal tab
+  document.querySelectorAll('.goal-tab').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.textContent) === goal);
+  });
+
+  // Restore today's cups
+  const saved = JSON.parse(localStorage.getItem(KEY_DAY) || 'null');
+  const today = todayStr();
+  if(saved && saved.date === today){
+    cups = saved.cups;
+  } else {
+    // New day — check streak
+    const last = localStorage.getItem(KEY_LAST) || '';
+    if(last){
+      const lastDate   = new Date(last.replace(/-/g,'/'));
+      const yesterday  = new Date(); yesterday.setDate(yesterday.getDate()-1);
+      const yd = yesterday.toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
+      if(last !== yd) streak = 0; // broke streak
+    }
+    cups = 0;
+  }
+
+  render();
+  renderStats();
+}
+
+// ── Drink ──
+function drink(e){
+  const maxCups = Math.ceil(goal / ML_PER_CUP) + 3;
+  if(cups >= maxCups) return;
+
+  // Ripple
+  const btn  = document.getElementById('btn-drink');
+  const rect = btn.getBoundingClientRect();
+  const rip  = document.createElement('span');
+  rip.className = 'ripple';
+  const size = Math.max(btn.offsetWidth, btn.offsetHeight);
+  rip.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(rip);
+  setTimeout(()=>rip.remove(), 500);
+
+  cups++;
+  saveDay();
+  render();
+
+  // Check goal achieved
+  const ml = cups * ML_PER_CUP;
+  if(ml >= goal && (ml - ML_PER_CUP) < goal){
+    // Just reached goal!
+    streak++;
+    total++;
+    localStorage.setItem(KEY_STREAK, streak);
+    localStorage.setItem(KEY_TOTAL,  total);
+    localStorage.setItem(KEY_LAST,   todayStr());
+    renderStats();
+  }
+}
+
+function undo(){
+  if(cups <= 0) return;
+  cups--;
+  saveDay();
+  render();
+}
+
+function saveDay(){
+  localStorage.setItem(KEY_DAY, JSON.stringify({date: todayStr(), cups}));
+}
+
+// ── Goal ──
+function setGoal(el, g){
+  goal = g;
+  localStorage.setItem(KEY_GOAL, g);
+  document.querySelectorAll('.goal-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ── Render ──
+function render(){
+  const ml       = cups * ML_PER_CUP;
+  const pct      = Math.min(ml / goal * 100, 100);
+  const maxCups  = Math.ceil(goal / ML_PER_CUP);
+  const remaining= Math.max(goal - ml, 0);
+
+  // Arc
+  const offset = ARC_LEN * (1 - pct/100);
+  document.getElementById('arc-fill').style.strokeDashoffset = offset;
+  document.getElementById('arc-pct').textContent = Math.round(pct) + '%';
+
+  // Amount
+  document.getElementById('cup-amount').innerHTML = ml.toLocaleString() + '<span>ml</span>';
+  document.getElementById('cup-goal').textContent =
+    remaining > 0 ? `目標 ${goal}ml まであと ${remaining}ml` : `🎉 目標 ${goal}ml 達成！`;
+
+  // Card fill bg
+  document.getElementById('glass-card').style.setProperty('--fill-h', pct + '%');
+
+  // Status
+  const msgEl = document.getElementById('status-msg');
+  if(pct >= 100){
+    msgEl.textContent = '🎊 目標達成！今日も完璧です';
+    msgEl.className   = 'status-msg done';
+  } else if(pct >= 75){
+    msgEl.textContent = 'もう少し！あと ' + (maxCups - cups) + ' 杯で達成 👍';
+    msgEl.className   = 'status-msg';
+  } else if(pct >= 50){
+    msgEl.textContent = '折り返し地点！順調です 💪';
+    msgEl.className   = 'status-msg';
+  } else if(cups > 0){
+    msgEl.textContent = 'いいスタート！続けましょう 💧';
+    msgEl.className   = 'status-msg';
+  } else {
+    msgEl.textContent = '今日の水分補給を始めましょう 💧';
+    msgEl.className   = 'status-msg';
+  }
+
+  // Button states
+  document.getElementById('btn-drink').disabled = pct >= 100 && cups >= maxCups + 3;
+  document.getElementById('btn-undo').disabled  = cups <= 0;
+
+  // Cup icons grid
+  const total_slots = Math.max(maxCups, cups);
+  let iconsHTML = '';
+  for(let i=0; i<total_slots; i++){
+    const isDone = i < cups;
+    iconsHTML += `<span class="cup-icon ${isDone?'done':'empty'}"
+      style="${isDone?`animation-delay:${i*.03}s`:''}"
+    >${isDone ? '💧' : '🫙'}</span>`;
+  }
+  document.getElementById('cups-icons').innerHTML = iconsHTML;
+
+  // Stats today
+  document.getElementById('st-cups').textContent = cups;
+}
+
+function renderStats(){
+  document.getElementById('st-streak').textContent = streak;
+  document.getElementById('st-total').textContent  = total;
+}
+
+init();
+</script>
+</body>
+</html>
