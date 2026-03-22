@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1in 1out・捨て活トラッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --in:#e85d3a;
+  --in-l:rgba(232,93,58,.07);
+  --in-b:rgba(232,93,58,.18);
+  --out:#059669;
+  --out-l:rgba(5,150,105,.07);
+  --out-b:rgba(5,150,105,.18);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:520px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Balance card ── */
+.balance-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:18px;padding:24px;margin-bottom:14px;
+  box-shadow:var(--shadow-md);text-align:center;
+  position:relative;overflow:hidden;
+  transition:background .35s,border-color .35s;
+}
+
+.balance-card.perfect{
+  background:linear-gradient(160deg,#f0fdf8,#ecfdf5);
+  border-color:rgba(5,150,105,.25);
+}
+.balance-card.over{
+  background:linear-gradient(160deg,#fff8f5,#fff3ed);
+  border-color:rgba(232,93,58,.2);
+}
+
+.balance-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+
+.balance-nums{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-bottom:14px;
+}
+
+.bal-block{text-align:center}
+.bal-num{
+  font-family:'Outfit',sans-serif;font-size:40px;font-weight:800;
+  letter-spacing:-.03em;line-height:1;
+}
+.bal-num.in-color{color:var(--in)}
+.bal-num.out-color{color:var(--out)}
+.bal-tag{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.04em}
+
+.bal-arrow{
+  font-size:20px;color:var(--light);padding-top:4px;
+}
+
+.balance-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  padding:7px 18px;border-radius:100px;border:1.5px solid;
+  transition:all .3s;
+}
+
+.status-perfect{color:var(--out);border-color:var(--out-b);background:var(--out-l)}
+.status-over   {color:var(--in); border-color:var(--in-b); background:var(--in-l)}
+.status-empty  {color:var(--light);border-color:var(--border);background:transparent}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;margin-bottom:14px;
+  box-shadow:var(--shadow);
+}
+
+.input-pair{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;
+}
+@media(max-width:400px){.input-pair{grid-template-columns:1fr}}
+
+.input-col label{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;margin-bottom:6px;letter-spacing:.03em;
+}
+.label-in {color:var(--in)}
+.label-out{color:var(--out)}
+.label-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-in {background:var(--in)}
+.dot-out{background:var(--out)}
+
+.input-col input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  padding:10px 12px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.input-col input::placeholder{color:var(--light)}
+.input-col input:focus{
+  background:var(--white);
+}
+.input-col.col-in  input:focus{border-color:var(--in); box-shadow:0 0 0 3px var(--in-l)}
+.input-col.col-out input:focus{border-color:var(--out);box-shadow:0 0 0 3px var(--out-l)}
+
+.category-row{
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;
+}
+.cat-btn{
+  font-size:12px;padding:4px 12px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.cat-btn:hover{border-color:var(--text);color:var(--text)}
+.cat-btn.active{background:var(--text);border-color:var(--text);color:#fff}
+
+.btn-add{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn-add:hover{opacity:.88}
+.btn-add:active{transform:scale(.99)}
+
+/* ── Log list ── */
+.log-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+}
+
+.log-header{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.log-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.btn-clear{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .15s}
+.btn-clear:hover{color:var(--in)}
+
+.log-list{max-height:360px;overflow-y:auto}
+
+.log-item{
+  display:flex;align-items:stretch;
+  border-bottom:1px solid var(--border);
+  animation:fadeIn .25s ease both;
+}
+.log-item:last-child{border-bottom:none}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+.log-in,.log-out{
+  flex:1;padding:12px 14px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.log-in{border-right:1px solid var(--border)}
+
+.log-badge{
+  font-size:9px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:3px;
+}
+.badge-in {color:var(--in)}
+.badge-out{color:var(--out)}
+
+.log-item-name{font-size:13px;color:var(--text);line-height:1.4}
+.log-item-cat{font-size:11px;color:var(--light)}
+
+.log-divider{
+  width:1px;background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:12px;color:var(--light);
+  padding:0 2px;
+}
+
+.log-del{
+  padding:0 12px;
+  background:none;border:none;border-left:1px solid var(--border);
+  color:var(--light);cursor:pointer;font-size:14px;
+  transition:color .15s,background .15s;flex-shrink:0;
+}
+.log-del:hover{color:var(--in);background:var(--in-l)}
+
+.log-empty{
+  text-align:center;padding:32px 20px;
+  color:var(--light);font-size:13px;line-height:1.8;
+}
+.log-empty span{display:block;font-size:30px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>♻️ 1in 1out 捨て活トラッカー</h1>
+    <p>買ったら捨てる。持ち物を増やさないための記録ツール。</p>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-card" id="balance-card">
+    <div class="balance-label">現在のバランス</div>
+    <div class="balance-nums">
+      <div class="bal-block">
+        <div class="bal-num in-color" id="bal-in">0</div>
+        <div class="bal-tag">IN（購入）</div>
+      </div>
+      <div class="bal-arrow">→</div>
+      <div class="bal-block">
+        <div class="bal-num out-color" id="bal-out">0</div>
+        <div class="bal-tag">OUT（処分）</div>
+      </div>
+    </div>
+    <div class="balance-status status-empty" id="balance-status">記録を始めましょう</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="input-pair">
+      <div class="input-col col-in">
+        <label><span class="label-dot dot-in"></span><span class="label-in">IN — 買ったもの</span></label>
+        <input type="text" id="in-name" placeholder="例：白いTシャツ" oninput="checkEnter(event)">
+      </div>
+      <div class="input-col col-out">
+        <label><span class="label-dot dot-out"></span><span class="label-out">OUT — 捨てるもの</span></label>
+        <input type="text" id="out-name" placeholder="例：古いTシャツ" oninput="checkEnter(event)">
+      </div>
+    </div>
+
+    <div class="category-row" id="cat-row">
+      <button class="cat-btn active" onclick="setCat(this,'')">すべて</button>
+      <button class="cat-btn" onclick="setCat(this,'👔 衣類')">👔 衣類</button>
+      <button class="cat-btn" onclick="setCat(this,'📚 本')">📚 本</button>
+      <button class="cat-btn" onclick="setCat(this,'🍳 キッチン')">🍳 キッチン</button>
+      <button class="cat-btn" onclick="setCat(this,'💄 美容')">💄 美容</button>
+      <button class="cat-btn" onclick="setCat(this,'🎮 趣味')">🎮 趣味</button>
+      <button class="cat-btn" onclick="setCat(this,'📦 その他')">📦 その他</button>
+    </div>
+
+    <button class="btn-add" onclick="addEntry()">＋ 記録する</button>
+  </div>
+
+  <!-- Log -->
+  <div class="log-card">
+    <div class="log-header">
+      <span class="log-title">記録一覧</span>
+      <button class="btn-clear" onclick="clearAll()">すべて削除</button>
+    </div>
+    <div class="log-list" id="log-list">
+      <div class="log-empty"><span>♻️</span>記録がありません<br>IN と OUT を入力して追加しましょう</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const KEY = '1in1out-log';
+let entries = JSON.parse(localStorage.getItem(KEY) || '[]');
+let selectedCat = '';
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(entries)) }
+
+function setCat(el, cat){
+  selectedCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function checkEnter(e){
+  if(e.key === 'Enter') addEntry();
+}
+
+function addEntry(){
+  const inName  = document.getElementById('in-name').value.trim();
+  const outName = document.getElementById('out-name').value.trim();
+  if(!inName && !outName){ alert('IN か OUT を少なくとも1つ入力してください'); return; }
+
+  entries.unshift({
+    id: Date.now(),
+    inName:  inName  || '（未記入）',
+    outName: outName || '（未記入）',
+    cat: selectedCat,
+    date: new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'})
+  });
+
+  save();
+  render();
+
+  document.getElementById('in-name').value  = '';
+  document.getElementById('out-name').value = '';
+  document.getElementById('in-name').focus();
+}
+
+function deleteEntry(id){
+  entries = entries.filter(e=>e.id !== id);
+  save(); render();
+}
+
+function clearAll(){
+  if(!confirm('すべての記録を削除しますか？')) return;
+  entries = []; save(); render();
+}
+
+function render(){
+  const list = document.getElementById('log-list');
+
+  // Counts (ignore "（未記入）")
+  const inCount  = entries.filter(e=>e.inName  !== '（未記入）').length;
+  const outCount = entries.filter(e=>e.outName !== '（未記入）').length;
+  const diff = inCount - outCount;
+
+  // Balance card
+  document.getElementById('bal-in').textContent  = inCount;
+  document.getElementById('bal-out').textContent = outCount;
+
+  const card   = document.getElementById('balance-card');
+  const status = document.getElementById('balance-status');
+
+  if(entries.length === 0){
+    card.className   = 'balance-card';
+    status.className = 'balance-status status-empty';
+    status.textContent = '記録を始めましょう';
+  } else if(diff <= 0){
+    card.className   = 'balance-card perfect';
+    status.className = 'balance-status status-perfect';
+    const msgs = ['✨ Perfect! 完璧なバランスです', '🎉 素晴らしい！持ち物が増えていません', '👏 Perfect! ミニマリスト精神◎'];
+    status.textContent = diff < 0
+      ? `🌟 完璧！${Math.abs(diff)}個 減らせています`
+      : msgs[Math.floor(Date.now()/10000) % msgs.length];
+  } else {
+    card.className   = 'balance-card over';
+    status.className = 'balance-status status-over';
+    status.textContent = `⚠ あと ${diff} 個 処分が必要です`;
+  }
+
+  // List
+  if(entries.length === 0){
+    list.innerHTML = '<div class="log-empty"><span>♻️</span>記録がありません<br>IN と OUT を入力して追加しましょう</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(e => `
+    <div class="log-item">
+      <div class="log-in">
+        <span class="log-badge badge-in">IN 購入</span>
+        <span class="log-item-name">${escHtml(e.inName)}</span>
+        <span class="log-item-cat">${e.cat || '— カテゴリなし'} · ${e.date}</span>
+      </div>
+      <div class="log-out">
+        <span class="log-badge badge-out">OUT 処分</span>
+        <span class="log-item-name">${escHtml(e.outName)}</span>
+        <span class="log-item-cat">${e.cat || '—'}</span>
+      </div>
+      <button class="log-del" onclick="deleteEntry(${e.id})" title="削除">✕</button>
+    </div>`).join('');
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+render();
+</script>
+</body>
+</html>
