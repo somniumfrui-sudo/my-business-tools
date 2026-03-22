@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日の運勢・おみくじ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#fdf8f2;
+  --white:#ffffff;
+  --border:#e8ddd0;
+  --text:#1e1208;
+  --muted:#7a6a58;
+  --light:#c4b098;
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 16px 100px;
+}
+
+/* subtle paper texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200,120,50,.06) 0%, transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(0,0,0,.012) 40px,rgba(0,0,0,.012) 41px),
+    repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(0,0,0,.008) 40px,rgba(0,0,0,.008) 41px);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:420px}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:36px}
+.header-kamon{
+  font-size:40px;display:block;margin-bottom:12px;
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.header h1{
+  font-family:'Noto Serif JP',serif;font-size:24px;font-weight:500;
+  letter-spacing:.1em;color:var(--text);margin-bottom:5px;
+}
+.header-date{font-size:12px;color:var(--muted);letter-spacing:.08em}
+
+/* ── Draw button ── */
+.draw-wrap{text-align:center;margin-bottom:28px}
+
+.btn-draw{
+  position:relative;
+  background:linear-gradient(160deg,#b5192a 0%,#8b0f1d 100%);
+  color:#fff;border:none;border-radius:50%;
+  width:140px;height:140px;
+  font-family:'Noto Serif JP',serif;
+  font-size:20px;font-weight:500;
+  letter-spacing:.12em;
+  cursor:pointer;
+  box-shadow:0 6px 28px rgba(139,15,29,.35), inset 0 1px 0 rgba(255,255,255,.15);
+  transition:transform .12s,box-shadow .18s;
+  overflow:hidden;
+}
+.btn-draw::before{
+  content:'';position:absolute;inset:6px;
+  border-radius:50%;border:1.5px solid rgba(255,255,255,.2);
+}
+.btn-draw::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.12) 0%, transparent 60%);
+}
+.btn-draw:hover{transform:scale(1.04);box-shadow:0 8px 36px rgba(139,15,29,.45)}
+.btn-draw:active{transform:scale(.97)}
+.btn-draw.spinning{animation:shake .35s ease}
+@keyframes shake{
+  0%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}
+  60%{transform:rotate(-5deg)}80%{transform:rotate(4deg)}100%{transform:rotate(0)}
+}
+.btn-draw-sub{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06em}
+
+/* ── Result card ── */
+#result-wrap{display:none}
+
+.result-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:4px;
+  box-shadow:0 2px 24px rgba(0,0,0,.08), 4px 4px 0 #d4c4b0;
+  overflow:hidden;
+  animation:unfurl .5s cubic-bezier(.34,1.2,.64,1) both;
+  margin-bottom:16px;
+}
+@keyframes unfurl{
+  from{opacity:0;transform:scaleY(.3) translateY(-20px)}
+  to  {opacity:1;transform:scaleY(1) translateY(0)}
+}
+
+/* top stripe */
+.result-stripe{
+  height:8px;
+  background:var(--stripe-color, #b5192a);
+  transition:background .4s;
+}
+
+.result-top{
+  padding:24px 24px 16px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(240,228,210,.25) 100%);
+}
+
+/* Fortune rank */
+.fortune-rank{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(48px,14vw,72px);
+  font-weight:700;
+  line-height:1;
+  letter-spacing:.05em;
+  color:var(--rank-color,#b5192a);
+  text-shadow:1px 2px 0 rgba(0,0,0,.08);
+  margin-bottom:6px;
+  animation:rankPop .4s cubic-bezier(.34,1.56,.64,1) .1s both;
+}
+@keyframes rankPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+
+.fortune-en{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px;
+}
+
+.fortune-msg{
+  font-family:'Noto Serif JP',serif;
+  font-size:14px;line-height:1.9;
+  color:var(--muted);
+  max-width:320px;margin:0 auto;
+}
+
+/* ── Detail rows ── */
+.detail-list{padding:0}
+.detail-row{
+  display:flex;align-items:flex-start;gap:0;
+  border-bottom:1px solid var(--border);
+}
+.detail-row:last-child{border-bottom:none}
+.detail-key{
+  font-family:'Noto Serif JP',serif;font-size:12px;
+  color:var(--muted);letter-spacing:.06em;
+  padding:13px 14px;border-right:1px solid var(--border);
+  min-width:80px;background:rgba(240,228,210,.2);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;line-height:1.5;
+}
+.detail-val{
+  font-size:13px;color:var(--text);
+  padding:13px 16px;line-height:1.65;flex:1;
+}
+.detail-val strong{font-weight:500;color:var(--rank-color,#b5192a)}
+
+/* ── Star rating ── */
+.stars-row{
+  padding:16px 20px;
+  display:flex;gap:12px;flex-wrap:wrap;
+  border-top:1px solid var(--border);
+  background:rgba(240,228,210,.15);
+}
+.star-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex:1;min-width:60px;
+}
+.star-label{font-size:10px;color:var(--muted);letter-spacing:.04em;text-align:center}
+.star-icons{font-size:13px;letter-spacing:1px;min-height:18px;line-height:1.3}
+
+/* ── Share / redraw ── */
+.action-row{
+  display:flex;gap:8px;margin-bottom:16px;
+}
+.btn-redraw{
+  flex:1;background:#1e1208;color:#fff;border:none;
+  border-radius:10px;font-family:'Noto Serif JP',serif;
+  font-size:14px;font-weight:400;letter-spacing:.1em;
+  padding:13px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn-redraw:hover{opacity:.88}
+.btn-redraw:active{transform:scale(.99)}
+.btn-share{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:13px 18px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+}
+.btn-share:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── History ── */
+.hist-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.hist-title{
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--light);margin-bottom:10px;
+}
+.hist-list{display:flex;flex-direction:column;gap:5px}
+.hist-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;background:var(--bg);border-radius:6px;font-size:12px;
+}
+.hist-rank{font-family:'Noto Serif JP',serif;font-weight:500;color:var(--text)}
+.hist-date{font-size:11px;color:var(--light)}
+.hist-empty{font-size:12px;color:var(--light);text-align:center;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-kamon">⛩️</span>
+    <h1>今日の運勢</h1>
+    <div class="header-date" id="today-date"></div>
+  </div>
+
+  <!-- Draw button -->
+  <div class="draw-wrap">
+    <button class="btn-draw" id="btn-draw" onclick="draw()">
+      おみくじ<br>を引く
+    </button>
+    <div class="btn-draw-sub" id="draw-sub">ボタンを押して運勢を占う</div>
+  </div>
+
+  <!-- Result -->
+  <div id="result-wrap">
+    <div class="result-card" id="result-card">
+      <div class="result-stripe" id="result-stripe"></div>
+      <div class="result-top">
+        <div class="fortune-rank" id="fortune-rank">大吉</div>
+        <div class="fortune-en"   id="fortune-en">GREAT LUCK</div>
+        <div class="fortune-msg"  id="fortune-msg">—</div>
+      </div>
+      <div class="detail-list" id="detail-list"></div>
+      <div class="stars-row" id="stars-row"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-redraw" onclick="draw()">🎴 もう一度引く</button>
+      <button class="btn-share"  onclick="share()">シェア</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="hist-card">
+    <div class="hist-title">引いた記録</div>
+    <div class="hist-list" id="hist-list">
+      <div class="hist-empty">まだ引いていません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FORTUNES = [
+  {
+    rank:'大吉', en:'GREAT LUCK', color:'#b5192a', stripe:'#b5192a',
+    weight:8,
+    msgs:[
+      '今日は何事も追い風。思い切った一歩が大きな実りをもたらします。',
+      '長く温めてきたアイデアを動かす最高の日。迷わず進んでください。',
+      '人との縁が開花する日。新しい出会いを大切に。',
+    ],
+    details:[
+      {key:'仕事運', val:'新しい提案が通りやすい日。上司への相談は今日がベスト。'},
+      {key:'金運',   val:'思わぬ臨時収入や値引きに恵まれそう。'},
+      {key:'対人運', val:'あなたの言葉に重みが増す日。積極的に発信を。'},
+    ],
+    lucky:{color:'深紅', number:7, item:'赤いもの', direction:'南'},
+    action:'今日試すこと：新しいAIツールを1つ使ってみる',
+    stars:{仕事:'⭐⭐⭐⭐⭐',金運:'⭐⭐⭐⭐⭐',恋愛:'⭐⭐⭐⭐⭐'},
+  },
+  {
+    rank:'吉', en:'GOOD LUCK', color:'#0057ff', stripe:'#0057ff',
+    weight:18,
+    msgs:[
+      '着実に前進できる一日。小さな積み重ねが後に大きな差になります。',
+      '穏やかな幸運が続きます。焦らず丁寧に取り組むことが吉。',
+      '努力が周囲に伝わりやすい日。地道な行動が評価されます。',
+    ],
+    details:[
+      {key:'仕事運', val:'コツコツとした作業が実を結ぶ。今日は丁寧さを意識して。'},
+      {key:'金運',   val:'堅実な選択が吉。衝動買いは控えめに。'},
+      {key:'対人運', val:'信頼できる友人との会話が気づきをもたらす。'},
+    ],
+    lucky:{color:'青', number:3, item:'ノート', direction:'東'},
+    action:'今日試すこと：読みたかった記事を1本じっくり読む',
+    stars:{仕事:'⭐⭐⭐⭐',金運:'⭐⭐⭐⭐',恋愛:'⭐⭐⭐'},
+  },
+  {
+    rank:'中吉', en:'MODERATE LUCK', color:'#059669', stripe:'#059669',
+    weight:20,
+    msgs:[
+      '可もなく不可もない、穏やかな一日。ルーティンを大切に過ごすと◎',
+      '普段通りの行動が安定をもたらす日。無理をしないことが開運の鍵。',
+      '小さな幸せに気づける感受性がある日。丁寧に過ごしてください。',
+    ],
+    details:[
+      {key:'仕事運', val:'現状維持が最善。新しいことより既存のタスクを丁寧に。'},
+      {key:'金運',   val:'予算内でのやりくりが吉。記録をつけると◎'},
+      {key:'対人運', val:'深い話より軽いコミュニケーションが好調。'},
+    ],
+    lucky:{color:'緑', number:4, item:'観葉植物', direction:'北'},
+    action:'今日試すこと：10分間の散歩で気分転換する',
+    stars:{仕事:'⭐⭐⭐',金運:'⭐⭐⭐',恋愛:'⭐⭐⭐'},
+  },
+  {
+    rank:'小吉', en:'SMALL LUCK', color:'#7c3aed', stripe:'#7c3aed',
+    weight:18,
+    msgs:[
+      '小さなラッキーが積み重なる日。見逃さず、感謝して受け取りましょう。',
+      '控えめな運気ですが、着実。見えないところで縁が繋がっています。',
+      '今日の出来事は、将来の糧になります。焦らずいきましょう。',
+    ],
+    details:[
+      {key:'仕事運', val:'地味な作業こそ今日の本番。後から輝く布石になります。'},
+      {key:'金運',   val:'小さな節約の積み重ねが吉。ポイントや特典を見逃さずに。'},
+      {key:'対人運', val:'自分から話しかけると意外な縁が生まれるかも。'},
+    ],
+    lucky:{color:'紫', number:1, item:'手帳', direction:'西'},
+    action:'今日試すこと：誰かに感謝のひとことを伝える',
+    stars:{仕事:'⭐⭐⭐',金運:'⭐⭐',恋愛:'⭐⭐⭐'},
+  },
+  {
+    rank:'末吉', en:'SMALL FORTUNE', color:'#d97706', stripe:'#d97706',
+    weight:14,
+    msgs:[
+      '今は種まきの時。結果はすぐ出なくても、着実に育っています。',
+      '焦らず待てば、後から運が開ける。今日は準備に徹するのが吉。',
+      '小さな親切が、巡り巡って自分に返ってくる日。',
+    ],
+    details:[
+      {key:'仕事運', val:'今日はインプットの日。行動より学びを優先して。'},
+      {key:'金運',   val:'大きな支出は先送りに。今は蓄えるタイミング。'},
+      {key:'対人運', val:'聴き上手になると吉。自分より相手の話に耳を傾けて。'},
+    ],
+    lucky:{color:'黄', number:8, item:'お茶', direction:'北東'},
+    action:'今日試すこと：気になっていたことを5分だけ調べてみる',
+    stars:{仕事:'⭐⭐',金運:'⭐⭐',恋愛:'⭐⭐'},
+  },
+  {
+    rank:'凶', en:'MISFORTUNE', color:'#6b7280', stripe:'#9ca3af',
+    weight:12,
+    msgs:[
+      '今日は無理をせず、守りに徹する日。ピンチはチャンスへの前置きです。',
+      '小さなミスに注意。慌てず確認を習慣にすると吉に転じます。',
+      '今日の逆境は、明日への力になる。休息も立派な行動です。',
+    ],
+    details:[
+      {key:'仕事運', val:'重要な決断は明日以降に。今日は確認作業に集中して。'},
+      {key:'金運',   val:'衝動買いや勢いでの判断は後悔のもと。'},
+      {key:'対人運', val:'言葉を選んで。本音は信頼できる人だけに打ち明けて。'},
+    ],
+    lucky:{color:'灰', number:2, item:'深呼吸', direction:'南西'},
+    action:'今日試すこと：5分間だけデジタル機器を手放してみる',
+    stars:{仕事:'⭐',金運:'⭐',恋愛:'⭐⭐'},
+  },
+  {
+    rank:'大凶', en:'GREAT MISFORTUNE', color:'#1e1208', stripe:'#374151',
+    weight:10,
+    msgs:[
+      '今日は嵐の前。しかし嵐が過ぎれば、必ず晴れ間が来ます。',
+      '最も低いところまで来たなら、あとは上がるだけ。底打ちの日と心得て。',
+      '逆境の日こそ、自分を磨く最良の機会。今日の我慢が未来を変えます。',
+    ],
+    details:[
+      {key:'仕事運', val:'新しい挑戦はいったん保留。今日は基礎固めに専念を。'},
+      {key:'金運',   val:'お金の動きには細心の注意を。財布のひもを固く締めて。'},
+      {key:'対人運', val:'誤解が生じやすい日。感情的にならず、静かに過ごすが吉。'},
+    ],
+    lucky:{color:'黒', number:0, item:'温かいお茶', direction:'真北'},
+    action:'今日試すこと：自分を褒める言葉を3つ書き出してみる',
+    stars:{仕事:'⭐',金運:'⭐',恋愛:'⭐'},
+  },
+];
+
+// Weighted random
+function pickFortune(){
+  const total = FORTUNES.reduce((s,f)=>s+f.weight,0);
+  let r = Math.random()*total;
+  for(const f of FORTUNES){
+    r -= f.weight;
+    if(r<=0) return f;
+  }
+  return FORTUNES[0];
+}
+
+let history = JSON.parse(localStorage.getItem('omikuji-hist')||'[]');
+
+function draw(){
+  const btn = document.getElementById('btn-draw');
+  btn.classList.add('spinning');
+  setTimeout(()=>btn.classList.remove('spinning'), 350);
+
+  const f = pickFortune();
+  renderResult(f);
+  addHistory(f);
+  document.getElementById('draw-sub').textContent = 'もう一度引けます';
+}
+
+function renderResult(f){
+  // Set CSS vars for color
+  const card = document.getElementById('result-card');
+  card.style.setProperty('--rank-color', f.color);
+
+  document.getElementById('result-stripe').style.background = f.stripe;
+  document.getElementById('fortune-rank').textContent = f.rank;
+  document.getElementById('fortune-rank').style.color = f.color;
+  document.getElementById('fortune-en').textContent   = f.en;
+  document.getElementById('fortune-msg').textContent  = f.msgs[Math.floor(Math.random()*f.msgs.length)];
+
+  // Details
+  const details = [...f.details, {
+    key:'ラッキー', val:`色：<strong>${f.lucky.color}</strong>　数：<strong>${f.lucky.number}</strong>　方角：<strong>${f.lucky.direction}</strong>　アイテム：<strong>${f.lucky.item}</strong>`
+  },{
+    key:'今日の行動', val:`<strong>${f.action}</strong>`
+  }];
+  document.getElementById('detail-list').innerHTML = details.map(d=>`
+    <div class="detail-row">
+      <div class="detail-key">${d.key}</div>
+      <div class="detail-val">${d.val}</div>
+    </div>`).join('');
+
+  // Stars
+  document.getElementById('stars-row').innerHTML = Object.entries(f.stars).map(([k,v])=>`
+    <div class="star-item">
+      <div class="star-icons">${v}</div>
+      <div class="star-label">${k}</div>
+    </div>`).join('');
+
+  // Show
+  const wrap = document.getElementById('result-wrap');
+  wrap.style.display = 'block';
+  // Re-trigger animation
+  const rc = document.getElementById('result-card');
+  rc.style.animation = 'none';
+  void rc.offsetWidth;
+  rc.style.animation = '';
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function addHistory(f){
+  const now = new Date();
+  history.unshift({
+    rank: f.rank,
+    color: f.color,
+    date: now.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})
+  });
+  if(history.length > 10) history.pop();
+  localStorage.setItem('omikuji-hist', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory(){
+  const el = document.getElementById('hist-list');
+  if(history.length === 0){
+    el.innerHTML = '<div class="hist-empty">まだ引いていません</div>'; return;
+  }
+  el.innerHTML = history.map(h=>`
+    <div class="hist-item">
+      <span class="hist-rank" style="color:${h.color}">${h.rank}</span>
+      <span class="hist-date">${h.date}</span>
+    </div>`).join('');
+}
+
+function share(){
+  const rank = document.getElementById('fortune-rank').textContent;
+  const text = `今日のおみくじは「${rank}」でした！ ⛩️`;
+  if(navigator.share){
+    navigator.share({title:'今日の運勢', text});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>alert('コピーしました: ' + text));
+  }
+}
+
+// Init
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+renderHistory();
+</script>
+</body>
+</html>
