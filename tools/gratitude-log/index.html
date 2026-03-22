@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3つの感謝ログ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Outfit:wght@400;600;700&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#fdf8f3;
+  --white:#ffffff;
+  --border:#e8e0d4;
+  --text:#2c2416;
+  --muted:#8a7d6b;
+  --light:#c4b8a8;
+  --accent:#c8763a;
+  --accent-l:rgba(200,118,58,.08);
+  --gold:#e8a84a;
+  --shadow:0 1px 4px rgba(44,36,22,.06);
+  --shadow-md:0 4px 20px rgba(44,36,22,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 16px 100px;
+}
+
+/* subtle texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(232,168,74,.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(200,118,58,.05) 0%, transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:480px}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:36px}
+
+.header-moon{font-size:40px;display:block;margin-bottom:12px;animation:sway 4s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+.header h1{
+  font-family:'Noto Serif JP',serif;font-size:22px;font-weight:400;
+  color:var(--text);letter-spacing:.06em;margin-bottom:6px;
+}
+.header-date{
+  font-size:12px;color:var(--muted);letter-spacing:.08em;
+}
+.header-streak{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:400;color:var(--accent);
+  background:var(--accent-l);border:1px solid rgba(200,118,58,.15);
+  border-radius:100px;padding:4px 12px;margin-top:10px;
+}
+
+/* ── Saved banner ── */
+.saved-banner{
+  display:none;
+  background:linear-gradient(135deg,#fef9f0,#fdf3e3);
+  border:1px solid rgba(232,168,74,.25);
+  border-radius:14px;padding:16px 20px;
+  margin-bottom:20px;text-align:center;
+  box-shadow:var(--shadow);
+}
+.saved-banner.show{display:block;animation:fadeUp .4s ease}
+.saved-banner-icon{font-size:28px;display:block;margin-bottom:6px}
+.saved-banner-text{font-family:'Noto Serif JP',serif;font-size:14px;color:var(--text);line-height:1.7}
+.saved-banner-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── Card ── */
+.main-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:20px;padding:28px 24px;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+}
+
+.card-label{
+  font-size:10px;font-weight:400;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--light);margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── Gratitude items ── */
+.items{display:flex;flex-direction:column;gap:14px}
+
+.item{
+  display:flex;gap:12px;align-items:flex-start;
+  animation:fadeUp .35s ease both;
+}
+.item:nth-child(1){animation-delay:.05s}
+.item:nth-child(2){animation-delay:.10s}
+.item:nth-child(3){animation-delay:.15s}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.item-num{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;
+  color:var(--border);line-height:1;padding-top:10px;
+  min-width:24px;text-align:center;
+  transition:color .3s;
+}
+.item-num.filled{color:var(--gold)}
+
+.item-textarea{
+  flex:1;
+  background:var(--bg);
+  border:1.5px solid var(--border);border-radius:12px;
+  color:var(--text);font-family:'Noto Sans JP',sans-serif;
+  font-size:14px;font-weight:300;line-height:1.75;
+  padding:11px 14px;outline:none;resize:none;
+  min-height:72px;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.item-textarea::placeholder{color:var(--light)}
+.item-textarea:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px rgba(200,118,58,.09);
+}
+.item-textarea:read-only{
+  background:var(--bg);border-color:var(--border);
+  color:var(--muted);cursor:default;box-shadow:none;
+}
+
+/* ── Mood selector ── */
+.mood-row{
+  margin-top:18px;padding-top:18px;border-top:1px solid var(--border);
+}
+.mood-label{font-size:11px;color:var(--muted);margin-bottom:10px;letter-spacing:.04em}
+.moods{display:flex;gap:8px;flex-wrap:wrap}
+.mood-btn{
+  font-size:22px;background:none;border:2px solid transparent;
+  border-radius:10px;padding:5px 8px;cursor:pointer;
+  transition:border-color .15s,transform .15s,background .15s;
+  line-height:1;
+}
+.mood-btn:hover{transform:scale(1.12);background:var(--bg)}
+.mood-btn.selected{border-color:var(--gold);background:rgba(232,168,74,.1)}
+.mood-btn:disabled{opacity:.4;cursor:default;transform:none}
+
+/* ── Buttons ── */
+.btn-save{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:12px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:.03em;
+  padding:14px;cursor:pointer;margin-bottom:10px;
+  transition:opacity .15s,transform .1s,background .18s;
+  box-shadow:0 3px 12px rgba(200,118,58,.25);
+}
+.btn-save:hover{opacity:.9}
+.btn-save:active{transform:scale(.99)}
+.btn-save:disabled{opacity:.5;cursor:default;transform:none}
+
+.btn-reset{
+  width:100%;background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:12px;
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:11px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+}
+.btn-reset:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── Stats row ── */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+
+.stat{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 10px;text-align:center;box-shadow:var(--shadow);
+}
+.stat-num{
+  font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;
+  letter-spacing:-.02em;color:var(--accent);line-height:1;margin-bottom:3px;
+}
+.stat-label{font-size:10px;color:var(--light);letter-spacing:.04em}
+
+/* ── Past logs ── */
+.past-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);
+}
+.past-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+}
+.past-title{font-size:10px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--light)}
+.btn-clr-hist{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .15s}
+.btn-clr-hist:hover{color:var(--accent)}
+
+.past-list{display:flex;flex-direction:column;gap:10px}
+
+.past-item{
+  padding:12px 14px;background:var(--bg);border-radius:10px;
+  border-left:3px solid var(--border);
+}
+.past-item-date{
+  font-size:10px;color:var(--muted);letter-spacing:.06em;margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.past-item-mood{font-size:14px}
+.past-item-texts{display:flex;flex-direction:column;gap:3px}
+.past-item-text{font-size:12px;color:var(--muted);line-height:1.5;padding-left:2px}
+.past-item-text::before{content:'• ';color:var(--light)}
+
+.past-empty{font-size:12px;color:var(--light);text-align:center;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-moon">✨</span>
+    <h1>3つの感謝ログ</h1>
+    <div class="header-date" id="today-date"></div>
+    <div class="header-streak" id="streak-badge">🔥 <span id="streak-num">0</span> 日連続記録中</div>
+  </div>
+
+  <!-- Saved state banner -->
+  <div class="saved-banner" id="saved-banner">
+    <span class="saved-banner-icon">✨</span>
+    <div class="saved-banner-text">今日の感謝を保存しました</div>
+    <div class="saved-banner-sub">明日またリセットして書きましょう</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="st-total">0</div>
+      <div class="stat-label">累計記録日</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-streak">0</div>
+      <div class="stat-label">連続日数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="st-items">0</div>
+      <div class="stat-label">感謝の総数</div>
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="main-card">
+    <div class="card-label">今日あったいいこと</div>
+
+    <div class="items">
+      <div class="item">
+        <div class="item-num" id="num-1">1</div>
+        <textarea class="item-textarea" id="text-1" placeholder="例：美味しいコーヒーが飲めた" rows="3" oninput="onInput(1)"></textarea>
+      </div>
+      <div class="item">
+        <div class="item-num" id="num-2">2</div>
+        <textarea class="item-textarea" id="text-2" placeholder="例：友人から連絡が来た" rows="3" oninput="onInput(2)"></textarea>
+      </div>
+      <div class="item">
+        <div class="item-num" id="num-3">3</div>
+        <textarea class="item-textarea" id="text-3" placeholder="例：今日も無事に1日を終えた" rows="3" oninput="onInput(3)"></textarea>
+      </div>
+    </div>
+
+    <!-- Mood -->
+    <div class="mood-row">
+      <div class="mood-label">今日の気分</div>
+      <div class="moods" id="moods">
+        <button class="mood-btn" onclick="selectMood('😔')" title="悲しい">😔</button>
+        <button class="mood-btn" onclick="selectMood('😐')" title="普通">😐</button>
+        <button class="mood-btn" onclick="selectMood('🙂')" title="まあまあ">🙂</button>
+        <button class="mood-btn" onclick="selectMood('😊')" title="良い">😊</button>
+        <button class="mood-btn" onclick="selectMood('🥰')" title="最高">🥰</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-save" id="btn-save" onclick="save()">🌟 今日の感謝を保存する</button>
+  <button class="btn-reset" id="btn-reset" onclick="confirmReset()">↺ リセットして新しい日を始める</button>
+
+  <!-- Past logs -->
+  <div class="past-card" style="margin-top:16px">
+    <div class="past-header">
+      <span class="past-title">過去の記録</span>
+      <button class="btn-clr-hist" onclick="clearHistory()">クリア</button>
+    </div>
+    <div class="past-list" id="past-list">
+      <div class="past-empty">まだ記録がありません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const KEY_TODAY   = 'glog-today';
+const KEY_HISTORY = 'glog-history';
+const KEY_STREAK  = 'glog-streak';
+const KEY_LAST    = 'glog-lastdate';
+const KEY_TOTAL   = 'glog-total';
+
+let selectedMood = '';
+
+// ── Init ──
+function todayStr(){
+  return new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+}
+
+function init(){
+  // Date display
+  const now = new Date();
+  document.getElementById('today-date').textContent =
+    now.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+  // Streak calc
+  const last   = localStorage.getItem(KEY_LAST) || '';
+  let streak   = parseInt(localStorage.getItem(KEY_STREAK)||'0');
+  const today  = todayStr();
+
+  if(last && last !== today){
+    // Check if yesterday
+    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+    const yStr = yesterday.toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+    if(last !== yStr) streak = 0; // broke streak
+  }
+
+  updateStatsUI(streak);
+
+  // Load today's data
+  const saved = JSON.parse(localStorage.getItem(KEY_TODAY)||'null');
+  if(saved && saved.date === today){
+    loadSaved(saved);
+  }
+
+  renderHistory();
+}
+
+function updateStatsUI(streak){
+  const total = parseInt(localStorage.getItem(KEY_TOTAL)||'0');
+  const hist  = JSON.parse(localStorage.getItem(KEY_HISTORY)||'[]');
+  const items = hist.reduce((s,h)=>s + h.texts.filter(t=>t.trim()).length, 0);
+
+  document.getElementById('st-total').textContent  = total;
+  document.getElementById('st-streak').textContent = streak;
+  document.getElementById('st-items').textContent  = items;
+  document.getElementById('streak-num').textContent = streak;
+}
+
+// ── Input feedback ──
+function onInput(n){
+  const val = document.getElementById('text-'+n).value.trim();
+  document.getElementById('num-'+n).className = 'item-num' + (val ? ' filled' : '');
+}
+
+function selectMood(m){
+  if(document.getElementById('moods').children[0].disabled) return;
+  selectedMood = selectedMood === m ? '' : m;
+  document.querySelectorAll('.mood-btn').forEach(b=>{
+    b.classList.toggle('selected', b.textContent === selectedMood);
+  });
+}
+
+// ── Save ──
+function save(){
+  const texts = [1,2,3].map(n=>document.getElementById('text-'+n).value.trim());
+  if(texts.every(t=>!t)){ alert('少なくとも1つ入力してください'); return; }
+
+  const today = todayStr();
+  const data  = { date:today, texts, mood:selectedMood };
+  localStorage.setItem(KEY_TODAY, JSON.stringify(data));
+
+  // Update streak
+  const last   = localStorage.getItem(KEY_LAST)||'';
+  let streak   = parseInt(localStorage.getItem(KEY_STREAK)||'0');
+  const now    = new Date();
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+  const yStr   = yesterday.toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+
+  if(last === today){
+    // re-save same day — no change
+  } else if(last === yStr){
+    streak++;
+  } else if(!last){
+    streak = 1;
+  } else {
+    streak = 1;
+  }
+
+  localStorage.setItem(KEY_STREAK, streak);
+  localStorage.setItem(KEY_LAST, today);
+
+  // Total days
+  const total = parseInt(localStorage.getItem(KEY_TOTAL)||'0');
+  if(last !== today) localStorage.setItem(KEY_TOTAL, total+1);
+
+  // Add to history
+  addHistory(data);
+  updateStatsUI(streak);
+  loadSaved(data);
+}
+
+function loadSaved(data){
+  data.texts.forEach((t,i)=>{
+    const ta = document.getElementById('text-'+(i+1));
+    ta.value = t;
+    ta.readOnly = true;
+    onInput(i+1);
+  });
+
+  // Lock mood
+  if(data.mood){
+    selectedMood = data.mood;
+    document.querySelectorAll('.mood-btn').forEach(b=>{
+      b.classList.toggle('selected', b.textContent === data.mood);
+      b.disabled = true;
+    });
+  } else {
+    document.querySelectorAll('.mood-btn').forEach(b=>b.disabled=true);
+  }
+
+  document.getElementById('btn-save').disabled = true;
+  document.getElementById('saved-banner').classList.add('show');
+}
+
+// ── Reset ──
+function confirmReset(){
+  if(!confirm('今日の記録をリセットして、新しい日の入力を始めますか？\n※ 過去の履歴は消えません')) return;
+  localStorage.removeItem(KEY_TODAY);
+  selectedMood = '';
+
+  [1,2,3].forEach(n=>{
+    const ta = document.getElementById('text-'+n);
+    ta.value = '';
+    ta.readOnly = false;
+    document.getElementById('num-'+n).className = 'item-num';
+  });
+
+  document.querySelectorAll('.mood-btn').forEach(b=>{ b.classList.remove('selected'); b.disabled=false; });
+  document.getElementById('btn-save').disabled = false;
+  document.getElementById('saved-banner').classList.remove('show');
+  document.getElementById('text-1').focus();
+}
+
+// ── History ──
+function addHistory(data){
+  let hist = JSON.parse(localStorage.getItem(KEY_HISTORY)||'[]');
+  // Replace if same date
+  hist = hist.filter(h=>h.date !== data.date);
+  hist.unshift(data);
+  if(hist.length > 30) hist = hist.slice(0,30);
+  localStorage.setItem(KEY_HISTORY, JSON.stringify(hist));
+  renderHistory();
+}
+
+function renderHistory(){
+  const hist = JSON.parse(localStorage.getItem(KEY_HISTORY)||'[]');
+  const el   = document.getElementById('past-list');
+  if(hist.length === 0){
+    el.innerHTML = '<div class="past-empty">まだ記録がありません</div>'; return;
+  }
+  el.innerHTML = hist.map(h=>{
+    const filled = h.texts.filter(t=>t.trim());
+    return `<div class="past-item">
+      <div class="past-item-date">
+        ${h.date}
+        ${h.mood ? `<span class="past-item-mood">${h.mood}</span>` : ''}
+      </div>
+      <div class="past-item-texts">
+        ${filled.map(t=>`<div class="past-item-text">${escHtml(t)}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistory(){
+  if(!confirm('過去の記録をすべて削除しますか？')) return;
+  localStorage.removeItem(KEY_HISTORY);
+  localStorage.removeItem(KEY_TOTAL);
+  localStorage.removeItem(KEY_STREAK);
+  localStorage.removeItem(KEY_LAST);
+  updateStatsUI(0);
+  renderHistory();
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+init();
+</script>
+</body>
+</html>
