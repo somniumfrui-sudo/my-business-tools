@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消費税・税込/税抜一括計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.06);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:480px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px 22px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+
+/* Mode toggle */
+.mode-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+.mode-label{font-size:12px;color:var(--muted)}
+.mode-tabs{display:flex;gap:4px}
+.mode-tab{
+  padding:6px 16px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.mode-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* Amount input */
+.amount-field{margin-bottom:16px}
+.amount-field label{
+  display:block;font-size:11px;color:var(--muted);
+  margin-bottom:7px;letter-spacing:.04em;
+}
+.amount-wrap{
+  position:relative;display:flex;align-items:center;
+}
+.amount-wrap .pre{
+  position:absolute;left:14px;
+  font-size:18px;color:var(--muted);pointer-events:none;font-family:'Outfit',sans-serif;font-weight:600;
+}
+.amount-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:12px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;
+  padding:14px 16px 14px 38px;outline:none;
+  letter-spacing:-.01em;
+  -moz-appearance:textfield;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.amount-wrap input::-webkit-inner-spin-button,
+.amount-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.amount-wrap input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.amount-wrap input::placeholder{color:var(--light)}
+
+/* Quick presets */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.preset{
+  font-size:12px;padding:4px 12px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Rounding selector */
+.round-row{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.round-label{font-size:12px;color:var(--muted)}
+.round-tabs{display:flex;gap:4px}
+.round-tab{
+  padding:4px 10px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.round-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Result blocks ── */
+.rate-block{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px 22px;
+  box-shadow:var(--shadow-md);margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+
+.rate-block::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--c,var(--accent));
+}
+
+.rate-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.rate-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  padding:5px 12px;border-radius:100px;
+  border:1.5px solid;
+}
+.rate-copy-all{
+  font-size:11px;color:var(--light);background:none;border:none;
+  cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .15s,background .15s;
+}
+.rate-copy-all:hover{color:var(--accent);background:var(--accent-l)}
+
+.result-rows{display:flex;flex-direction:column;gap:10px}
+
+.result-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-radius:10px;background:var(--bg);
+  transition:background .15s;
+}
+.result-row:hover{background:#f0f4ff}
+
+.rr-left{display:flex;flex-direction:column;gap:2px}
+.rr-label{font-size:12px;color:var(--muted)}
+.rr-sub{font-size:10px;color:var(--light)}
+.rr-right{display:flex;align-items:center;gap:8px}
+.rr-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);
+  animation:valPop .2s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes valPop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.rr-tax{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  padding:2px 8px;border-radius:100px;
+}
+.tax-add{color:var(--red); background:var(--red-l)}
+.tax-inc{color:var(--green);background:rgba(5,150,105,.07)}
+
+.btn-copy-row{
+  background:none;border:none;color:var(--light);
+  cursor:pointer;font-size:14px;padding:4px;
+  border-radius:5px;transition:color .15s,background .15s;
+  flex-shrink:0;
+}
+.btn-copy-row:hover{color:var(--accent);background:var(--accent-l)}
+.btn-copy-row.copied{color:var(--green)}
+
+/* ── Summary table ── */
+.summary-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow);margin-bottom:10px;
+}
+.summary-header{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.btn-copy-all{
+  font-size:11px;color:var(--light);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;transition:color .15s;
+}
+.btn-copy-all:hover{color:var(--accent)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  background:var(--bg);color:var(--muted);font-weight:500;
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  padding:8px 16px;text-align:right;border-bottom:1px solid var(--border);
+}
+th:first-child{text-align:left}
+td{
+  padding:10px 16px;text-align:right;border-bottom:1px solid var(--border);
+  color:var(--muted);font-size:13px;
+}
+td:first-child{text-align:left;color:var(--text);font-weight:500}
+tr:last-child td{border-bottom:none}
+td.val{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:var(--text);
+}
+td.tax-val{color:var(--red);font-family:'Outfit',sans-serif;font-weight:600}
+
+/* ── Note ── */
+.note{font-size:11px;color:var(--light);text-align:center;line-height:1.7;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🧾 消費税・税込/税抜一括計算機</h1>
+    <p>金額を入力するだけで、10%・8%の税込・税抜価格を同時に表示します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="mode-row">
+      <span class="mode-label">入力する金額の種類</span>
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('excl',this)">税抜価格</button>
+        <button class="mode-tab"        onclick="setMode('incl',this)">税込価格</button>
+      </div>
+    </div>
+
+    <div class="amount-field">
+      <label id="amount-label">税抜価格を入力</label>
+      <div class="amount-wrap">
+        <span class="pre">¥</span>
+        <input type="number" id="amount" placeholder="10000" min="0" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="presets">
+      <button class="preset" onclick="setAmt(1000)">¥1,000</button>
+      <button class="preset" onclick="setAmt(5000)">¥5,000</button>
+      <button class="preset" onclick="setAmt(10000)">¥10,000</button>
+      <button class="preset" onclick="setAmt(50000)">¥50,000</button>
+      <button class="preset" onclick="setAmt(100000)">¥10万</button>
+      <button class="preset" onclick="setAmt(1000000)">¥100万</button>
+    </div>
+
+    <div class="round-row">
+      <span class="round-label">端数処理</span>
+      <div class="round-tabs">
+        <button class="round-tab active" onclick="setRound('floor',this)">切り捨て</button>
+        <button class="round-tab"        onclick="setRound('round',this)">四捨五入</button>
+        <button class="round-tab"        onclick="setRound('ceil',this)">切り上げ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none">
+
+    <!-- 10% block -->
+    <div class="rate-block" style="--c:#0057ff">
+      <div class="rate-header">
+        <span class="rate-badge" style="color:#0057ff;border-color:rgba(0,87,255,.2);background:rgba(0,87,255,.06)">
+          🧾 消費税 10%（標準税率）
+        </span>
+        <button class="rate-copy-all" onclick="copyBlock(10)">一括コピー</button>
+      </div>
+      <div class="result-rows" id="rows-10"></div>
+    </div>
+
+    <!-- 8% block -->
+    <div class="rate-block" style="--c:#059669">
+      <div class="rate-header">
+        <span class="rate-badge" style="color:#059669;border-color:rgba(5,150,105,.2);background:rgba(5,150,105,.06)">
+          🥦 消費税 8%（軽減税率）
+        </span>
+        <button class="rate-copy-all" onclick="copyBlock(8)">一括コピー</button>
+      </div>
+      <div class="result-rows" id="rows-8"></div>
+    </div>
+
+    <!-- Summary table -->
+    <div class="summary-card">
+      <div class="summary-header">
+        <span>一覧まとめ</span>
+        <button class="btn-copy-all" onclick="copyTable()">表をコピー</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>10%（標準）</th>
+            <th>8%（軽減）</th>
+          </tr>
+        </thead>
+        <tbody id="summary-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="note">※ 端数処理は1円未満を対象。インボイス制度では事業者ごとに処理方法が異なります。</div>
+
+  </div>
+</div>
+
+<script>
+let mode     = 'excl'; // excl=税抜入力 / incl=税込入力
+let rounding = 'floor';
+
+function setMode(m, el){
+  mode = m;
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('amount-label').textContent = m === 'excl' ? '税抜価格を入力' : '税込価格を入力';
+  calc();
+}
+
+function setRound(r, el){
+  rounding = r;
+  document.querySelectorAll('.round-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  calc();
+}
+
+function setAmt(v){
+  document.getElementById('amount').value = v;
+  calc();
+}
+
+function applyRound(n){
+  if(rounding === 'floor') return Math.floor(n);
+  if(rounding === 'ceil')  return Math.ceil(n);
+  return Math.round(n);
+}
+
+function fmt(n){ return '¥' + Math.round(n).toLocaleString('ja-JP') }
+
+function computeRate(amount, rate){
+  if(mode === 'excl'){
+    const excl = amount;
+    const tax  = applyRound(excl * rate / 100);
+    const incl = excl + tax;
+    return {excl, tax, incl};
+  } else {
+    const incl = amount;
+    const excl = applyRound(incl / (1 + rate/100));
+    const tax  = incl - excl;
+    return {excl, tax, incl};
+  }
+}
+
+// last computed values for copy
+let last10 = {}, last8 = {};
+
+function calc(){
+  const raw = parseFloat(document.getElementById('amount').value);
+  if(!raw || raw < 0){ document.getElementById('results').style.display='none'; return; }
+
+  last10 = computeRate(raw, 10);
+  last8  = computeRate(raw, 8);
+
+  renderBlock(last10, 10, 'rows-10');
+  renderBlock(last8,  8,  'rows-8');
+  renderTable(last10, last8);
+
+  document.getElementById('results').style.display = 'block';
+}
+
+function renderBlock(d, rate, elId){
+  const rows = [
+    { label:'税抜価格',  sub:'消費税を含まない価格', val: fmt(d.excl), key:'excl', taxBadge: null },
+    { label:'消費税額',  sub:`${rate}% 分の税額`,   val: fmt(d.tax),  key:'tax',  taxBadge: rate+'%' },
+    { label:'税込価格',  sub:'消費税を含む合計',      val: fmt(d.incl), key:'incl', taxBadge: null },
+  ];
+
+  document.getElementById(elId).innerHTML = rows.map(r=>`
+    <div class="result-row">
+      <div class="rr-left">
+        <span class="rr-label">${r.label}</span>
+        <span class="rr-sub">${r.sub}</span>
+      </div>
+      <div class="rr-right">
+        ${r.taxBadge ? `<span class="rr-tax tax-add">+${r.taxBadge}</span>` : ''}
+        <span class="rr-val">${r.val}</span>
+        <button class="btn-copy-row" onclick="copyVal('${r.val}',this)" title="コピー">📋</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderTable(d10, d8){
+  document.getElementById('summary-tbody').innerHTML = `
+    <tr>
+      <td>税抜価格</td>
+      <td class="val">${fmt(d10.excl)}</td>
+      <td class="val">${fmt(d8.excl)}</td>
+    </tr>
+    <tr>
+      <td>消費税額</td>
+      <td class="tax-val">${fmt(d10.tax)}</td>
+      <td class="tax-val">${fmt(d8.tax)}</td>
+    </tr>
+    <tr>
+      <td>税込価格</td>
+      <td class="val">${fmt(d10.incl)}</td>
+      <td class="val">${fmt(d8.incl)}</td>
+    </tr>`;
+}
+
+function copyVal(val, btn){
+  const num = val.replace(/[¥,]/g,'');
+  navigator.clipboard.writeText(num).then(()=>{
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='📋'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function copyBlock(rate){
+  const d = rate === 10 ? last10 : last8;
+  const text = `【消費税${rate}%】\n税抜: ${fmt(d.excl)}\n消費税: ${fmt(d.tax)}\n税込: ${fmt(d.incl)}`;
+  navigator.clipboard.writeText(text).then(()=>alert('コピーしました'));
+}
+
+function copyTable(){
+  const text =
+    `\t10%（標準）\t8%（軽減）\n` +
+    `税抜価格\t${fmt(last10.excl)}\t${fmt(last8.excl)}\n` +
+    `消費税額\t${fmt(last10.tax)}\t${fmt(last8.tax)}\n` +
+    `税込価格\t${fmt(last10.incl)}\t${fmt(last8.incl)}`;
+  navigator.clipboard.writeText(text).then(()=>alert('表をコピーしました'));
+}
+</script>
+</body>
+</html>
