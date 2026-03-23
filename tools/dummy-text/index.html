@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ダミーテキスト生成器</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Settings card ── */
+.settings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:14px;
+}
+
+/* Source tabs */
+.source-tabs{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;
+}
+.src-tab{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;padding:7px 13px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  transition:all .14s;
+}
+.src-tab .src-icon{font-size:15px}
+.src-tab:hover{border-color:var(--accent);color:var(--text)}
+.src-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* Controls grid */
+.controls-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;
+}
+@media(max-width:440px){.controls-grid{grid-template-columns:1fr}}
+
+.ctrl-group label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);margin-bottom:6px;
+}
+.ctrl-group label .val{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  color:var(--accent);
+}
+
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);border:2.5px solid var(--white);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,87,255,.25);transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+
+/* Format toggles */
+.format-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fmt-btn{
+  font-size:11px;padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+  transition:all .13s;
+}
+.fmt-btn:hover{border-color:var(--accent);color:var(--accent)}
+.fmt-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.btn-generate{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .14s,transform .1s;
+}
+.btn-generate:hover{opacity:.88}
+.btn-generate:active{transform:scale(.99)}
+
+/* ── Output card ── */
+.output-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+  margin-bottom:12px;
+}
+.output-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.output-meta{
+  font-size:11px;color:var(--muted);
+  display:flex;gap:12px;
+}
+.output-meta span{display:flex;align-items:center;gap:4px}
+.output-actions{display:flex;gap:6px}
+.out-btn{
+  font-size:11px;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;transition:color .13s,background .13s;
+}
+.out-btn:hover{color:var(--accent);background:var(--accent-l)}
+.out-btn.done{color:var(--green)}
+
+.output-area{
+  padding:20px;
+  font-size:14px;line-height:1.85;color:var(--text);
+  min-height:160px;max-height:400px;overflow-y:auto;
+  white-space:pre-wrap;word-break:break-all;
+}
+.output-area.serif{font-family:'Noto Serif JP',serif;font-weight:300}
+.output-area.mono{font-family:'Courier New',monospace;font-size:13px}
+.output-area .para+.para{margin-top:1em}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:160px;color:var(--light);font-size:13px;gap:8px;
+}
+.empty-state .empty-icon{font-size:32px;opacity:.4}
+
+/* ── Copy bar ── */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.copy-bar-txt{font-size:12px;color:var(--muted)}
+.btn-copy-all{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .13s,transform .1s;flex-shrink:0;
+}
+.btn-copy-all:hover{opacity:.9}
+.btn-copy-all:active{transform:scale(.97)}
+.btn-copy-all.done{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📝 ダミーテキスト生成器</h1>
+    <p>デザイン・開発で使うダミー文章を一瞬で生成。日本の名作文学も使えます。</p>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings-card">
+    <div class="card-label">テキストの種類</div>
+
+    <div class="source-tabs" id="source-tabs">
+      <button class="src-tab active" onclick="setSrc('wagahai',this)">
+        <span class="src-icon">🐱</span> 吾輩は猫である
+      </button>
+      <button class="src-tab" onclick="setSrc('kokoro',this)">
+        <span class="src-icon">❤️</span> こころ
+      </button>
+      <button class="src-tab" onclick="setSrc('rashomon',this)">
+        <span class="src-icon">⛩️</span> 羅生門
+      </button>
+      <button class="src-tab" onclick="setSrc('botchan',this)">
+        <span class="src-icon">📚</span> 坊っちゃん
+      </button>
+      <button class="src-tab" onclick="setSrc('lorem',this)">
+        <span class="src-icon">🌐</span> Lorem Ipsum
+      </button>
+      <button class="src-tab" onclick="setSrc('business',this)">
+        <span class="src-icon">💼</span> ビジネス文
+      </button>
+      <button class="src-tab" onclick="setSrc('lorem_jp',this)">
+        <span class="src-icon">🔤</span> 日本語ランダム
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="controls-grid">
+      <div class="ctrl-group">
+        <label>段落数 <span class="val" id="para-val">3</span></label>
+        <input type="range" id="para-range" min="1" max="20" value="3"
+          oninput="document.getElementById('para-val').textContent=this.value">
+      </div>
+      <div class="ctrl-group">
+        <label>1段落あたりの文数 <span class="val" id="sent-val">4</span></label>
+        <input type="range" id="sent-range" min="1" max="12" value="4"
+          oninput="document.getElementById('sent-val').textContent=this.value">
+      </div>
+    </div>
+
+    <div class="card-label">表示フォント</div>
+    <div class="format-row">
+      <button class="fmt-btn active" onclick="setFont('sans',this)">ゴシック</button>
+      <button class="fmt-btn" onclick="setFont('serif',this)">明朝体</button>
+      <button class="fmt-btn" onclick="setFont('mono',this)">等幅</button>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">⚡ 生成する</button>
+  </div>
+
+  <!-- Output -->
+  <div class="output-card">
+    <div class="output-head">
+      <div class="output-meta">
+        <span>📄 <span id="meta-paras">0</span>段落</span>
+        <span>✍️ <span id="meta-chars">0</span>文字</span>
+      </div>
+      <div class="output-actions">
+        <button class="out-btn" onclick="generate()">🔄 再生成</button>
+        <button class="out-btn" id="btn-copy-pane" onclick="copyAll()">📋 コピー</button>
+      </div>
+    </div>
+    <div class="output-area" id="output-area">
+      <div class="empty-state">
+        <span class="empty-icon">📝</span>
+        「生成する」を押してください
+      </div>
+    </div>
+  </div>
+
+  <div class="copy-bar">
+    <span class="copy-bar-txt" id="copy-meta">テキストを生成してコピー</span>
+    <button class="btn-copy-all" id="btn-copy-all" onclick="copyAll()">📋 コピー</button>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ── Source data ──
+// ═══════════════════════════════════════════
+
+const SOURCES = {
+
+wagahai: {
+  sentences:[
+    '吾輩は猫である。名前はまだ無い。',
+    'どこで生れたかとんと見当がつかぬ。',
+    '何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。',
+    '吾輩はここで始めて人間というものを見た。',
+    'しかもあとで聞くとそれは書生という人間中で一番獰悪な種族であったそうだ。',
+    'この書生というのは時々我々を捕えて煮て食うという話である。',
+    'しかし当時は何という考もなかったから別段恐しいとも思わなかった。',
+    'ただ彼の掌に載せられてスーと持ち上げられた時何だかフワフワした感じがあったばかりである。',
+    '掌の上で少し落ち着いて書生の顔を見たのがいわゆる人間というものの見始であろう。',
+    'この時妙なものだと思った感じが今でも残っている。',
+    '第一毛をもって装飾されべきはずの顔がつるつるしてまるで薬缶だ。',
+    'その後猫にもだいぶ逢ったがこんな片輪には一度も出会わした事がない。',
+    '書生の掌の裏でしばらくはよい心持に坐っておったが、やがて嘔吐をもよおした。',
+    '吾輩は彼の腋の下を潜って背中へ回ってみたが何分にも歩けない。',
+    '不図自分の顔を撫でて見ると何となく変な心持がした。',
+    '上から見ると真中に毛の薄くなった部分があって、その周囲に少し毛がある。',
+    '吾輩は苦しい。到底助からないと思った。',
+    '胃液が増して来る。胃の中が弱って居るせいであろう。',
+    '書生は吾輩を見て少し笑ったようであった。',
+    '主人は吾輩が台所の板の間においてある時、折々電燈の光に照らされて眠っているのを見る事がある。',
+  ]
+},
+
+kokoro: {
+  sentences:[
+    '私はその人を常に先生と呼んでいた。',
+    'だからここでもただ先生と書くだけで本名は打ち明けない。',
+    'これは世間を憚かる遠慮というよりも、その方が私にとって自然だからである。',
+    '私が先生と知り合いになったのは鎌倉である。',
+    'その時私はまだ若々しい書生であった。',
+    '先生は何事にも平静を装っている人であったが、その眼の奥には深い憂愁が宿っていた。',
+    '先生はひどく孤独を愛した人であった。',
+    '先生はその孤独のために苦しんでいた。',
+    '私には先生の過去が分からなかった。しかし先生がある秘密を抱えている事だけは感じていた。',
+    '先生の奥さんは明るい人であった。先生がどんなに暗くても、奥さんの存在が家を温めていた。',
+    '私は先生の書斎で多くの時間を過ごした。',
+    '先生は時々突然口を閉ざした。そしてじっと宙を見つめた。',
+    '人間を信頼したいけれど、信頼できないという先生の言葉が耳に残っている。',
+    '先生の遺書は長かった。読み終えた時、私の手は震えていた。',
+    '恋は罪悪だと先生は言った。道徳と両立しないものだとも言った。',
+    '精神的に向上心のないものは馬鹿だと先生は言った。',
+    'Kは突然死んだ。その死は私に取って非常な驚きであった。',
+    '先生が自殺の意思を持っていた事は明らかであった。',
+    '私の過去を扉の中に閉じ込めて、鍵を掛けた上にその鍵を捨てた。',
+    '人間の心は変わる。しかし、ある核心のようなものは変わらない。',
+  ]
+},
+
+rashomon: {
+  sentences:[
+    'ある日の暮方の事である。一人の下人が、羅生門の下で雨やみを待っていた。',
+    '広い門の下には、この男のほかに誰もいない。',
+    'ただ、所々丹塗の剥げた、大きな円柱に、蟋蟀が一匹とまっている。',
+    '羅生門が、朱雀大路にある以上は、この男のほかにも、雨やみをする市女笠や揉烏帽子が、もう二三人はありそうなものである。',
+    'それが、この男のほかには誰もいない。',
+    'その理由は、この二三年、京都に地震とか辻風とか火事とか饑饉とか云う災が打続いたからである。',
+    '下人は飢死をするか盗人になるかという問題の前に途方に暮れていた。',
+    '楼の上には、誰かいる。火が、その天井に描かれた龍の絵を、宝石のような色に照し出している。',
+    '下人は、老婆が死骸の髪の毛を、一本一本、抜きはじめた。',
+    '老婆の仕事は、女の髪の毛を抜いて鬘にして売ろうとしていたのであった。',
+    '老婆は、蛇を干魚と偽って売っていた女の事を話した。',
+    '下人の心に、勇気が出てきた。さっきここへ上ってから、今まであった、じっとして動かない勇気である。',
+    '下人は老婆から着物を剥ぎ取り、夜の闇の中に消えていった。',
+    '生きるためならば、何をしても許されるのか。下人は問いながら走った。',
+    '人の悪を悪とするか、やむを得ない悪とするかは、時代と境遇によって変わる。',
+    '羅生門の夜はいつも深く、静まり返っていた。',
+    '飢えた者に倫理を説くのは、いつの時代でも難しい。',
+    '老婆の論理は、下人を解放したが、同時に縛りつけた。',
+    '下人がどこへ行ったか、それを知る者はいない。',
+    'その夜、羅生門の上には死骸だけが残された。',
+  ]
+},
+
+botchan: {
+  sentences:[
+    '親譲りの無鉄砲で小供の時から損ばかりしている。',
+    '小学校にいる時分学校の二階から飛び降りて一週間ほど腰を抜かした事がある。',
+    'なぜそんな無闇をしたと聞く人があるかも知れぬ。大した理由でもない。',
+    '新築の二階から首を出していたら、同級生の一人が冗談に、いくら威張っても、そこから飛び降りる事は出来まい、と云ったから、飛び降りて見せた。',
+    '今から思うと何でもない。やはり無鉄砲な仕業である。',
+    '物理学校を卒業したのは二十三の年であった。',
+    'その年の四月から四国のある中学校に数学の教師として赴任する事になった。',
+    '松山へ赴任したのは、この坊っちゃんにとって大きな冒険であった。',
+    '赤シャツは口元にいつも笑いを浮かべていた。しかしその笑いには温度がなかった。',
+    '野だいこは赤シャツの太鼓持ちである。常に赤シャツの側にいて、その言葉に賛同する。',
+    '山嵐は荒々しい外見の裏に、真っ直ぐな誠実さを持っていた。',
+    'うらなりは物静かで、哀愁を帯びた男であった。',
+    'マドンナと呼ばれる女はそれほど美しくもなかったが、なぜか男たちを惹き付けた。',
+    '坊っちゃんは不正が嫌いだった。だからこそ、周りと衝突した。',
+    '学校というのは生徒だけが騒々しいわけではない。先生同士のほうが厄介だ。',
+    '温泉に入りながら、坊っちゃんは東京の清を思い出した。',
+    '清は坊っちゃんを信じていた。それが坊っちゃんの支えだった。',
+    '正直に生きる事は損である。しかし坊っちゃんはそれをやめなかった。',
+    '坊っちゃんは最後に東京へ帰った。清はそこで待っていた。',
+    '清はその後すぐ死んだ。坊っちゃんはその事を今でも残念に思っている。',
+  ]
+},
+
+lorem: {
+  sentences:[
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.',
+    'Excepteur sint occaecat cupidatat non proident.',
+    'Sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    'Curabitur pretium tincidunt lacus. Nulla gravida orci a odio.',
+    'Nullam varius, turpis molestie dictum ultrices, enim nibh euismod lectus.',
+    'Proin non sem auctor, commodo diam eget, ullamcorper magna.',
+    'Phasellus lobortis nisi a elit interdum, at faucibus mauris pharetra.',
+    'Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia.',
+    'Nam eu sapien sed libero tincidunt convallis.',
+    'Integer in feugiat lorem, vitae egestas libero.',
+    'Donec porttitor euismod dignissim. Aliquam erat volutpat.',
+    'Pellentesque habitant morbi tristique senectus et netus et malesuada fames.',
+    'Fusce lobortis lorem at ipsum semper sagittis.',
+    'Vivamus sit amet semper lacus, in mollis libero.',
+    'Nulla commodo risus et augue malesuada, non vulputate nulla bibendum.',
+    'Etiam rhoncus ipsum non odio consequat, vitae malesuada felis interdum.',
+    'Mauris convallis purus ac feugiat euismod.',
+  ]
+},
+
+business: {
+  sentences:[
+    '弊社のサービスをご利用いただきありがとうございます。',
+    '本日はお忙しい中お時間をいただき、誠にありがとうございます。',
+    '今後とも変わらぬご支援のほど、よろしくお願い申し上げます。',
+    '貴社の益々のご発展を心よりお祈り申し上げます。',
+    'ご不明な点がございましたら、お気軽にお問い合わせください。',
+    'このたびは格別のお引き立てを賜り、厚く御礼申し上げます。',
+    '担当者より折り返しご連絡いたしますので、今しばらくお待ちください。',
+    '誠に勝手ながら、下記の期間を休業とさせていただきます。',
+    'ご迷惑をおかけしたことを、深くお詫び申し上げます。',
+    'この度は弊社製品をお選びいただき、誠にありがとうございます。',
+    '今後のプロジェクトの成功をお祈りしております。',
+    '引き続き、何卒よろしくお願い申し上げます。',
+    '本件についてご検討いただけますようお願い申し上げます。',
+    'ご提案の内容について、社内で協議の上ご回答申し上げます。',
+    'ご連絡が遅くなりまして、大変失礼いたしました。',
+    '弊社のサービスは、お客様のご要望に応じて柔軟に対応いたします。',
+    'ご多用中のところ恐縮ですが、ご確認いただけますでしょうか。',
+    '引き続きご愛顧のほど、何卒よろしくお願い申し上げます。',
+    '今後ともお力添えのほど、よろしくお願い申し上げます。',
+    '取り急ぎ、メールにてご連絡申し上げます。',
+  ]
+},
+
+lorem_jp: {
+  sentences:[
+    'あいうえおかきくけこさしすせそたちつてとなにぬねの。',
+    'はひふへほまみむめもやゆよらりるれろわをん。',
+    '日本語のダミーテキストとして使用するサンプル文章です。',
+    'こちらはデザインやレイアウト確認のためのテキストです。',
+    'フォントや文字サイズの確認にご利用ください。',
+    'テキストの折り返しや行間の確認ができます。',
+    '実際のコンテンツに近いボリューム感を確認するためのサンプルです。',
+    'このテキストは実際の意味を持たないダミー文章です。',
+    'デザインの検討段階でよく使われるプレースホルダーテキストです。',
+    '文字の大きさや行の長さを視覚的に確認するために使います。',
+    '段落の区切りや余白の感覚をつかむためのサンプルです。',
+    'ウェブサイトやアプリのモックアップ制作によく使われます。',
+    'テキストエリアや入力欄の表示確認にも使えます。',
+    'コンテンツの配置やバランスを確認するためのサンプルです。',
+    '日本語特有の文字の幅や行の崩れを確認できます。',
+    'ひらがな、カタカナ、漢字が混在した一般的な日本語テキストです。',
+    'このサンプルテキストを置き換えて実際のコンテンツを入力してください。',
+    '印刷物やデジタルコンテンツのレイアウト確認に使われます。',
+    '文字の密度や読みやすさを確認するためのテキストです。',
+    '実際のコンテンツが入った際の見た目を想定して確認してください。',
+  ]
+}
+
+};
+
+// ── State ──
+let currentSrc  = 'wagahai';
+let currentFont = 'sans';
+let outputText  = '';
+
+function setSrc(src, btn){
+  currentSrc = src;
+  document.querySelectorAll('.src-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setFont(font, btn){
+  currentFont = font;
+  document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const area = document.getElementById('output-area');
+  area.className = 'output-area' + (font==='serif'?' serif':font==='mono'?' mono':'');
+}
+
+// ── Generate ──
+function generate(){
+  const paras = parseInt(document.getElementById('para-range').value);
+  const sents = parseInt(document.getElementById('sent-range').value);
+  const src   = SOURCES[currentSrc];
+  const pool  = [...src.sentences];
+
+  // Shuffle pool
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+
+  const paragraphs = [];
+  let sIdx = 0;
+  for(let p=0; p<paras; p++){
+    const lines = [];
+    for(let s=0; s<sents; s++){
+      lines.push(pool[sIdx % pool.length]);
+      sIdx++;
+    }
+    paragraphs.push(lines.join(currentSrc==='lorem' ? ' ' : ''));
+  }
+
+  outputText = paragraphs.join('\n\n');
+  const totalChars = outputText.replace(/\n/g,'').length;
+
+  // Render
+  const area = document.getElementById('output-area');
+  area.className = 'output-area' + (currentFont==='serif'?' serif':currentFont==='mono'?' mono':'');
+  area.innerHTML = paragraphs.map(p=>`<div class="para">${escHtml(p)}</div>`).join('');
+
+  // Meta
+  document.getElementById('meta-paras').textContent = paras;
+  document.getElementById('meta-chars').textContent = totalChars.toLocaleString();
+  document.getElementById('copy-meta').textContent  = `${paras}段落 · ${totalChars.toLocaleString()}文字をコピー`;
+}
+
+// ── Copy ──
+function copyAll(){
+  if(!outputText){ alert('先にテキストを生成してください'); return; }
+  navigator.clipboard.writeText(outputText).then(()=>{
+    ['btn-copy-pane','btn-copy-all'].forEach(id=>{
+      const btn = document.getElementById(id);
+      const orig = btn.textContent;
+      btn.textContent='✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); },1600);
+    });
+  });
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Auto-generate on load
+generate();
+</script>
+</body>
+</html>
