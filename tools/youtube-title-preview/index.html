@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTubeタイトル・CTR攻略プレビュー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --red:#ff0000;
+  --red-d:#cc0000;
+  --red-l:rgba(255,0,0,.07);
+  --bg:#f9f9f9;
+  --white:#fff;
+  --border:#e5e5e5;
+  --text:#0f0f0f;
+  --muted:#606060;
+  --light:#aaa;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:720px;margin:0 auto}
+
+/* ── Header ── */
+.header{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:28px;
+}
+.yt-logo{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  color:var(--text);letter-spacing:-.02em;
+}
+.yt-logo-icon{
+  background:var(--red);border-radius:6px;
+  padding:4px 8px;display:flex;align-items:center;justify-content:center;
+}
+.yt-logo-icon svg{width:20px;height:14px;fill:#fff}
+.header-sub{font-size:12px;color:var(--muted);margin-left:auto;letter-spacing:.02em}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+
+.input-label{
+  font-size:11px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:8px;display:block;
+}
+
+.title-input-wrap{position:relative}
+
+.title-input{
+  width:100%;background:var(--bg);border:2px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:400;
+  padding:13px 60px 13px 16px;outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  line-height:1.5;
+}
+.title-input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px var(--red-l);
+  background:var(--white);
+}
+.title-input::placeholder{color:var(--light)}
+
+.char-badge{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  color:var(--muted);transition:color .2s;
+}
+.char-badge.warn{color:var(--red)}
+.char-badge.ok  {color:#059669}
+
+/* Quick insert buttons */
+.quick-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.q-btn{
+  font-size:12px;padding:4px 10px;border-radius:6px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.q-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
+
+/* ── Main grid ── */
+.main-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:14px;margin-bottom:14px;
+}
+@media(max-width:580px){.main-grid{grid-template-columns:1fr}}
+
+/* ── Preview card ── */
+.preview-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.preview-card-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.preview-tabs{display:flex;gap:4px}
+.p-tab{
+  font-size:11px;padding:3px 10px;border-radius:100px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.p-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+.preview-body{padding:16px}
+
+/* ── Phone mockup ── */
+.phone{
+  width:100%;max-width:260px;
+  margin:0 auto;
+  background:#0f0f0f;border-radius:28px;
+  padding:14px 10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+  position:relative;
+}
+.phone::before{
+  content:'';position:absolute;
+  top:10px;left:50%;transform:translateX(-50%);
+  width:60px;height:5px;background:#222;border-radius:3px;
+}
+
+/* YouTube app UI */
+.yt-app{background:#0f0f0f;border-radius:16px;overflow:hidden}
+
+.yt-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px 8px;background:#0f0f0f;
+}
+.yt-app-logo{
+  display:flex;align-items:center;gap:5px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;color:#fff;
+}
+.yt-app-logo-icon{
+  background:var(--red);border-radius:4px;
+  width:22px;height:15px;display:flex;align-items:center;justify-content:center;
+}
+.yt-app-logo-icon svg{width:12px;height:9px;fill:#fff}
+.yt-topbar-icons{display:flex;gap:8px}
+.yt-topbar-icon{width:16px;height:16px;background:#555;border-radius:50%}
+
+/* Thumbnail */
+.yt-thumb-wrap{
+  position:relative;width:100%;
+  background:#1a1a1a;
+  aspect-ratio:16/9;overflow:hidden;
+}
+.yt-thumb-bg{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 40%,#0f3460 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.yt-thumb-placeholder{
+  font-size:32px;opacity:.3;
+}
+.yt-duration{
+  position:absolute;bottom:5px;right:5px;
+  background:rgba(0,0,0,.85);color:#fff;
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;
+  padding:1px 5px;border-radius:3px;
+}
+
+/* Video info row */
+.yt-info{
+  display:flex;gap:8px;padding:8px 10px 4px;background:#0f0f0f;
+}
+.yt-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#e53935,#ff7043);flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;
+}
+.yt-text{flex:1;min-width:0}
+
+/* Title display in phone */
+.yt-title-display{
+  font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:500;
+  color:#fff;line-height:1.4;margin-bottom:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  word-break:break-all;
+}
+.yt-title-display .fade-part{
+  color:rgba(255,255,255,.35);
+}
+
+.yt-channel{font-size:9px;color:#aaa;line-height:1.3}
+.yt-meta{font-size:9px;color:#888;line-height:1.3}
+
+/* ── Desktop preview ── */
+.desktop-preview{display:none}
+.desktop-preview.show{display:block}
+.phone-preview{}
+
+.dt-wrap{
+  background:#0f0f0f;border-radius:12px;overflow:hidden;padding:12px;
+}
+.dt-row{display:flex;gap:10px}
+.dt-thumb{
+  width:120px;height:68px;flex-shrink:0;
+  background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;opacity:.4;position:relative;
+}
+.dt-duration{
+  position:absolute;bottom:4px;right:4px;
+  background:rgba(0,0,0,.85);color:#fff;
+  font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+  padding:1px 4px;border-radius:2px;
+}
+.dt-info{flex:1;min-width:0}
+.dt-title{
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:12px;font-weight:500;color:#fff;
+  line-height:1.4;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  word-break:break-all;
+}
+.dt-title .fade-part{color:rgba(255,255,255,.3)}
+.dt-channel-row{font-size:10px;color:#aaa}
+
+/* Search preview */
+.search-preview{display:none}
+.search-preview.show{display:block}
+
+.search-wrap{
+  background:#0f0f0f;border-radius:12px;padding:12px;
+}
+.search-item{display:flex;gap:8px;align-items:flex-start}
+.search-thumb{
+  width:80px;height:46px;flex-shrink:0;
+  background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);
+  border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;opacity:.4;position:relative;
+}
+.search-dur{
+  position:absolute;bottom:2px;right:2px;
+  background:rgba(0,0,0,.85);color:#fff;
+  font-family:'Outfit',sans-serif;font-size:8px;font-weight:700;
+  padding:1px 3px;border-radius:2px;
+}
+.search-info{flex:1;min-width:0}
+.search-title{
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:12px;font-weight:500;color:#fff;
+  line-height:1.4;margin-bottom:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.search-title .fade-part{color:rgba(255,255,255,.3)}
+.search-meta{font-size:9px;color:#888}
+
+/* ── Score & Advice card ── */
+.advice-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.advice-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.advice-head-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+}
+
+/* Score ring */
+.score-ring{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 16px 12px;
+}
+.ring-wrap{position:relative;width:80px;height:80px;margin-bottom:8px}
+.ring-svg{width:80px;height:80px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:#f0f0f0;stroke-width:8}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;transition:stroke-dashoffset .6s ease,stroke .4s}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-score{
+  font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;
+  line-height:1;color:var(--text);
+}
+.ring-max{font-size:10px;color:var(--light);margin-top:1px}
+.score-label{
+  font-size:12px;font-weight:500;color:var(--muted);
+  text-align:center;letter-spacing:.03em;
+}
+
+/* Checklist */
+.checklist{padding:0 16px 16px;display:flex;flex-direction:column;gap:7px}
+.check-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 10px;border-radius:8px;
+  font-size:12px;line-height:1.5;
+  transition:background .15s;
+}
+.check-item.pass{background:rgba(5,150,105,.06)}
+.check-item.fail{background:rgba(255,0,0,.04)}
+.check-item.warn{background:rgba(217,119,6,.05)}
+.check-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.check-text{color:var(--muted)}
+.check-text strong{color:var(--text);font-weight:500}
+
+/* ── Copy row ── */
+.copy-row{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.copy-row-txt{font-size:12px;color:var(--muted)}
+.btn-copy{
+  background:var(--red);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-copy:hover{opacity:.9}
+.btn-copy:active{transform:scale(.97)}
+.btn-copy.done{background:#059669}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="yt-logo">
+      <div class="yt-logo-icon">
+        <svg viewBox="0 0 24 17"><path d="M23.5 2.7S23.2.6 22.3.7C21.4-.2 20.4 0 20.4 0S16.8-.1 12 0C7.2-.1 3.6 0 3.6 0S2.6-.2 1.7.7C.8.6.5 2.7.5 2.7S.2 5 .2 7.3v2.1C.2 11.7.5 14 .5 14s.3 2.1 1.2 2S3.6 17 3.6 17 7.1 17.3 12 17.2c4.9.1 8.4-.2 8.4-.2s1-.1 1.9-1c.9.1 1.2-2 1.2-2S24 11.7 24 9.4V7.3c0-2.3-.5-4.6-.5-4.6zM9.7 12V4.8l6.5 3.6L9.7 12z"/></svg>
+      </div>
+      CTR攻略プレビュー
+    </div>
+    <span class="header-sub">YouTubeタイトル最適化ツール</span>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="input-label" for="title-input">動画タイトルを入力</label>
+    <div class="title-input-wrap">
+      <input type="text" class="title-input" id="title-input" maxlength="100"
+        placeholder="例：【保存版】知らないと損する○○の裏技５選！"
+        oninput="update()">
+      <span class="char-badge" id="char-badge">0</span>
+    </div>
+    <div class="quick-row">
+      <span style="font-size:11px;color:var(--light);align-self:center">クイック挿入：</span>
+      <button class="q-btn" onclick="insert('【')">【</button>
+      <button class="q-btn" onclick="insert('】')">】</button>
+      <button class="q-btn" onclick="insert('！')">！</button>
+      <button class="q-btn" onclick="insert('？')">？</button>
+      <button class="q-btn" onclick="insert('…')">…</button>
+      <button class="q-btn" onclick="insert('【保存版】')">【保存版】</button>
+      <button class="q-btn" onclick="insert('【初心者向け】')">【初心者向け】</button>
+      <button class="q-btn" onclick="insert('○○選')">○○選</button>
+      <button class="q-btn" onclick="insert('完全解説')">完全解説</button>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Preview -->
+    <div class="preview-card">
+      <div class="preview-card-head">
+        <span>プレビュー</span>
+        <div class="preview-tabs">
+          <button class="p-tab active" onclick="setPreviewMode('phone',this)">スマホ</button>
+          <button class="p-tab" onclick="setPreviewMode('desktop',this)">PC</button>
+          <button class="p-tab" onclick="setPreviewMode('search',this)">検索</button>
+        </div>
+      </div>
+      <div class="preview-body">
+
+        <!-- Phone -->
+        <div class="phone-preview" id="prev-phone">
+          <div class="phone">
+            <div class="yt-app">
+              <div class="yt-topbar">
+                <div class="yt-app-logo">
+                  <div class="yt-app-logo-icon">
+                    <svg viewBox="0 0 24 17"><path d="M23.5 2.7S23.2.6 22.3.7C21.4-.2 20.4 0 20.4 0S16.8-.1 12 0C7.2-.1 3.6 0 3.6 0S2.6-.2 1.7.7C.8.6.5 2.7.5 2.7S.2 5 .2 7.3v2.1C.2 11.7.5 14 .5 14s.3 2.1 1.2 2S3.6 17 3.6 17 7.1 17.3 12 17.2c4.9.1 8.4-.2 8.4-.2s1-.1 1.9-1c.9.1 1.2-2 1.2-2S24 11.7 24 9.4V7.3c0-2.3-.5-4.6-.5-4.6zM9.7 12V4.8l6.5 3.6L9.7 12z"/></svg>
+                  </div>
+                  YouTube
+                </div>
+                <div class="yt-topbar-icons">
+                  <div class="yt-topbar-icon"></div>
+                  <div class="yt-topbar-icon"></div>
+                </div>
+              </div>
+              <div class="yt-thumb-wrap">
+                <div class="yt-thumb-bg"><div class="yt-thumb-placeholder">▶</div></div>
+                <div class="yt-duration">12:34</div>
+              </div>
+              <div class="yt-info">
+                <div class="yt-avatar">CH</div>
+                <div class="yt-text">
+                  <div class="yt-title-display" id="phone-title">タイトルがここに表示されます</div>
+                  <div class="yt-channel">チャンネル名 · 1.2万回視聴 · 3日前</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop -->
+        <div class="desktop-preview" id="prev-desktop">
+          <div class="dt-wrap">
+            <div class="dt-row">
+              <div class="dt-thumb">
+                ▶
+                <div class="dt-duration">12:34</div>
+              </div>
+              <div class="dt-info">
+                <div class="dt-title" id="desktop-title">タイトルがここに表示されます</div>
+                <div class="dt-channel-row">チャンネル名<br>1.2万回視聴 · 3日前</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-preview" id="prev-search">
+          <div class="search-wrap">
+            <div class="search-item">
+              <div class="search-thumb">▶<div class="search-dur">12:34</div></div>
+              <div class="search-info">
+                <div class="search-title" id="search-title">タイトルがここに表示されます</div>
+                <div class="search-meta">チャンネル名 · 1.2万回視聴</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Score & Advice -->
+    <div class="advice-card">
+      <div class="advice-head">
+        <span class="advice-head-label">CTRスコア & アドバイス</span>
+      </div>
+      <div class="score-ring">
+        <div class="ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 80 80">
+            <circle class="ring-bg" cx="40" cy="40" r="32"/>
+            <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="32"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-score" id="ring-score">0</div>
+            <div class="ring-max">/100</div>
+          </div>
+        </div>
+        <div class="score-label" id="score-label">タイトルを入力してください</div>
+      </div>
+      <div class="checklist" id="checklist">
+        <div class="check-item warn">
+          <span class="check-icon">💡</span>
+          <span class="check-text">タイトルを入力するとアドバイスが表示されます</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Copy row -->
+  <div class="copy-row">
+    <span class="copy-row-txt" id="copy-row-txt">最適化されたタイトルをコピー</span>
+    <button class="btn-copy" id="btn-copy" onclick="copyTitle()">📋 コピー</button>
+  </div>
+
+</div>
+
+<script>
+const CIRC = 2 * Math.PI * 32; // ≈ 201
+let previewMode = 'phone';
+
+// ── Insert ──
+function insert(str){
+  const inp = document.getElementById('title-input');
+  const s = inp.selectionStart, e = inp.selectionEnd;
+  inp.value = inp.value.slice(0,s) + str + inp.value.slice(e);
+  inp.setSelectionRange(s+str.length, s+str.length);
+  inp.focus();
+  update();
+}
+
+// ── Preview mode ──
+function setPreviewMode(mode, btn){
+  previewMode = mode;
+  document.querySelectorAll('.p-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('prev-phone').className   = mode==='phone'   ? 'phone-preview' : 'phone-preview';
+  document.getElementById('prev-desktop').className = mode==='desktop' ? 'desktop-preview show' : 'desktop-preview';
+  document.getElementById('prev-search').className  = mode==='search'  ? 'search-preview show' : 'search-preview';
+  // phone visibility
+  document.getElementById('prev-phone').style.display = mode==='phone' ? 'block' : 'none';
+  update();
+}
+// init
+document.getElementById('prev-phone').style.display='block';
+
+// ── Build title HTML with fade at char 28 ──
+const FADE_CHAR = 28;
+
+function buildTitleHtml(title, maxChars){
+  if(!title) return '<span style="opacity:.3">タイトルがここに表示されます</span>';
+  const limit = maxChars || 999;
+  const display = title.length > limit ? title.slice(0, limit-1) + '…' : title;
+
+  if(display.length <= FADE_CHAR) return escHtml(display);
+
+  const vivid = escHtml(display.slice(0, FADE_CHAR));
+  const faded = escHtml(display.slice(FADE_CHAR));
+  return vivid + `<span class="fade-part">${faded}</span>`;
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Update ──
+function update(){
+  const title  = document.getElementById('title-input').value;
+  const len    = title.length;
+
+  // Char badge
+  const badge = document.getElementById('char-badge');
+  badge.textContent = len;
+  badge.className   = 'char-badge' + (len > 60 ? ' warn' : len > 0 && len <= 40 ? ' ok' : '');
+
+  // Titles
+  document.getElementById('phone-title').innerHTML   = buildTitleHtml(title, 40);
+  document.getElementById('desktop-title').innerHTML = buildTitleHtml(title, 60);
+  document.getElementById('search-title').innerHTML  = buildTitleHtml(title, 35);
+
+  // Score & checklist
+  analyzeTitle(title, len);
+
+  // Copy row
+  document.getElementById('copy-row-txt').textContent =
+    title ? `「${title.slice(0,30)}${title.length>30?'…':''}」をコピー` : '最適化されたタイトルをコピー';
+}
+
+// ── Analyze ──
+function analyzeTitle(title, len){
+  if(!title){
+    setScore(0, 'タイトルを入力してください');
+    document.getElementById('checklist').innerHTML =
+      '<div class="check-item warn"><span class="check-icon">💡</span><span class="check-text">タイトルを入力するとアドバイスが表示されます</span></div>';
+    return;
+  }
+
+  const checks = [];
+  let score = 0;
+
+  // 1. 文字数
+  if(len >= 20 && len <= 40){
+    checks.push({pass:true, text:'<strong>文字数が最適</strong>（20〜40文字）。スマホで2行表示される理想的な長さです。'});
+    score += 20;
+  } else if(len > 0 && len < 20){
+    checks.push({pass:false, text:`<strong>文字数が短すぎます</strong>（現在${len}文字）。20文字以上にするとクリック率が上がります。`});
+    score += 8;
+  } else if(len > 60){
+    checks.push({warn:true, text:`<strong>文字数がやや長め</strong>（現在${len}文字）。60文字を超えると省略されやすくなります。`});
+    score += 10;
+  } else {
+    checks.push({pass:true, text:`<strong>文字数はまずまず</strong>（現在${len}文字）。`});
+    score += 15;
+  }
+
+  // 2. 【】かっこ
+  const hasKakko = /【.+?】/.test(title);
+  if(hasKakko){
+    const kakko = title.match(/【(.+?)】/g) || [];
+    checks.push({pass:true, text:`<strong>【】タグあり</strong>（${kakko.join(' ')}）。カテゴリが一目でわかりクリック率UP。`});
+    score += 15;
+  } else {
+    checks.push({pass:false, text:'<strong>【】がありません</strong>。冒頭に【保存版】【初心者向け】などを入れるとCTRが上がります。'});
+  }
+
+  // 3. 数字
+  const nums = title.match(/\d+/g);
+  if(nums){
+    checks.push({pass:true, text:`<strong>数字あり</strong>（${nums.join(', ')}）。具体的な数字はクリック率を大幅に上げます。`});
+    score += 15;
+  } else {
+    checks.push({pass:false, text:'<strong>数字がありません</strong>。「5選」「10分で」「3倍」など具体的な数字を入れましょう。'});
+  }
+
+  // 4. 感嘆符・疑問符
+  const hasExcl  = /[！!？?]/.test(title);
+  if(hasExcl){
+    checks.push({pass:true, text:'<strong>感嘆符・疑問符あり</strong>。感情を喚起してクリックを促します。'});
+    score += 10;
+  } else {
+    checks.push({warn:true, text:'<strong>感嘆符・疑問符なし</strong>。「！」「？」を末尾に加えると感情が動きやすくなります。'});
+    score += 3;
+  }
+
+  // 5. 冒頭28文字以内に魅力が収まっているか
+  const first28 = title.slice(0, FADE_CHAR);
+  const has28Num   = /\d/.test(first28);
+  const has28Kakko = /【/.test(first28);
+  const has28Power = /[！!？?無料|保存|裏技|秘密|最強|完全|爆速|衝撃|必見|損|得|禁断]/.test(first28);
+  if(has28Num || has28Kakko || has28Power){
+    checks.push({pass:true, text:`<strong>冒頭28文字に訴求ポイントあり</strong>。スマホでフェードアウトする前に魅力が伝わります。`});
+    score += 20;
+  } else {
+    checks.push({warn:true, text:`<strong>冒頭28文字に訴求ポイントを入れましょう</strong>。スマホでは28文字付近から薄くなります。数字や【】を前に持ってくるのがコツです。`});
+    score += 5;
+  }
+
+  // 6. パワーワード
+  const powerWords = ['無料','保存','裏技','秘密','最強','完全','爆速','衝撃','必見','損','得','禁断','やばい','神','激変','革命','速攻','永久'];
+  const found = powerWords.filter(w => title.includes(w));
+  if(found.length > 0){
+    checks.push({pass:true, text:`<strong>パワーワードあり</strong>（${found.join('・')}）。感情を動かす言葉が含まれています。`});
+    score += 10;
+  } else {
+    checks.push({warn:true, text:'<strong>パワーワードを入れると効果的</strong>。「保存版」「完全解説」「裏技」などでクリック率を上げましょう。'});
+    score += 3;
+  }
+
+  // 7. タイトル重複・ありきたりチェック
+  const generic = ['動画','について','解説','紹介','まとめ'];
+  const hasGeneric = generic.some(w => title === w || title.startsWith(w));
+  if(!hasGeneric){
+    checks.push({pass:true, text:'<strong>ありきたりな始まり方ではありません</strong>。独自性があります。'});
+    score += 10;
+  } else {
+    checks.push({fail:true, text:'<strong>タイトルの始まりがありきたりです</strong>。もっと具体的・刺激的な始め方にしましょう。'});
+  }
+
+  score = Math.min(100, score);
+
+  const labels = score >= 80 ? '🔥 最高！このまま公開できます'
+               : score >= 60 ? '👍 良好。あと少し改善しましょう'
+               : score >= 40 ? '⚠ 改善の余地あり'
+               : '❌ 大幅な改善が必要です';
+
+  setScore(score, labels);
+
+  const colors = score >= 80 ? '#059669' : score >= 60 ? '#0057ff' : score >= 40 ? '#d97706' : '#dc2626';
+  document.getElementById('checklist').innerHTML = checks.map(c=>`
+    <div class="check-item ${c.pass?'pass':c.warn?'warn':'fail'}">
+      <span class="check-icon">${c.pass?'✅':c.warn?'💡':'❌'}</span>
+      <span class="check-text">${c.text}</span>
+    </div>`).join('');
+}
+
+function setScore(score, label){
+  const fill   = document.getElementById('ring-fill');
+  const offset = CIRC * (1 - score/100);
+  const color  = score >= 80 ? '#059669' : score >= 60 ? '#0057ff' : score >= 40 ? '#d97706' : '#dc2626';
+  fill.style.strokeDashoffset = offset;
+  fill.style.stroke = color;
+  document.getElementById('ring-score').textContent = score;
+  document.getElementById('score-label').textContent = label;
+}
+
+// ── Copy ──
+function copyTitle(){
+  const title = document.getElementById('title-input').value;
+  if(!title){ alert('タイトルを入力してください'); return; }
+  navigator.clipboard.writeText(title).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ コピー済み';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('done'); }, 1800);
+  });
+}
+
+// Init
+update();
+</script>
+</body>
+</html>
