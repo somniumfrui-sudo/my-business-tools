@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マインド・デトックス・1分書き出し</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Outfit:wght@300;400;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#faf9f6;
+  --text:#1a1612;
+  --muted:#8a8076;
+  --light:#c4b8a0;
+  --border:#e4ddd0;
+  --white:#ffffff;
+}
+
+html,body{height:100%}
+
+body{
+  font-family:'Noto Serif JP',serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;
+  padding:24px 20px;
+  transition:background 1.2s ease;
+  overflow:hidden;
+}
+
+/* paper texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(0,0,0,.025) 28px,rgba(0,0,0,.025) 29px);
+  pointer-events:none;z-index:0;
+}
+
+/* ── Flash overlay ── */
+#flash{
+  position:fixed;inset:0;
+  background:#fff;
+  opacity:0;pointer-events:none;
+  z-index:200;
+  transition:opacity .06s ease;
+}
+
+/* ── Wrap ── */
+.wrap{
+  position:relative;z-index:1;
+  width:100%;max-width:580px;
+  display:flex;flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+/* ── Idle screen ── */
+#idle-screen{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:20px;
+  animation:fadeIn .5s ease;
+}
+
+.idle-icon{
+  font-size:52px;
+  animation:sway 4s ease-in-out infinite;
+}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+
+.idle-title{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);
+}
+.idle-desc{
+  font-size:14px;color:var(--muted);line-height:1.8;max-width:380px;
+}
+.idle-desc strong{color:var(--text);font-weight:400}
+
+.btn-start{
+  background:var(--text);color:var(--bg);border:none;
+  border-radius:100px;font-family:'Outfit',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:.04em;
+  padding:15px 40px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(26,22,18,.2);
+  transition:transform .12s,box-shadow .15s,opacity .15s;
+}
+.btn-start:hover{transform:scale(1.03);box-shadow:0 6px 28px rgba(26,22,18,.28)}
+.btn-start:active{transform:scale(.98)}
+
+.idle-note{font-size:12px;color:var(--light);letter-spacing:.04em}
+
+/* ── Writing screen ── */
+#write-screen{display:none;width:100%}
+#write-screen.show{display:flex;flex-direction:column;align-items:center;gap:16px}
+
+/* Timer ring */
+.timer-wrap{position:relative;width:80px;height:80px}
+.timer-svg{width:80px;height:80px;transform:rotate(-90deg)}
+.t-bg  {fill:none;stroke:var(--border);stroke-width:5}
+.t-fill{
+  fill:none;stroke:var(--text);stroke-width:5;stroke-linecap:round;
+  stroke-dasharray:220;stroke-dashoffset:0;
+  transition:stroke-dashoffset .9s linear,stroke .4s;
+}
+.t-fill.warn{stroke:#c0392b}
+.timer-center{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.timer-num{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  color:var(--text);line-height:1;letter-spacing:-.02em;
+  transition:color .4s;
+}
+.timer-num.warn{color:#c0392b}
+.timer-label{font-size:9px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* Writing area */
+.write-area-wrap{width:100%;position:relative}
+
+textarea#mind-text{
+  width:100%;
+  min-height:320px;
+  background:transparent;
+  border:none;border-bottom:1px solid var(--border);
+  outline:none;resize:none;
+  font-family:'Noto Serif JP',serif;font-weight:300;
+  font-size:16px;line-height:2;color:var(--text);
+  padding:8px 4px;
+  caret-color:var(--text);
+  transition:opacity .4s;
+}
+textarea#mind-text::placeholder{color:var(--light)}
+textarea#mind-text:disabled{
+  color:var(--muted);cursor:default;opacity:.7;
+}
+
+/* char count */
+.write-meta{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--light);margin-top:6px;letter-spacing:.04em;
+}
+
+/* ── Done screen ── */
+#done-screen{display:none;width:100%}
+#done-screen.show{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:20px;
+  animation:fadeIn .4s ease;
+}
+
+.done-icon{font-size:48px}
+.done-title{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  letter-spacing:-.01em;color:var(--text);
+}
+.done-sub{font-size:14px;color:var(--muted);line-height:1.8;max-width:360px}
+.done-stat{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);background:var(--border);
+  border-radius:100px;padding:5px 16px;
+}
+
+.btn-forget{
+  background:var(--text);color:var(--bg);border:none;
+  border-radius:100px;font-family:'Outfit',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:.04em;
+  padding:15px 36px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(26,22,18,.2);
+  transition:transform .12s,box-shadow .15s;
+  position:relative;overflow:hidden;
+}
+.btn-forget:hover{transform:scale(1.03);box-shadow:0 6px 28px rgba(26,22,18,.28)}
+.btn-forget:active{transform:scale(.98)}
+
+/* ripple on forget */
+.ripple-forget{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.3);
+  transform:scale(0);animation:ripple .6s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+.btn-again{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  border-radius:100px;font-family:'Noto Serif JP',serif;font-weight:300;
+  font-size:13px;padding:10px 24px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+}
+.btn-again:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── Clean screen (after forget) ── */
+#clean-screen{display:none;width:100%;text-align:center}
+#clean-screen.show{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  animation:emerge .6s ease;
+}
+@keyframes emerge{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+.clean-icon{font-size:56px}
+.clean-title{
+  font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);
+}
+.clean-sub{font-size:14px;color:var(--muted);line-height:1.8;max-width:320px}
+
+.clean-breathe{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin:8px 0;
+}
+.breathe-circle{
+  width:60px;height:60px;border-radius:50%;
+  background:rgba(26,22,18,.06);
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe{
+  0%,100%{transform:scale(1);opacity:.5}
+  50%{transform:scale(1.4);opacity:1}
+}
+.breathe-label{font-size:12px;color:var(--light);letter-spacing:.1em;text-transform:uppercase}
+
+.btn-restart{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  border-radius:100px;font-family:'Noto Serif JP',serif;font-weight:300;
+  font-size:13px;padding:10px 28px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+  margin-top:8px;
+}
+.btn-restart:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── Animations ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div class="wrap">
+
+  <!-- ── Idle ── -->
+  <div id="idle-screen">
+    <div class="idle-icon">🌿</div>
+    <div class="idle-title">マインド・デトックス</div>
+    <div class="idle-desc">
+      頭の中のモヤモヤを、<strong>1分間だけ</strong>ひたすら打ち込みます。<br>
+      上手く書かなくていい。誰にも見せない。<br>
+      書き終えたら、すべて忘れる。
+    </div>
+    <button class="btn-start" onclick="startSession()">▶ 書き始める</button>
+    <div class="idle-note">データは保存されません。消去すると完全に消えます。</div>
+  </div>
+
+  <!-- ── Writing ── -->
+  <div id="write-screen">
+    <div class="timer-wrap">
+      <svg class="timer-svg" viewBox="0 0 80 80">
+        <circle class="t-bg"   cx="40" cy="40" r="35"/>
+        <circle class="t-fill" id="t-fill" cx="40" cy="40" r="35"/>
+      </svg>
+      <div class="timer-center">
+        <div class="timer-num" id="timer-num">1:00</div>
+        <div class="timer-label">残り</div>
+      </div>
+    </div>
+
+    <div class="write-area-wrap">
+      <textarea id="mind-text"
+        placeholder="今、頭の中にあることを、そのまま書いてください。&#10;うまく書かなくていい。誰にも見えない。&#10;ただ、流し出してください…"
+        oninput="updateMeta()"></textarea>
+      <div class="write-meta">
+        <span id="meta-chars">0文字</span>
+        <span id="meta-hint">思ったことをそのまま書いて</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Done ── -->
+  <div id="done-screen">
+    <div class="done-icon">✍️</div>
+    <div class="done-title">1分間、よく書けました</div>
+    <div class="done-sub">
+      頭の中から言葉にできただけで、モヤモヤは半分以下になっています。<br>
+      準備ができたら、すべてを流し去りましょう。
+    </div>
+    <div class="done-stat" id="done-stat">— 文字 書きました</div>
+    <button class="btn-forget" id="btn-forget" onclick="forget(event)">
+      🌊 すべて忘れる
+    </button>
+    <button class="btn-again" onclick="startSession()">もう1分 続ける</button>
+  </div>
+
+  <!-- ── Clean ── -->
+  <div id="clean-screen">
+    <div class="clean-icon">🌤</div>
+    <div class="clean-title">スッキリしました</div>
+    <div class="clean-sub">
+      書いたことはすべて消えました。<br>
+      少しだけ、深呼吸してみましょう。
+    </div>
+    <div class="clean-breathe">
+      <div class="breathe-circle"></div>
+      <div class="breathe-label">息を吸って… 吐いて…</div>
+    </div>
+    <button class="btn-restart" onclick="backToIdle()">↩ 最初に戻る</button>
+  </div>
+
+</div>
+
+<script>
+const TOTAL_SEC = 60;
+const CIRC      = 2 * Math.PI * 35; // ≈ 220
+
+let timer     = null;
+let remaining = TOTAL_SEC;
+let phase     = 'idle'; // idle | writing | done | clean
+
+// ── Start ──
+function startSession(){
+  show('write-screen');
+  phase = 'writing';
+  remaining = TOTAL_SEC;
+
+  const ta = document.getElementById('mind-text');
+  ta.value = '';
+  ta.disabled = false;
+  updateMeta();
+  updateTimer();
+
+  setTimeout(()=>{ ta.focus(); }, 100);
+
+  clearInterval(timer);
+  timer = setInterval(tick, 1000);
+}
+
+// ── Tick ──
+function tick(){
+  remaining--;
+  updateTimer();
+  if(remaining <= 0){
+    clearInterval(timer);
+    onTimeUp();
+  }
+}
+
+function updateTimer(){
+  const m   = Math.floor(remaining/60);
+  const s   = remaining % 60;
+  const pct = remaining / TOTAL_SEC;
+  const off = CIRC * (1 - pct);
+  const warn= remaining <= 10;
+
+  document.getElementById('timer-num').textContent =
+    m + ':' + String(s).padStart(2,'0');
+  document.getElementById('timer-num').className   = 'timer-num' + (warn?' warn':'');
+  document.getElementById('t-fill').style.strokeDashoffset = off;
+  document.getElementById('t-fill').className = 't-fill' + (warn?' warn':'');
+
+  // Hint changes
+  const hints = [
+    {at:50, txt:'続けて…'},
+    {at:30, txt:'何でも書いていい'},
+    {at:15, txt:'もう少しで終わります'},
+    {at:5,  txt:'あと少し…'},
+  ];
+  for(const h of hints){
+    if(remaining <= h.at){
+      document.getElementById('meta-hint').textContent = h.txt;
+      break;
+    }
+  }
+}
+
+// ── Time up ──
+function onTimeUp(){
+  const ta   = document.getElementById('mind-text');
+  const chars= ta.value.length;
+  ta.disabled = true;
+
+  document.getElementById('done-stat').textContent = chars.toLocaleString() + ' 文字 書きました';
+
+  show('done-screen');
+  phase = 'done';
+}
+
+// ── Forget ──
+function forget(e){
+  // Ripple
+  const btn  = document.getElementById('btn-forget');
+  const rect = btn.getBoundingClientRect();
+  const rip  = document.createElement('span');
+  rip.className = 'ripple-forget';
+  const size = Math.max(btn.offsetWidth, btn.offsetHeight);
+  rip.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(rip);
+  setTimeout(()=>rip.remove(), 700);
+
+  // Flash
+  doFlash();
+
+  setTimeout(()=>{
+    // Wipe text
+    document.getElementById('mind-text').value = '';
+    document.getElementById('meta-chars').textContent = '0文字';
+    document.getElementById('meta-hint').textContent  = '思ったことをそのまま書いて';
+
+    // Change bg to slightly cooler
+    document.body.style.background = '#f0f4f8';
+    setTimeout(()=>{ document.body.style.background = ''; }, 2000);
+
+    show('clean-screen');
+    phase = 'clean';
+  }, 300);
+}
+
+// ── Flash ──
+function doFlash(){
+  const fl = document.getElementById('flash');
+  fl.style.transition = 'none';
+  fl.style.opacity = '1';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fl.style.transition = 'opacity 1.4s ease';
+      fl.style.opacity = '0';
+    });
+  });
+}
+
+// ── Back to idle ──
+function backToIdle(){
+  show('idle-screen');
+  phase = 'idle';
+  clearInterval(timer);
+  document.getElementById('mind-text').value = '';
+  remaining = TOTAL_SEC;
+}
+
+// ── Show helper ──
+function show(id){
+  ['idle-screen','write-screen','done-screen','clean-screen'].forEach(sid=>{
+    const el = document.getElementById(sid);
+    el.style.display = 'none';
+    el.classList.remove('show');
+  });
+  const target = document.getElementById(id);
+  target.style.display = '';
+  target.classList.add('show');
+}
+
+// ── Meta ──
+function updateMeta(){
+  const len = document.getElementById('mind-text').value.length;
+  document.getElementById('meta-chars').textContent = len.toLocaleString() + '文字';
+}
+
+// ── Keyboard shortcut ──
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && phase==='writing'){
+    clearInterval(timer);
+    onTimeUp();
+  }
+});
+
+// Init
+show('idle-screen');
+</script>
+</body>
+</html>
