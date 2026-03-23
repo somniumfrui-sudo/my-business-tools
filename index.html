@@ -17,98 +17,99 @@
     /* ── Header ── */
     .site-header {
       text-align: center;
-      padding: 56px 24px 12px;
+      padding: 52px 24px 0;
     }
 
     .site-header h1 {
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 800;
       color: #111;
       letter-spacing: -0.02em;
     }
 
     .site-header p {
-      margin-top: 12px;
+      margin-top: 10px;
       font-size: 15px;
       color: #666;
     }
 
     /* ── Divider ── */
     .divider {
-      max-width: 960px;
-      margin: 32px auto 0;
+      max-width: 1040px;
+      margin: 28px auto 0;
       border: none;
       border-top: 1px solid #e8eaed;
     }
 
     /* ── Grid ── */
     .grid {
-      max-width: 960px;
+      max-width: 1040px;
       margin: 0 auto;
-      padding: 32px 24px 80px;
+      padding: 28px 20px 80px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
     }
 
-    @media (max-width: 720px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
+    @media (max-width: 860px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px)  {
       .grid { grid-template-columns: 1fr; }
-      .site-header h1 { font-size: 28px; }
+      .site-header h1 { font-size: 26px; }
     }
 
-    /* ── Card ── */
-    /*
+    /* ── Card ──
+     *
      * 新しいカードの追加方法:
      *   1. tools/ 内に新フォルダを作成
-     *   2. .grid の中に <a class="card"> を1つ追加するだけ
+     *   2. .grid の中に <a class="card"> を1つ足すだけ！
+     *
      */
     .card {
       display: flex;
       flex-direction: column;
-      background: #f0f3f8;
-      border-radius: 14px;
-      overflow: hidden;
+      gap: 6px;
+      background: #f6f8fc;
+      border: 1px solid #eaecf0;
+      border-radius: 12px;
+      padding: 16px 15px 18px;
       text-decoration: none;
       color: inherit;
-      transition: transform .18s ease, box-shadow .18s ease;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
     }
 
     .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0,0,0,.10);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+      border-color: #d0d5e0;
     }
 
-    /* Preview area */
-    .card-preview {
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(160deg, #dce5f5 0%, #c8d6ee 100%);
-      font-size: 56px;
-    }
-
-    /* Text area */
-    .card-body {
-      padding: 16px 18px 20px;
-      background: #ffffff;
+    .card-icon {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 2px;
     }
 
     .card-title {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: #1a6ff4;
-      margin-bottom: 6px;
+      line-height: 1.35;
     }
 
     .card-desc {
-      font-size: 13px;
-      color: #555;
-      line-height: 1.6;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.55;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      text-align: center;
+      padding: 20px 24px 40px;
+      font-size: 12px;
+      color: #aaa;
+      border-top: 1px solid #e8eaed;
     }
   </style>
 </head>
@@ -123,208 +124,146 @@
 
 <!-- =====================================================
      ★ ツールグリッド
-     追加方法: .grid の中に <a class="card"> を1つ足すだけ
+     追加方法: .grid の中に <a class="card"> を1つ足すだけ！
      ===================================================== -->
 <div class="grid">
 
-  <!-- カード 1 -->
   <a class="card" href="/tools/calc-sns/">
-    <div class="card-preview">📊</div>
-    <div class="card-body">
-      <div class="card-title">SNS広告 損益分岐点シミュレーター</div>
-      <div class="card-desc">広告費・原価・CVRを入力するだけで、黒字転換に必要な販売数を即計算します。</div>
-    </div>
+    <div class="card-icon">📊</div>
+    <div class="card-title">SNS広告 損益分岐点シミュレーター</div>
+    <div class="card-desc">広告費・CVRを入力して黒字転換に必要な販売数を即計算。</div>
   </a>
 
-  <!-- カード 2 -->
   <a class="card" href="/tools/digital-detox/">
-    <div class="card-preview">📟</div>
-    <div class="card-body">
-      <div class="card-title">デジタルデトックス計算機</div>
-      <div class="card-desc">SNSに奪われている一生の時間を可視化。その時間で習得できたスキルも分かります。</div>
-    </div>
+    <div class="card-icon">📵</div>
+    <div class="card-title">デジタルデトックス計算機</div>
+    <div class="card-desc">SNS利用時間が1年・5年・10年でどれだけ損失になるか可視化。</div>
   </a>
 
-   <!-- カード 3 -->
   <a class="card" href="/tools/sns-counter/">
-    <div class="card-preview">#️⃣</div>
-    <div class="card-body">
-      <div class="card-title">文字数＆ハッシュタグ・カウンター</div>
-      <div class="card-desc">X（Twitter）やInstagramの投稿を作る際、文字数制限やハッシュタグの数をリアルタイムで数えます。</div>
-    </div>
+    <div class="card-icon">✍️</div>
+    <div class="card-title">文字数＆ハッシュタグ・カウンター</div>
+    <div class="card-desc">X・Instagram・Threadsの文字数・ハッシュタグ数をリアルタイム計測。</div>
   </a>
 
-  <!-- カード 4 -->
   <a class="card" href="/tools/todo/">
-    <div class="card-preview">🌙</div>
-    <div class="card-body">
-      <div class="card-title">ToDoリスト</div>
-      <div class="card-desc">ダークモード対応のシンプルToDoリストです。（保存機能付き）</div>
-    </div>
+    <div class="card-icon">✅</div>
+    <div class="card-title">ダークモード対応 ToDoリスト</div>
+    <div class="card-desc">ブラウザを閉じてもデータが消えない、爆速で動くメモ・ToDo。</div>
   </a>
 
-   <!-- カード 5 -->
   <a class="card" href="/tools/subscription-checker/">
-    <div class="card-preview">💸</div>
-    <div class="card-body">
-      <div class="card-title">サブスク・コスト断捨離チェッカー</div>
-      <div class="card-desc">月額サービスを1つ解約したら、10年でいくら浮いて何が買えるかを可視化します。</div>
-    </div>
+    <div class="card-icon">🗑</div>
+    <div class="card-title">サブスク・コスト断捨離チェッカー</div>
+    <div class="card-desc">月額サービスを解約したら10年でいくら浮いて何が買えるか可視化。</div>
   </a>
 
-    <!-- カード 6 -->
   <a class="card" href="/tools/eye-care-timer/">
-    <div class="card-preview">👁️</div>
-    <div class="card-body">
-      <div class="card-title">アイ・ケアタイマー</div>
-      <div class="card-desc">「20分おきに、20フィート（約6m）先を、20秒間見る」という医学的に推奨される習慣をサポート。</div>
-    </div>
+    <div class="card-icon">👁️</div>
+    <div class="card-title">アイ・ケアタイマー</div>
+    <div class="card-desc">20-20-20ルールで眼精疲労を防ぐシンプルなリマインダー。</div>
   </a>
 
-     <!-- カード 7 -->
   <a class="card" href="/tools/password-generator/">
-    <div class="card-preview">🔑</div>
-    <div class="card-body">
-      <div class="card-title">パスワード・ジェネレーター</div>
-      <div class="card-desc">「SNSやサイト登録時に使える、ランダムで強力なパスワードを1秒で作るツール。</div>
-    </div>
+    <div class="card-icon">🔑</div>
+    <div class="card-title">パスワード・ジェネレーター</div>
+    <div class="card-desc">安全で強力なランダムパスワードを1秒で生成。サーバー送信なし。</div>
   </a>
 
-     <!-- カード 8 -->
   <a class="card" href="/tools/unit-price-checker/">
-    <div class="card-preview">⚖️</div>
-    <div class="card-body">
-      <div class="card-title">どっちがお得？単位価格計算機</div>
-      <div class="card-desc">商品の価格を比べて「どっちが本当に安いか」を瞬時に比較します。</div>
-    </div>
+    <div class="card-icon">🛒</div>
+    <div class="card-title">どっちがお得？単位価格計算機</div>
+    <div class="card-desc">商品A・Bの価格と容量を入れるだけで本当に安い方を即判定。</div>
   </a>
 
-       <!-- カード 9 -->
   <a class="card" href="/tools/gratitude-log/">
-    <div class="card-preview">✨</div>
-    <div class="card-body">
-      <div class="card-title">3つの感謝ログ</div>
-      <div class="card-desc">寝る前に「今日あった3つのいいこと」を書くだけで、幸福度を上げるシンプルなツール。</div>
-    </div>
+    <div class="card-icon">✨</div>
+    <div class="card-title">3つの感謝ログ</div>
+    <div class="card-desc">寝る前に今日あった3つのいいことを書くだけ。幸福度UPの習慣。</div>
   </a>
 
-        <!-- カード 10 -->
   <a class="card" href="/tools/1in1out-tracker/">
-    <div class="card-preview">♻️</div>
-    <div class="card-body">
-      <div class="card-title">1in 1out 捨て活トラッカー</div>
-      <div class="card-desc">何かを買ったら何かを捨てる。持ち物の数を増やさないための記録ツール。</div>
-    </div>
+    <div class="card-icon">♻️</div>
+    <div class="card-title">1in 1out 捨て活トラッカー</div>
+    <div class="card-desc">買ったら捨てる。持ち物を増やさないための記録ツール。</div>
   </a>
 
-         <!-- カード 11 -->
   <a class="card" href="/tools/food-savings-sim/">
-    <div class="card-preview">🍱</div>
-    <div class="card-body">
-      <div class="card-title">外食 vs 自炊 貯金シミュレーター</div>
-      <div class="card-desc">何気なく買っているコンビニコーヒーや外食を、自炊や水筒に変えたらどれだけ資産が増えるか計算します。</div>
-    </div>
+    <div class="card-icon">🍱</div>
+    <div class="card-title">外食 vs 自炊 貯金シミュレーター</div>
+    <div class="card-desc">コンビニ・外食を自炊に変えたら30年でいくら資産が増えるか計算。</div>
   </a>
 
-         <!-- カード 12 -->
   <a class="card" href="/tools/water-tracker/">
-    <div class="card-preview">💧</div>
-    <div class="card-body">
-      <div class="card-title">水飲みトラッカー</div>
-      <div class="card-desc">「水分補給」をサポートするシンプルな記録計。</div>
-    </div>
+    <div class="card-icon">💧</div>
+    <div class="card-title">水飲みリマインダー・トラッカー</div>
+    <div class="card-desc">1日の目標水分量に対してコップ1杯ごとに記録。達成率をゲージ表示。</div>
   </a>
 
-           <!-- カード 13 -->
   <a class="card" href="/tools/pomodoro/">
-    <div class="card-preview">🍅</div>
-    <div class="card-body">
-      <div class="card-title">ポモドーロ・タイマー</div>
-      <div class="card-desc">25分集中＋5分休憩のサイクルを回す、仕事の相棒ツール。</div>
-    </div>
+    <div class="card-icon">🍅</div>
+    <div class="card-title">ポモドーロ・タイマー</div>
+    <div class="card-desc">25分集中＋5分休憩のサイクルを回す仕事の相棒ツール。</div>
   </a>
 
-             <!-- カード 14 -->
   <a class="card" href="/tools/bmi-calculator/">
-    <div class="card-preview">⚖️</div>
-    <div class="card-body">
-      <div class="card-title">BMI & 適正体重計算機</div>
-      <div class="card-desc">身長・体重を入力するだけで、BMI・肥満度・適正体重との差を即計算します。</div>
-    </div>
+    <div class="card-icon">⚖️</div>
+    <div class="card-title">BMI & 適正体重計算機</div>
+    <div class="card-desc">身長・体重を入れるだけでBMI・肥満度・適正体重との差を即計算。</div>
   </a>
 
-              <!-- カード 15 -->
   <a class="card" href="/tools/tax-calculator/">
-    <div class="card-preview">🧾</div>
-    <div class="card-body">
-      <div class="card-title">消費税・税込/税抜一括計算機</div>
-      <div class="card-desc">金額を入力するだけで、10%・8%の税込・税抜価格を同時に表示します。</div>
-    </div>
+    <div class="card-icon">🧾</div>
+    <div class="card-title">消費税・税込/税抜一括計算機</div>
+    <div class="card-desc">10%・8%の税込・税抜価格を同時表示。内税・外税もスイッチ切替。</div>
   </a>
 
-               <!-- カード 16 -->
   <a class="card" href="/tools/omikuji/">
-    <div class="card-preview">⛩️</div>
-    <div class="card-body">
-      <div class="card-title">今日の運勢</div>
-      <div class="card-desc">ボタンを押すと今日の運勢を占うおみくじを引けます。</div>
-    </div>
+    <div class="card-icon">⛩️</div>
+    <div class="card-title">今日の運勢・おみくじ</div>
+    <div class="card-desc">ボタンを押すと大吉〜大凶＋今日のラッキーアクションを表示。</div>
   </a>
 
-                <!-- カード 17 -->
   <a class="card" href="/tools/calendar-converter/">
-    <div class="card-preview">📅</div>
-    <div class="card-body">
-      <div class="card-title">西暦・和暦・年齢 早見計算機</div>
-      <div class="card-desc">「昭和◯◯年は西暦だと？」「今、何歳？」を瞬時に解決します。</div>
-    </div>
+    <div class="card-icon">📅</div>
+    <div class="card-title">西暦・和暦・年齢 早見計算機</div>
+    <div class="card-desc">「昭和○○年は西暦だと？」「今何歳？」を瞬時に双方向変換。</div>
   </a>
 
-                  <!-- カード 18 -->
   <a class="card" href="/tools/hourly-rate-simulator/">
-    <div class="card-preview">⚡</div>
-    <div class="card-body">
-      <div class="card-title">秒速・時給計算シミュレーター</div>
-      <div class="card-desc">自分の月収や案件の報酬を、実労働時間で割って「本当の時給」を可視化します。</div>
-    </div>
+    <div class="card-icon">⚡</div>
+    <div class="card-title">秒速・時給計算シミュレーター</div>
+    <div class="card-desc">月収と稼働時間から本当の時給と1分・1秒あたりの報酬を可視化。</div>
   </a>
 
-                    <!-- カード 19 -->
   <a class="card" href="/tools/color-picker/">
-    <div class="card-preview">🎨</div>
-    <div class="card-body">
-      <div class="card-title">カラーピッカー & 変換</div>
-      <div class="card-desc">色を選ぶだけで HEX・RGB・HSL を即コピー。デザイン・開発の作業を爆速化。
-
-</div>
-    </div>
+    <div class="card-icon">🎨</div>
+    <div class="card-title">カラーピッカー & 変換</div>
+    <div class="card-desc">色を選ぶだけでHEX・RGB・HSLを即コピー。デザイン・開発を爆速化。</div>
   </a>
 
-                      <!-- カード 20 -->
   <a class="card" href="/tools/focus-timer/">
-    <div class="card-preview">🌑</div>
-    <div class="card-body">
-      <div class="card-title">無音・作業用タイマー</div>
-      <div class="card-desc">余計な情報を一切排除し、数字だけが大きく映るミニマルなタイマー。
-
-</div>
-    </div>
+    <div class="card-icon">⏱</div>
+    <div class="card-title">集中！無音・作業用タイマー</div>
+    <div class="card-desc">数字だけが画面いっぱいに映るミニマルな全画面タイマー。</div>
   </a>
-  
+
   <!-- =====================================================
        次のカードをここに追加（テンプレート）
 
   <a class="card" href="/tools/YOUR-SLUG/">
-    <div class="card-preview">🛠</div>
-    <div class="card-body">
-      <div class="card-title">ツール名</div>
-      <div class="card-desc">説明文を2〜3文で。</div>
-    </div>
+    <div class="card-icon">🛠</div>
+    <div class="card-title">ツール名</div>
+    <div class="card-desc">説明文を1〜2文で。</div>
   </a>
 
   ===================================================== -->
 
 </div>
+
+<footer class="site-footer">
+  &copy; 2026 All AI Toolbox — すべてのツールは無料・ログイン不要
+</footer>
 
 </body>
 </html>
