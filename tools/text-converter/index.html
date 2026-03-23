@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大文字・小文字・全角半角・一括変換</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Editor layout ── */
+.editor{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-bottom:14px;
+  align-items:start;
+}
+@media(max-width:540px){.editor{grid-template-columns:1fr}}
+
+.pane{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+
+.pane-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.pane-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+}
+.pane-actions{display:flex;gap:6px}
+.pane-btn{
+  font-size:11px;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 6px;border-radius:5px;transition:color .14s,background .14s;
+}
+.pane-btn:hover{color:var(--accent);background:var(--accent-l)}
+.pane-btn.done{color:var(--green)}
+
+textarea{
+  width:100%;background:var(--white);border:none;outline:none;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  color:var(--text);padding:14px;resize:none;line-height:1.75;
+  min-height:200px;
+}
+textarea::placeholder{color:var(--light)}
+textarea:focus{outline:none}
+
+.pane-footer{
+  padding:6px 14px 8px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--light);letter-spacing:.03em;
+  display:flex;gap:10px;
+}
+
+/* ── Button groups ── */
+.btn-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+
+.btn-group{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.group-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.group-label .dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+
+.btn{
+  font-size:12px;font-weight:500;
+  padding:7px 14px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--text);cursor:pointer;
+  transition:all .14s;letter-spacing:.02em;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.btn:hover{
+  border-color:var(--c,var(--accent));
+  color:var(--c,var(--accent));
+  background:var(--cl,var(--accent-l));
+}
+.btn:active{transform:scale(.97)}
+
+.btn.primary{
+  background:var(--c,var(--accent));
+  border-color:var(--c,var(--accent));
+  color:#fff;
+}
+.btn.primary:hover{opacity:.88;color:#fff}
+
+/* ── Quick copy bar ── */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.copy-bar-label{font-size:12px;color:var(--muted)}
+.btn-copy-all{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-copy-all:hover{opacity:.9}
+.btn-copy-all:active{transform:scale(.97)}
+.btn-copy-all.done{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🔄 大文字・小文字・全角半角・一括変換</h1>
+    <p>テキストを貼り付けてボタンを押すだけ。面倒な変換作業を秒で終わらせます。</p>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="pane-label">入力</span>
+        <div class="pane-actions">
+          <button class="pane-btn" onclick="clearInput()">クリア</button>
+          <button class="pane-btn" onclick="pasteInput()">貼り付け</button>
+        </div>
+      </div>
+      <textarea id="input" placeholder="ここにテキストを入力または貼り付け…" oninput="syncStats()"></textarea>
+      <div class="pane-footer">
+        <span id="in-chars">0文字</span>
+        <span id="in-lines">0行</span>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-header">
+        <span class="pane-label">出力</span>
+        <div class="pane-actions">
+          <button class="pane-btn" id="btn-copy-out" onclick="copyOutput()">コピー</button>
+          <button class="pane-btn" onclick="swapPanes()">⇄ 入れ替え</button>
+        </div>
+      </div>
+      <textarea id="output" placeholder="変換結果がここに表示されます" readonly></textarea>
+      <div class="pane-footer">
+        <span id="out-chars">0文字</span>
+        <span id="out-lines">0行</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Button groups -->
+  <div class="btn-groups">
+
+    <!-- 英字変換 -->
+    <div class="btn-group">
+      <div class="group-label">
+        <span class="dot" style="background:#0057ff"></span>
+        英字の大文字・小文字
+      </div>
+      <div class="btns">
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toUpper)">ABC → 大文字</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toLower)">abc → 小文字</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toTitle)">Title Case</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toToggle)">大小 反転</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toCamel)">camelCase</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toSnake)">snake_case</button>
+        <button class="btn" style="--c:#0057ff;--cl:rgba(0,87,255,.07)"
+          onclick="apply(toKebab)">kebab-case</button>
+      </div>
+    </div>
+
+    <!-- 全角・半角 -->
+    <div class="btn-group">
+      <div class="group-label">
+        <span class="dot" style="background:#7c3aed"></span>
+        全角・半角の変換
+      </div>
+      <div class="btns">
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toFullWidth)">半角 → 全角（英数）</button>
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toHalfWidth)">全角 → 半角（英数）</button>
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toFullKana)">半角カナ → 全角カナ</button>
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toHalfKana)">全角カナ → 半角カナ</button>
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toFullSpace)">半角スペース → 全角</button>
+        <button class="btn" style="--c:#7c3aed;--cl:rgba(124,58,237,.07)"
+          onclick="apply(toHalfSpace)">全角スペース → 半角</button>
+      </div>
+    </div>
+
+    <!-- スペース・改行 -->
+    <div class="btn-group">
+      <div class="group-label">
+        <span class="dot" style="background:#059669"></span>
+        スペース・改行の整形
+      </div>
+      <div class="btns">
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(removeSpaces)">スペースを全削除</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(trimLines)">各行の前後スペース除去</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(removeBlankLines)">空行を削除</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(lineToComma)">改行 → カンマ区切り</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(commaToLine)">カンマ → 改行</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(lineToSpace)">改行 → スペース</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(dedupe)">重複行を削除</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(sortLines)">行を昇順ソート</button>
+        <button class="btn" style="--c:#059669;--cl:rgba(5,150,105,.07)"
+          onclick="apply(reverseLines)">行を逆順に</button>
+      </div>
+    </div>
+
+    <!-- 記号・その他 -->
+    <div class="btn-group">
+      <div class="group-label">
+        <span class="dot" style="background:#d97706"></span>
+        記号・その他
+      </div>
+      <div class="btns">
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(removeSymbols)">記号を除去</button>
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(removeNumbers)">数字を除去</button>
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(extractUrls)">URLだけ抽出</button>
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(addLineNums)">行番号を追加</button>
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(reverseText)">文字を逆順に</button>
+        <button class="btn" style="--c:#d97706;--cl:rgba(217,119,6,.07)"
+          onclick="apply(countChars)">文字種別カウント</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Copy all -->
+  <div class="copy-bar">
+    <span class="copy-bar-label">出力テキストをそのままコピー</span>
+    <button class="btn-copy-all" id="btn-copy-all" onclick="copyOutput()">📋 コピー</button>
+  </div>
+
+</div>
+
+<script>
+// ── Stats ──
+function syncStats(){
+  const inp = document.getElementById('input').value;
+  const out = document.getElementById('output').value;
+  document.getElementById('in-chars').textContent  = inp.length + '文字';
+  document.getElementById('in-lines').textContent  = inp ? inp.split('\n').length + '行' : '0行';
+  document.getElementById('out-chars').textContent = out.length + '文字';
+  document.getElementById('out-lines').textContent = out ? out.split('\n').length + '行' : '0行';
+}
+
+// ── Apply transform ──
+function apply(fn){
+  const inp = document.getElementById('input').value;
+  if(!inp.trim()){ alert('テキストを入力してください'); return; }
+  document.getElementById('output').value = fn(inp);
+  syncStats();
+}
+
+// ── Clipboard ──
+function clearInput(){
+  document.getElementById('input').value = '';
+  document.getElementById('output').value = '';
+  syncStats();
+}
+
+async function pasteInput(){
+  try{
+    const text = await navigator.clipboard.readText();
+    document.getElementById('input').value = text;
+    syncStats();
+  }catch(e){ document.getElementById('input').focus(); }
+}
+
+function copyOutput(){
+  const out = document.getElementById('output').value;
+  if(!out) return;
+  navigator.clipboard.writeText(out).then(()=>{
+    ['btn-copy-out','btn-copy-all'].forEach(id=>{
+      const btn = document.getElementById(id);
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('done'); }, 1500);
+    });
+  });
+}
+
+function swapPanes(){
+  const inp = document.getElementById('input');
+  const out = document.getElementById('output');
+  const tmp = inp.value;
+  inp.value = out.value;
+  out.value = tmp;
+  syncStats();
+}
+
+// ═══════════════════════════════
+// ── Transform functions ──
+// ═══════════════════════════════
+
+// 英字変換
+const toUpper  = t => t.toUpperCase();
+const toLower  = t => t.toLowerCase();
+const toTitle  = t => t.replace(/\b\w/g, c => c.toUpperCase());
+const toToggle = t => t.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join('');
+
+const toCamel = t => t.trim()
+  .split(/[\s_\-]+/)
+  .map((w,i) => i===0 ? w.toLowerCase() : w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())
+  .join('');
+
+const toSnake = t => t.trim()
+  .replace(/([A-Z])/g,' $1')
+  .split(/[\s\-]+/)
+  .map(w => w.toLowerCase())
+  .join('_');
+
+const toKebab = t => t.trim()
+  .replace(/([A-Z])/g,' $1')
+  .split(/[\s_]+/)
+  .map(w => w.toLowerCase())
+  .join('-');
+
+// 全角・半角（英数字）
+function toFullWidth(t){
+  return t.replace(/[\x21-\x7E]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0))
+          .replace(/\x20/g, '\u3000');
+}
+function toHalfWidth(t){
+  return t.replace(/[\uFF01-\uFF5E]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+          .replace(/\u3000/g, ' ');
+}
+
+// 全角・半角カナ
+const HALF_KANA = 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝﾞﾟ';
+const FULL_KANA = 'ヲァィゥェォャュョッーアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン゛゜';
+const DAKUTEN_MAP = {
+  カ:'ガ',キ:'ギ',ク:'グ',ケ:'ゲ',コ:'ゴ',サ:'ザ',シ:'ジ',ス:'ズ',セ:'ゼ',ソ:'ゾ',
+  タ:'ダ',チ:'ヂ',ツ:'ヅ',テ:'デ',ト:'ド',ハ:'バ',ヒ:'ビ',フ:'ブ',ヘ:'ベ',ホ:'ボ',
+  ウ:'ヴ',
+};
+const HANDAKUTEN_MAP = {ハ:'パ',ヒ:'ピ',フ:'プ',ヘ:'ペ',ホ:'ポ'};
+
+function toFullKana(t){
+  let result = '';
+  for(let i=0;i<t.length;i++){
+    const c = t[i];
+    const next = t[i+1];
+    const idx = HALF_KANA.indexOf(c);
+    if(idx >= 0){
+      const full = FULL_KANA[idx];
+      if(next === 'ﾞ' && DAKUTEN_MAP[full]){ result += DAKUTEN_MAP[full]; i++; }
+      else if(next === 'ﾟ' && HANDAKUTEN_MAP[full]){ result += HANDAKUTEN_MAP[full]; i++; }
+      else result += full;
+    } else { result += c; }
+  }
+  return result;
+}
+
+function toHalfKana(t){
+  const map = {};
+  [...FULL_KANA].forEach((c,i) => { if(c !== '゛' && c !== '゜') map[c] = HALF_KANA[i]; });
+  // dakuten / handakuten
+  Object.entries(DAKUTEN_MAP).forEach(([k,v]) => { map[v] = map[k] + 'ﾞ'; });
+  Object.entries(HANDAKUTEN_MAP).forEach(([k,v]) => { map[v] = map[k] + 'ﾟ'; });
+  return [...t].map(c => map[c] || c).join('');
+}
+
+// スペース
+const toFullSpace  = t => t.replace(/ /g, '\u3000');
+const toHalfSpace  = t => t.replace(/\u3000/g, ' ');
+const removeSpaces = t => t.replace(/[ \u3000\t]/g, '');
+const trimLines    = t => t.split('\n').map(l => l.trim()).join('\n');
+const removeBlankLines = t => t.split('\n').filter(l => l.trim()).join('\n');
+
+// 改行・区切り
+const lineToComma  = t => t.split('\n').map(l=>l.trim()).filter(Boolean).join(', ');
+const commaToLine  = t => t.split(/[,、，]\s*/).map(s=>s.trim()).filter(Boolean).join('\n');
+const lineToSpace  = t => t.split('\n').map(l=>l.trim()).filter(Boolean).join(' ');
+const dedupe       = t => [...new Set(t.split('\n'))].join('\n');
+const sortLines    = t => t.split('\n').sort((a,b) => a.localeCompare(b,'ja')).join('\n');
+const reverseLines = t => t.split('\n').reverse().join('\n');
+
+// 記号・その他
+const removeSymbols = t => t.replace(/[^\p{L}\p{N}\s]/gu, '');
+const removeNumbers = t => t.replace(/[\d０-９]/g, '');
+const reverseText   = t => [...t].reverse().join('');
+const addLineNums   = t => t.split('\n').map((l,i) => `${i+1}. ${l}`).join('\n');
+
+function extractUrls(t){
+  const urls = t.match(/https?:\/\/[^\s\u3000"'<>）。、]+/g) || [];
+  return urls.length ? urls.join('\n') : '（URLが見つかりませんでした）';
+}
+
+function countChars(t){
+  const total   = t.length;
+  const kanji   = (t.match(/[\u4E00-\u9FFF]/g)||[]).length;
+  const hiragana= (t.match(/[\u3041-\u3096]/g)||[]).length;
+  const katakana= (t.match(/[\u30A1-\u30FA]/g)||[]).length;
+  const alpha   = (t.match(/[a-zA-Zａ-ｚＡ-Ｚ]/g)||[]).length;
+  const num     = (t.match(/[0-9０-９]/g)||[]).length;
+  const spaces  = (t.match(/[ \u3000\t]/g)||[]).length;
+  const lines   = t.split('\n').length;
+  return [
+    `総文字数  ：${total}`,
+    `漢字      ：${kanji}`,
+    `ひらがな  ：${hiragana}`,
+    `カタカナ  ：${katakana}`,
+    `英字      ：${alpha}`,
+    `数字      ：${num}`,
+    `スペース  ：${spaces}`,
+    `行数      ：${lines}`,
+  ].join('\n');
+}
+</script>
+</body>
+</html>
