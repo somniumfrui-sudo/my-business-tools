@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YES/NO 迷い解消コイン</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#faf9f6;
+  --white:#ffffff;
+  --border:#e8e2d8;
+  --text:#1a1510;
+  --muted:#7a7060;
+  --light:#c4b8a0;
+  --gold:#c89020;
+  --gold2:#e8b040;
+  --gold3:#f8d060;
+  --yes:#1a6fff;
+  --yes-l:rgba(26,111,255,.08);
+  --no:#888;
+  --shadow:0 2px 8px rgba(0,0,0,.07);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+  display:flex;flex-direction:column;align-items:center;
+}
+
+.wrap{width:100%;max-width:440px}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:32px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:20px;
+}
+.input-label{
+  font-size:11px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:8px;
+  display:block;
+}
+textarea{
+  width:100%;background:#faf9f6;border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  padding:12px 14px;outline:none;resize:none;line-height:1.75;min-height:80px;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+textarea:focus{
+  border-color:var(--gold);background:var(--white);
+  box-shadow:0 0 0 3px rgba(200,144,32,.09);
+}
+textarea::placeholder{color:var(--light)}
+
+.examples{
+  display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;
+}
+.ex{
+  font-size:11px;padding:3px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .14s;
+}
+.ex:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── Coin stage ── */
+.coin-stage{
+  display:flex;flex-direction:column;align-items:center;
+  margin-bottom:24px;
+}
+
+/* 3-D coin */
+.coin-wrap{
+  width:180px;height:180px;
+  perspective:600px;
+  margin-bottom:28px;cursor:pointer;
+}
+
+.coin{
+  width:180px;height:180px;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .1s;
+}
+
+.coin.spin-yes{
+  animation:spinYes 1.4s cubic-bezier(.4,0,.2,1) both;
+}
+.coin.spin-no{
+  animation:spinNo 1.4s cubic-bezier(.4,0,.2,1) both;
+}
+.coin.idle:hover{transform:rotateY(20deg) rotateX(10deg)}
+
+@keyframes spinYes{
+  0%  {transform:rotateY(0)}
+  30% {transform:rotateY(900deg) rotateX(20deg)}
+  70% {transform:rotateY(1620deg) rotateX(-10deg)}
+  100%{transform:rotateY(1800deg)}  /* lands on YES face */
+}
+@keyframes spinNo{
+  0%  {transform:rotateY(0)}
+  30% {transform:rotateY(900deg) rotateX(-20deg)}
+  70% {transform:rotateY(1620deg) rotateX(10deg)}
+  100%{transform:rotateY(1980deg)}  /* lands on NO face (extra half turn) */
+}
+
+.face{
+  position:absolute;inset:0;border-radius:50%;
+  backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  box-shadow:inset 0 0 0 6px rgba(255,255,255,.2),
+             inset 0 0 0 10px rgba(255,255,255,.06),
+             0 4px 16px rgba(0,0,0,.2);
+}
+
+.face-yes{
+  background:radial-gradient(circle at 35% 30%,#f0c040 0%,#c89020 50%,#a07010 100%);
+  transform:rotateY(0deg);
+}
+.face-no{
+  background:radial-gradient(circle at 35% 30%,#d8d0c0 0%,#a8a090 50%,#807870 100%);
+  transform:rotateY(180deg);
+}
+
+.face-text{
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:42px;
+  letter-spacing:-.02em;line-height:1;
+  text-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.face-yes .face-text{color:#fff8e0}
+.face-no  .face-text{color:#f0ede8}
+
+.face-sub{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;margin-top:4px;
+  opacity:.7;
+}
+.face-yes .face-sub{color:#fff8e0}
+.face-no  .face-sub{color:#f0ede8}
+
+/* coin edge */
+.coin-edge{
+  position:absolute;inset:0;border-radius:50%;
+  box-shadow:0 6px 0 -2px rgba(0,0,0,.15),0 8px 16px rgba(0,0,0,.2);
+  pointer-events:none;
+}
+
+/* ── Throw button ── */
+.btn-throw{
+  width:100%;background:linear-gradient(160deg,#d4a020 0%,#c08010 100%);
+  color:#fff8e0;border:none;border-radius:14px;
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;
+  padding:16px;cursor:pointer;letter-spacing:.02em;
+  box-shadow:0 4px 16px rgba(200,144,32,.35);
+  transition:opacity .15s,transform .1s,box-shadow .15s;
+}
+.btn-throw:hover{opacity:.92;box-shadow:0 6px 22px rgba(200,144,32,.45)}
+.btn-throw:active{transform:scale(.98)}
+.btn-throw:disabled{opacity:.5;cursor:default;transform:none}
+
+/* ── Result ── */
+.result-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow-lg);margin-bottom:16px;
+  text-align:center;
+  display:none;
+  animation:resultIn .4s cubic-bezier(.34,1.2,.64,1) both;
+}
+.result-card.show{display:block}
+
+@keyframes resultIn{
+  from{opacity:0;transform:translateY(12px) scale(.97)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+
+.result-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Outfit',sans-serif;font-size:32px;font-weight:800;
+  letter-spacing:-.02em;padding:10px 28px;border-radius:100px;
+  margin-bottom:12px;
+}
+.badge-yes{background:var(--yes-l);color:var(--yes);border:2px solid rgba(26,111,255,.2)}
+.badge-no {background:rgba(120,120,120,.07);color:#555;border:2px solid rgba(120,120,120,.18)}
+
+.result-topic{
+  font-size:13px;color:var(--muted);margin-bottom:12px;
+  padding:10px 14px;background:#faf9f6;border-radius:8px;
+  border-left:3px solid var(--gold);text-align:left;line-height:1.6;
+  display:none;
+}
+.result-topic.show{display:block}
+
+.result-message{
+  font-size:14px;color:var(--muted);line-height:1.75;
+  margin-bottom:14px;
+}
+
+.result-quote{
+  font-size:12px;color:var(--light);
+  font-style:italic;border-top:1px solid var(--border);
+  padding-top:12px;line-height:1.7;
+}
+
+/* ── History ── */
+.hist-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);
+}
+.hist-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.hist-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.btn-clr{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .14s}
+.btn-clr:hover{color:var(--gold)}
+
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;background:#faf9f6;border-radius:8px;font-size:12px;
+}
+.hist-badge{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;
+  min-width:42px;text-align:center;
+}
+.hist-badge.yes{color:var(--yes)}
+.hist-badge.no {color:#888}
+.hist-topic{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-time{font-size:10px;color:var(--light);flex-shrink:0}
+.hist-empty{font-size:12px;color:var(--light);text-align:center;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🪙 YES/NO 迷い解消コイン</h1>
+    <p>迷いを入力してコインを投げる。結果に「ホッとしたか」「ガッカリしたか」で本音がわかる。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="input-label">迷っていること（任意）</label>
+    <textarea id="topic" placeholder="例：この案件、受けるべきか？&#10;例：今日ジムに行くべきか？&#10;例：その人に連絡すべきか？"></textarea>
+    <div class="examples">
+      <button class="ex" onclick="setEx('転職すべきか？')">転職すべきか？</button>
+      <button class="ex" onclick="setEx('これ買うべきか？')">これ買うべきか？</button>
+      <button class="ex" onclick="setEx('告白すべきか？')">告白すべきか？</button>
+      <button class="ex" onclick="setEx('今日休むべきか？')">今日休むべきか？</button>
+      <button class="ex" onclick="setEx('副業を始めるべきか？')">副業を始めるべきか？</button>
+    </div>
+  </div>
+
+  <!-- Coin -->
+  <div class="coin-stage">
+    <div class="coin-wrap" onclick="throwCoin()">
+      <div class="coin idle" id="coin">
+        <div class="face face-yes">
+          <div class="face-text">YES</div>
+          <div class="face-sub">やる！</div>
+        </div>
+        <div class="face face-no">
+          <div class="face-text">NO</div>
+          <div class="face-sub">今は待て</div>
+        </div>
+        <div class="coin-edge"></div>
+      </div>
+    </div>
+    <button class="btn-throw" id="btn-throw" onclick="throwCoin()">🪙 コインを投げる</button>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+    <div class="result-badge" id="result-badge">—</div>
+    <div class="result-topic" id="result-topic"></div>
+    <div class="result-message" id="result-message">—</div>
+    <div class="result-quote"  id="result-quote">—</div>
+  </div>
+
+  <!-- History -->
+  <div class="hist-card">
+    <div class="hist-header">
+      <span class="hist-title">投げた記録</span>
+      <button class="btn-clr" onclick="clearHist()">クリア</button>
+    </div>
+    <div class="hist-list" id="hist-list">
+      <div class="hist-empty">まだ投げていません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const YES_MSGS = [
+  'コインが「GO」と言っている。あとは行動あるのみ。',
+  '迷っていた時間が、もったいなかったと思える日が来る。',
+  '「やらない後悔」より「やった後悔」の方が軽い。今動こう。',
+  '準備が整うのを待っていたら、永遠にその日は来ない。',
+  'チャンスは「準備ができてから」ではなく「来たとき」にある。',
+  'コインは出た。あとはあなたが決めるだけ。',
+  '直感はすでに知っている。理由はあとからついてくる。',
+];
+const NO_MSGS = [
+  '今は待て。タイミングが全てを変えることがある。',
+  '「しない」という選択も、立派な決断だ。',
+  '急ぐ必要はない。もう少し情報を集めてから動こう。',
+  '今日の「NO」は、明日の「YES」のための準備かもしれない。',
+  'コインが「待て」と言っている。直感に従うのも知恵のうち。',
+  '立ち止まることは、後退ではない。再考するための余白だ。',
+  '焦りの中の決断より、落ち着いた中の決断の方が正確だ。',
+];
+const QUOTES = [
+  '「コインが落ちた瞬間、どっちを望んでいたか感じた？それが本音だ。」',
+  '「決断とは選ぶことではなく、選ばないことを選ばないことだ。」',
+  '「迷いが消えない理由は、どちらも正解だからかもしれない。」',
+  '「結果がどうあれ、投げた勇気が大事だ。」',
+  '「100%の確信が得られる決断なんて、この世に存在しない。」',
+  '「コインは答えを教えてくれるのではなく、あなたの本音を引き出す道具だ。」',
+];
+
+let history = JSON.parse(localStorage.getItem('yesno-hist')||'[]');
+let spinning = false;
+
+function setEx(text){ document.getElementById('topic').value = text }
+
+function throwCoin(){
+  if(spinning) return;
+  spinning = true;
+  const btn = document.getElementById('btn-throw');
+  btn.disabled = true;
+
+  const result = Math.random() < 0.5 ? 'yes' : 'no';
+  const coin   = document.getElementById('coin');
+
+  // reset animation
+  coin.className = 'coin';
+  void coin.offsetWidth;
+  coin.className = 'coin spin-' + result;
+
+  // play click sound
+  playClick();
+
+  setTimeout(()=>{
+    spinning = false;
+    btn.disabled = false;
+    showResult(result);
+  }, 1400);
+}
+
+function showResult(result){
+  const topic = document.getElementById('topic').value.trim();
+  const isYes = result === 'yes';
+
+  const badge = document.getElementById('result-badge');
+  badge.textContent  = isYes ? '✨ YES — やる！' : '🤚 NO — 今は待て';
+  badge.className    = 'result-badge ' + (isYes ? 'badge-yes' : 'badge-no');
+
+  const topicEl = document.getElementById('result-topic');
+  if(topic){
+    topicEl.textContent = '「' + topic + '」';
+    topicEl.classList.add('show');
+  } else {
+    topicEl.classList.remove('show');
+  }
+
+  const msgs = isYes ? YES_MSGS : NO_MSGS;
+  document.getElementById('result-message').textContent =
+    msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('result-quote').textContent =
+    QUOTES[Math.floor(Math.random()*QUOTES.length)];
+
+  const card = document.getElementById('result-card');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+
+  // history
+  addHist(result, topic);
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function addHist(result, topic){
+  history.unshift({
+    result,
+    topic: topic || '（テーマなし）',
+    time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
+  });
+  if(history.length > 12) history.pop();
+  localStorage.setItem('yesno-hist', JSON.stringify(history));
+  renderHist();
+}
+
+function renderHist(){
+  const el = document.getElementById('hist-list');
+  if(!history.length){
+    el.innerHTML='<div class="hist-empty">まだ投げていません</div>'; return;
+  }
+  el.innerHTML = history.map(h=>`
+    <div class="hist-item">
+      <span class="hist-badge ${h.result}">${h.result==='yes'?'YES':'NO'}</span>
+      <span class="hist-topic">${escHtml(h.topic)}</span>
+      <span class="hist-time">${h.time}</span>
+    </div>`).join('');
+}
+
+function clearHist(){
+  history=[];
+  localStorage.setItem('yesno-hist','[]');
+  renderHist();
+}
+
+function playClick(){
+  try{
+    const ctx  = new (window.AudioContext||window.webkitAudioContext)();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    // coin spin sound: rapid metallic taps that slow down
+    const taps = 18;
+    for(let i=0;i<taps;i++){
+      const t    = ctx.currentTime + Math.pow(i/taps, 1.8) * 1.2;
+      const osc  = ctx.createOscillator();
+      const g    = ctx.createGain();
+      osc.type   = 'sine';
+      osc.frequency.value = 1800 + Math.random()*600;
+      g.gain.setValueAtTime(0.12 - i*0.006, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.04);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t+0.05);
+    }
+    // landing thud
+    const thud  = ctx.createOscillator();
+    const tg    = ctx.createGain();
+    thud.type   = 'sine'; thud.frequency.value = 180;
+    tg.gain.setValueAtTime(0.3, ctx.currentTime+1.3);
+    tg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+1.6);
+    thud.connect(tg); tg.connect(ctx.destination);
+    thud.start(ctx.currentTime+1.3); thud.stop(ctx.currentTime+1.65);
+  }catch(e){}
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+renderHist();
+</script>
+</body>
+</html>
