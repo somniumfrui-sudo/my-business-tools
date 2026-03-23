@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お買い物・予算オーバー防止計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --yellow:#d97706;
+  --yellow-l:rgba(217,119,6,.07);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:480px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Budget bar (sticky) ── */
+.budget-bar{
+  position:sticky;top:12px;z-index:20;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:16px 18px;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+  transition:border-color .3s,background .3s;
+}
+
+.budget-bar.safe  {border-color:rgba(5,150,105,.3);  background:linear-gradient(135deg,#f0fdf8,#fff)}
+.budget-bar.warn  {border-color:rgba(217,119,6,.3);   background:linear-gradient(135deg,#fffbf0,#fff)}
+.budget-bar.over  {border-color:rgba(220,38,38,.35);  background:linear-gradient(135deg,#fff5f5,#fff)}
+
+.budget-top{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.budget-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--light)}
+
+.budget-set-row{display:flex;align-items:center;gap:6px}
+.budget-label2{font-size:12px;color:var(--muted)}
+.budget-input-wrap{position:relative}
+.budget-input-wrap .pre{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+.budget-input{
+  width:110px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  padding:6px 10px 6px 24px;outline:none;
+  -moz-appearance:textfield;
+  transition:border-color .15s;
+}
+.budget-input::-webkit-inner-spin-button,
+.budget-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.budget-input:focus{border-color:var(--accent)}
+
+/* Progress bar */
+.progress-track{
+  width:100%;height:8px;background:var(--bg);
+  border-radius:4px;overflow:hidden;margin-bottom:8px;
+}
+.progress-fill{
+  height:100%;border-radius:4px;
+  transition:width .35s cubic-bezier(.4,0,.2,1),background .3s;
+  background:var(--green);
+}
+.progress-fill.warn{background:var(--yellow)}
+.progress-fill.over{background:var(--red)}
+
+/* Budget numbers */
+.budget-nums{
+  display:flex;justify-content:space-between;align-items:flex-end;
+}
+.bn-left{}
+.bn-pct{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  color:var(--muted);margin-bottom:2px;
+}
+.bn-remaining{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;
+  letter-spacing:-.02em;line-height:1;
+  transition:color .3s;
+}
+.bn-remaining.safe  {color:var(--green)}
+.bn-remaining.warn  {color:var(--yellow)}
+.bn-remaining.over  {color:var(--red)}
+.bn-remaining-label{font-size:11px;color:var(--muted);margin-top:1px}
+
+.bn-right{text-align:right}
+.bn-total{
+  font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;
+  letter-spacing:-.03em;color:var(--text);line-height:1;
+}
+.bn-total-label{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* ── Item input ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 18px 14px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.input-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;display:block;
+}
+
+/* Item row */
+.item-row{display:flex;gap:8px;margin-bottom:10px}
+.item-name-wrap{flex:1}
+.item-name{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  padding:10px 12px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.item-name:focus{border-color:var(--accent);background:var(--white)}
+.item-name::placeholder{color:var(--light)}
+
+.item-price-wrap{position:relative;width:130px;flex-shrink:0}
+.item-price-wrap .pre{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+.item-price{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  padding:10px 10px 10px 26px;outline:none;
+  -moz-appearance:textfield;
+  transition:border-color .15s,background .15s;
+}
+.item-price::-webkit-inner-spin-button,
+.item-price::-webkit-outer-spin-button{-webkit-appearance:none}
+.item-price:focus{border-color:var(--accent);background:var(--white)}
+.item-price::placeholder{color:var(--light)}
+
+/* Tax toggle */
+.tax-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;
+}
+.tax-label{font-size:12px;color:var(--muted)}
+.tax-tabs{display:flex;gap:4px}
+.tax-tab{
+  padding:4px 12px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .14s;
+}
+.tax-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+.btn-add{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:12px;cursor:pointer;
+  transition:opacity .14s,transform .1s;
+}
+.btn-add:hover{opacity:.9}
+.btn-add:active{transform:scale(.99)}
+
+/* Preset quick adds */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.preset-btn{
+  font-size:11px;padding:4px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.preset-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Item list ── */
+.list-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  margin-bottom:12px;
+}
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.list-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.btn-clear-all{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .13s}
+.btn-clear-all:hover{color:var(--red)}
+
+.item-list{max-height:320px;overflow-y:auto}
+
+.list-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  animation:slideIn .2s ease both;
+  transition:background .13s;
+}
+.list-item:last-child{border-bottom:none}
+.list-item:hover{background:var(--bg)}
+
+@keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+.item-num{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  color:var(--light);min-width:20px;text-align:center;flex-shrink:0;
+}
+.item-info{flex:1;min-width:0}
+.item-name-disp{
+  font-size:13px;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.item-price-disp{
+  font-family:'Outfit',sans-serif;font-size:11px;color:var(--muted);
+  margin-top:1px;
+}
+.item-total-disp{
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text);flex-shrink:0;
+}
+.btn-del{
+  background:none;border:none;color:var(--light);
+  cursor:pointer;font-size:15px;padding:2px 4px;
+  border-radius:5px;transition:color .13s,background .13s;flex-shrink:0;
+}
+.btn-del:hover{color:var(--red);background:var(--red-l)}
+
+.list-empty{
+  text-align:center;padding:28px;color:var(--light);font-size:13px;
+}
+
+/* ── Summary ── */
+.summary-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.summary-rows{display:flex;flex-direction:column;gap:8px}
+.summary-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;
+}
+.summary-row .s-label{color:var(--muted)}
+.summary-row .s-val{
+  font-family:'Outfit',sans-serif;font-weight:700;color:var(--text);font-size:14px;
+}
+.summary-divider{height:1px;background:var(--border);margin:4px 0}
+.summary-row.total .s-label{font-weight:500;color:var(--text)}
+.summary-row.total .s-val{font-size:20px;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🛒 お買い物・予算オーバー防止計算機</h1>
+    <p>商品を追加するだけで合計と予算残額をリアルタイム表示。買いすぎを防ぎます。</p>
+  </div>
+
+  <!-- Budget bar (sticky) -->
+  <div class="budget-bar" id="budget-bar">
+    <div class="budget-top">
+      <span class="budget-label">予算管理</span>
+      <div class="budget-set-row">
+        <span class="budget-label2">予算：</span>
+        <div class="budget-input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" class="budget-input" id="budget" value="3000" min="1" oninput="updateAll()">
+        </div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="budget-nums">
+      <div class="bn-left">
+        <div class="bn-pct" id="bn-pct">0% 使用</div>
+        <div class="bn-remaining safe" id="bn-remaining">¥3,000</div>
+        <div class="bn-remaining-label" id="bn-remaining-label">残り</div>
+      </div>
+      <div class="bn-right">
+        <div class="bn-total" id="bn-total">¥0</div>
+        <div class="bn-total-label">合計（税込）</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="input-label">商品を追加</label>
+
+    <div class="item-row">
+      <div class="item-name-wrap">
+        <input type="text" class="item-name" id="item-name"
+          placeholder="商品名（省略可）"
+          onkeydown="if(event.key==='Enter')addItem()">
+      </div>
+      <div class="item-price-wrap">
+        <span class="pre">¥</span>
+        <input type="number" class="item-price" id="item-price"
+          placeholder="金額" min="0"
+          onkeydown="if(event.key==='Enter')addItem()"
+          oninput="updatePreview()">
+      </div>
+    </div>
+
+    <div class="tax-row">
+      <span class="tax-label">税率：</span>
+      <div class="tax-tabs">
+        <button class="tax-tab active" onclick="setTax(10,this)">10%</button>
+        <button class="tax-tab" onclick="setTax(8,this)">8%（軽減）</button>
+        <button class="tax-tab" onclick="setTax(0,this)">非課税</button>
+      </div>
+    </div>
+
+    <button class="btn-add" onclick="addItem()">＋ カゴに追加</button>
+
+    <div class="presets">
+      <span style="font-size:11px;color:var(--light);align-self:center">よく使う：</span>
+      <button class="preset-btn" onclick="quickAdd('コンビニコーヒー',180,10)">☕ 180円</button>
+      <button class="preset-btn" onclick="quickAdd('お弁当',498,8)">🍱 498円</button>
+      <button class="preset-btn" onclick="quickAdd('ペットボトル',158,8)">🥤 158円</button>
+      <button class="preset-btn" onclick="quickAdd('お菓子',108,8)">🍫 108円</button>
+      <button class="preset-btn" onclick="quickAdd('雑誌',550,10)">📰 550円</button>
+    </div>
+  </div>
+
+  <!-- Item list -->
+  <div class="list-card">
+    <div class="list-header">
+      <span class="list-title">カゴの中身 <span id="item-count" style="color:var(--accent);font-family:'Outfit',sans-serif">0点</span></span>
+      <button class="btn-clear-all" onclick="clearAll()">全削除</button>
+    </div>
+    <div class="item-list" id="item-list">
+      <div class="list-empty">商品を追加するとここに表示されます 🛒</div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-card">
+    <div class="summary-rows">
+      <div class="summary-row">
+        <span class="s-label">小計（税抜）</span>
+        <span class="s-val" id="s-excl">¥0</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">消費税（10%）</span>
+        <span class="s-val" id="s-tax10">¥0</span>
+      </div>
+      <div class="summary-row">
+        <span class="s-label">消費税（8% 軽減）</span>
+        <span class="s-val" id="s-tax8">¥0</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-row total">
+        <span class="s-label">合計（税込）</span>
+        <span class="s-val" id="s-total">¥0</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let items   = [];
+let taxRate = 10;
+let nextId  = 1;
+
+function setTax(r, btn){
+  taxRate = r;
+  document.querySelectorAll('.tax-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function fmt(n){ return '¥' + Math.round(n).toLocaleString('ja-JP') }
+
+function getTaxedPrice(price, rate){
+  return Math.floor(price * (1 + rate/100));
+}
+
+function quickAdd(name, price, tax){
+  document.getElementById('item-name').value  = name;
+  document.getElementById('item-price').value = price;
+  // set tax tab
+  document.querySelectorAll('.tax-tab').forEach((b,i)=>{
+    const rates=[10,8,0];
+    b.classList.toggle('active', rates[i]===tax);
+  });
+  taxRate = tax;
+  addItem();
+}
+
+function addItem(){
+  const nameEl  = document.getElementById('item-name');
+  const priceEl = document.getElementById('item-price');
+  const price   = parseFloat(priceEl.value);
+
+  if(!price || price <= 0){ priceEl.focus(); return; }
+
+  const name = nameEl.value.trim() || `商品${nextId}`;
+  const taxed = getTaxedPrice(price, taxRate);
+
+  items.push({ id: nextId++, name, price, taxRate, taxed });
+
+  nameEl.value  = '';
+  priceEl.value = '';
+  nameEl.focus();
+
+  render();
+}
+
+function deleteItem(id){
+  items = items.filter(i=>i.id!==id);
+  render();
+}
+
+function clearAll(){
+  if(items.length === 0) return;
+  if(!confirm('すべての商品を削除しますか？')) return;
+  items = [];
+  render();
+}
+
+function updatePreview(){ /* live feedback if needed */ }
+
+function updateAll(){ render(); }
+
+function render(){
+  const budget = parseFloat(document.getElementById('budget').value) || 0;
+
+  // Totals
+  const totalTaxed = items.reduce((s,i)=>s+i.taxed, 0);
+  const excl10 = items.filter(i=>i.taxRate===10).reduce((s,i)=>s+i.price,0);
+  const excl8  = items.filter(i=>i.taxRate===8).reduce((s,i)=>s+i.price,0);
+  const exclN  = items.filter(i=>i.taxRate===0).reduce((s,i)=>s+i.price,0);
+  const tax10  = items.filter(i=>i.taxRate===10).reduce((s,i)=>s+(i.taxed-i.price),0);
+  const tax8   = items.filter(i=>i.taxRate===8).reduce((s,i)=>s+(i.taxed-i.price),0);
+  const exclTotal = excl10+excl8+exclN;
+
+  // Budget bar
+  const remaining = budget - totalTaxed;
+  const pct       = budget > 0 ? Math.min(totalTaxed/budget*100, 100) : 0;
+  const state     = remaining < 0 ? 'over' : pct >= 80 ? 'warn' : 'safe';
+
+  const bar = document.getElementById('budget-bar');
+  bar.className = 'budget-bar ' + state;
+
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = pct.toFixed(1) + '%';
+  fill.className   = 'progress-fill ' + (remaining < 0 ? 'over' : pct>=80 ? 'warn' : '');
+
+  document.getElementById('bn-pct').textContent = Math.round(pct) + '% 使用';
+  document.getElementById('bn-total').textContent = fmt(totalTaxed);
+
+  const remEl = document.getElementById('bn-remaining');
+  const remLbl= document.getElementById('bn-remaining-label');
+  if(remaining >= 0){
+    remEl.textContent = fmt(remaining);
+    remEl.className   = 'bn-remaining ' + state;
+    remLbl.textContent = '予算まであと';
+  } else {
+    remEl.textContent = fmt(Math.abs(remaining));
+    remEl.className   = 'bn-remaining over';
+    remLbl.textContent = '⚠ 予算オーバー';
+  }
+
+  // List
+  document.getElementById('item-count').textContent = items.length + '点';
+  const listEl = document.getElementById('item-list');
+  if(items.length === 0){
+    listEl.innerHTML = '<div class="list-empty">商品を追加するとここに表示されます 🛒</div>';
+  } else {
+    // running total for cumulative display
+    let running = 0;
+    listEl.innerHTML = items.map((item, idx)=>{
+      running += item.taxed;
+      const overBudget = budget > 0 && running > budget;
+      return `<div class="list-item">
+        <span class="item-num">${idx+1}</span>
+        <div class="item-info">
+          <div class="item-name-disp">${escHtml(item.name)}</div>
+          <div class="item-price-disp">
+            ¥${item.price.toLocaleString()} × 税${item.taxRate}%
+            = <strong>${fmt(item.taxed)}</strong>
+            &nbsp;·&nbsp;
+            <span style="color:${overBudget?'var(--red)':'var(--muted)'}">
+              累計 ${fmt(running)}${overBudget?' ⚠':''}
+            </span>
+          </div>
+        </div>
+        <span class="item-total-disp">${fmt(item.taxed)}</span>
+        <button class="btn-del" onclick="deleteItem(${item.id})" title="削除">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Summary
+  document.getElementById('s-excl').textContent  = fmt(exclTotal);
+  document.getElementById('s-tax10').textContent  = fmt(tax10);
+  document.getElementById('s-tax8').textContent   = fmt(tax8);
+  document.getElementById('s-total').textContent  = fmt(totalTaxed);
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+render();
+</script>
+</body>
+</html>
