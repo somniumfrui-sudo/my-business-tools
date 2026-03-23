@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>箇条書き一括整形ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:680px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Editor ── */
+.editor{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-bottom:14px;
+}
+@media(max-width:560px){.editor{grid-template-columns:1fr}}
+
+.pane{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+
+.pane-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+}
+.pane-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+}
+.pane-acts{display:flex;gap:5px}
+.pane-btn{
+  font-size:11px;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 8px;border-radius:5px;
+  transition:color .14s,background .14s;
+}
+.pane-btn:hover{color:var(--accent);background:var(--accent-l)}
+.pane-btn.copied{color:var(--green)}
+
+textarea{
+  flex:1;width:100%;background:var(--white);border:none;outline:none;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  color:var(--text);padding:14px;resize:none;line-height:1.8;
+  min-height:220px;
+}
+textarea::placeholder{color:var(--light)}
+textarea[readonly]{
+  background:#fafbfc;color:var(--text);cursor:default;
+}
+
+.pane-foot{
+  padding:6px 14px 8px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--light);display:flex;gap:10px;flex-shrink:0;
+}
+
+/* ── Format options ── */
+.options-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.options-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+
+/* Style tabs */
+.style-tabs{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;
+}
+.style-tab{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;padding:7px 14px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+  transition:all .14s;font-weight:300;
+}
+.style-tab .tab-preview{
+  font-family:'Noto Sans JP',monospace;font-size:12px;
+  color:var(--light);letter-spacing:.02em;
+}
+.style-tab:hover{border-color:var(--accent);color:var(--text)}
+.style-tab.active{
+  background:var(--accent);border-color:var(--accent);
+  color:#fff;
+}
+.style-tab.active .tab-preview{color:rgba(255,255,255,.7)}
+
+/* Toggle options */
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+
+.toggle-item{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:var(--muted);cursor:pointer;
+  padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  transition:all .14s;user-select:none;
+}
+.toggle-item:hover{border-color:var(--light);color:var(--text)}
+.toggle-item.on{
+  background:rgba(5,150,105,.07);border-color:rgba(5,150,105,.25);color:var(--green);
+}
+.toggle-dot{
+  width:14px;height:14px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;transition:all .14s;display:flex;align-items:center;justify-content:center;
+}
+.toggle-item.on .toggle-dot{background:var(--green);border-color:var(--green)}
+.toggle-item.on .toggle-dot::after{content:'✓';font-size:8px;color:#fff;font-weight:700}
+
+/* ── Convert button ── */
+.convert-bar{
+  display:flex;gap:8px;margin-bottom:14px;
+}
+.btn-convert{
+  flex:1;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .14s,transform .1s;
+}
+.btn-convert:hover{opacity:.88}
+.btn-convert:active{transform:scale(.99)}
+
+.btn-swap{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:10px;
+  font-size:16px;width:46px;cursor:pointer;
+  transition:color .14s,border-color .14s,transform .3s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-swap:hover{color:var(--accent);border-color:var(--accent)}
+.btn-swap.spin{transform:rotate(180deg)}
+
+/* ── Custom prefix input ── */
+.custom-wrap{
+  display:none;margin-top:10px;
+}
+.custom-wrap.show{display:flex;align-items:center;gap:8px}
+.custom-label{font-size:12px;color:var(--muted);white-space:nowrap}
+.custom-input{
+  width:120px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;
+  padding:7px 10px;outline:none;
+  transition:border-color .15s;
+}
+.custom-input:focus{border-color:var(--accent)}
+
+/* ── Quick copy bar ── */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:11px 16px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.copy-bar-txt{font-size:12px;color:var(--muted)}
+.btn-copy-final{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-copy-final:hover{opacity:.9}
+.btn-copy-final:active{transform:scale(.97)}
+.btn-copy-final.done{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📋 箇条書き一括整形ツール</h1>
+    <p>雑なメモを貼るだけで、きれいな箇条書きに一瞬で整形します。</p>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">入力（生テキスト）</span>
+        <div class="pane-acts">
+          <button class="pane-btn" onclick="clearAll()">クリア</button>
+          <button class="pane-btn" onclick="pasteClip()">貼り付け</button>
+        </div>
+      </div>
+      <textarea id="input"
+        placeholder="タスクを整理したい&#10;ミーティングのメモを貼り付け&#10;・すでに箇条書きでも大丈夫&#10;1. 番号付きでもOK&#10;　インデントがあっても処理します"
+        oninput="syncStats();autoConvert()"></textarea>
+      <div class="pane-foot">
+        <span id="in-chars">0文字</span>
+        <span id="in-lines">0行</span>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">出力（整形後）</span>
+        <div class="pane-acts">
+          <button class="pane-btn" id="btn-copy-pane" onclick="copyOut()">コピー</button>
+          <button class="pane-btn" onclick="swapPanes()">⇄ 入替</button>
+        </div>
+      </div>
+      <textarea id="output" readonly placeholder="整形結果がここに表示されます"></textarea>
+      <div class="pane-foot">
+        <span id="out-chars">0文字</span>
+        <span id="out-lines">0行</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="options-card">
+    <div class="options-label">整形スタイル</div>
+
+    <div class="style-tabs" id="style-tabs">
+      <button class="style-tab active" onclick="setStyle('dot',this)">
+        <span class="tab-preview">・</span> 中点
+      </button>
+      <button class="style-tab" onclick="setStyle('bullet',this)">
+        <span class="tab-preview">•</span> 丸点
+      </button>
+      <button class="style-tab" onclick="setStyle('dash',this)">
+        <span class="tab-preview">-</span> ハイフン
+      </button>
+      <button class="style-tab" onclick="setStyle('arrow',this)">
+        <span class="tab-preview">→</span> 矢印
+      </button>
+      <button class="style-tab" onclick="setStyle('check',this)">
+        <span class="tab-preview">☐</span> チェック
+      </button>
+      <button class="style-tab" onclick="setStyle('checked',this)">
+        <span class="tab-preview">✅</span> 完了済
+      </button>
+      <button class="style-tab" onclick="setStyle('num',this)">
+        <span class="tab-preview">1.</span> 番号付き
+      </button>
+      <button class="style-tab" onclick="setStyle('circle',this)">
+        <span class="tab-preview">①</span> 丸数字
+      </button>
+      <button class="style-tab" onclick="setStyle('none',this)">
+        <span class="tab-preview">　</span> なし
+      </button>
+      <button class="style-tab" onclick="setStyle('custom',this)">
+        <span class="tab-preview">✏</span> カスタム
+      </button>
+    </div>
+
+    <div class="custom-wrap" id="custom-wrap">
+      <span class="custom-label">カスタム記号：</span>
+      <input class="custom-input" id="custom-prefix" value="▶ " oninput="autoConvert()" placeholder="▶ や ★ など">
+    </div>
+
+    <div class="toggles">
+      <div class="toggle-item on" id="tgl-trim" onclick="toggleOpt('trim')">
+        <div class="toggle-dot"></div>前後スペース除去
+      </div>
+      <div class="toggle-item on" id="tgl-blank" onclick="toggleOpt('blank')">
+        <div class="toggle-dot"></div>空行を削除
+      </div>
+      <div class="toggle-item on" id="tgl-strip" onclick="toggleOpt('strip')">
+        <div class="toggle-dot"></div>既存の記号を除去
+      </div>
+      <div class="toggle-item" id="tgl-upper" onclick="toggleOpt('upper')">
+        <div class="toggle-dot"></div>先頭を大文字に
+      </div>
+      <div class="toggle-item" id="tgl-period" onclick="toggleOpt('period')">
+        <div class="toggle-dot"></div>文末に。を追加
+      </div>
+      <div class="toggle-item" id="tgl-sort" onclick="toggleOpt('sort')">
+        <div class="toggle-dot"></div>五十音順ソート
+      </div>
+      <div class="toggle-item" id="tgl-dedup" onclick="toggleOpt('dedup')">
+        <div class="toggle-dot"></div>重複行を削除
+      </div>
+    </div>
+  </div>
+
+  <div class="convert-bar">
+    <button class="btn-convert" onclick="convert()">✨ 整形する</button>
+    <button class="btn-swap" id="btn-swap" onclick="swapPanes()" title="入れ替え">⇄</button>
+  </div>
+
+  <div class="copy-bar">
+    <span class="copy-bar-txt">整形後のテキストをそのままコピー</span>
+    <button class="btn-copy-final" id="btn-copy-final" onclick="copyOut()">📋 コピー</button>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+let style   = 'dot';
+let opts    = {trim:true,blank:true,strip:true,upper:false,period:false,sort:false,dedup:false};
+
+const CIRCLE_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
+                     '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+
+// ── Style selector ──
+function setStyle(s, el){
+  style = s;
+  document.querySelectorAll('.style-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const cw = document.getElementById('custom-wrap');
+  cw.classList.toggle('show', s === 'custom');
+  autoConvert();
+}
+
+// ── Toggle options ──
+function toggleOpt(key){
+  opts[key] = !opts[key];
+  const el = document.getElementById('tgl-'+key);
+  el.classList.toggle('on', opts[key]);
+  autoConvert();
+}
+
+// ── Convert ──
+function convert(){
+  const raw = document.getElementById('input').value;
+  if(!raw.trim()){ alert('テキストを入力してください'); return; }
+  const result = transform(raw);
+  document.getElementById('output').value = result;
+  syncStats();
+}
+
+function autoConvert(){
+  const raw = document.getElementById('input').value;
+  if(!raw.trim()){
+    document.getElementById('output').value = '';
+    syncStats(); return;
+  }
+  document.getElementById('output').value = transform(raw);
+  syncStats();
+}
+
+function transform(raw){
+  let lines = raw.split('\n');
+
+  // Trim
+  if(opts.trim) lines = lines.map(l => l.trim());
+
+  // Remove blank
+  if(opts.blank) lines = lines.filter(l => l.length > 0);
+
+  // Deduplicate
+  if(opts.dedup) lines = [...new Set(lines)];
+
+  // Sort
+  if(opts.sort) lines = [...lines].sort((a,b)=>a.localeCompare(b,'ja'));
+
+  // Strip existing prefixes (・•-–—→★▶☐✅✔︎ 数字. 数字) など)
+  if(opts.strip){
+    lines = lines.map(l =>
+      l.replace(/^[\s　]*(?:[・•\-–—→←★▶◀☐✅✔︎▷◆◇■□●○※◎≫»›〉〔〕【】①-⑳]+[\s　]*|(?:\d+|[一二三四五六七八九十]+)[.)、．][\s　]*)/,'')
+       .trim()
+    );
+  }
+
+  // Capitalize first letter
+  if(opts.upper){
+    lines = lines.map(l => l.length > 0 ? l[0].toUpperCase() + l.slice(1) : l);
+  }
+
+  // Add period
+  if(opts.period){
+    lines = lines.map(l => {
+      if(!l) return l;
+      const last = l[l.length-1];
+      if(!/[。.!！?？]/.test(last)) return l + '。';
+      return l;
+    });
+  }
+
+  // Apply prefix
+  const prefix = getPrefix();
+  lines = lines.map((l,i) => {
+    if(!l.trim()) return l;
+    if(style === 'num')    return `${i+1}. ${l}`;
+    if(style === 'circle') return `${CIRCLE_NUMS[Math.min(i,CIRCLE_NUMS.length-1)]} ${l}`;
+    if(style === 'none')   return l;
+    return prefix + l;
+  });
+
+  return lines.join('\n');
+}
+
+function getPrefix(){
+  const map = {
+    dot:'・', bullet:'• ', dash:'- ', arrow:'→ ',
+    check:'☐ ', checked:'✅ ', custom:null,
+  };
+  if(style === 'custom'){
+    return document.getElementById('custom-prefix').value;
+  }
+  return map[style] || '・';
+}
+
+// ── Stats ──
+function syncStats(){
+  const inp = document.getElementById('input').value;
+  const out = document.getElementById('output').value;
+  const lines = (t) => t ? t.split('\n').filter(l=>l.trim()).length : 0;
+  document.getElementById('in-chars').textContent  = inp.length + '文字';
+  document.getElementById('in-lines').textContent  = lines(inp) + '行';
+  document.getElementById('out-chars').textContent = out.length + '文字';
+  document.getElementById('out-lines').textContent = lines(out) + '行';
+}
+
+// ── Clipboard ──
+async function pasteClip(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('input').value = t;
+    autoConvert();
+  }catch(e){ document.getElementById('input').focus(); }
+}
+
+function clearAll(){
+  document.getElementById('input').value  = '';
+  document.getElementById('output').value = '';
+  syncStats();
+}
+
+function copyOut(){
+  const out = document.getElementById('output').value;
+  if(!out) return;
+  navigator.clipboard.writeText(out).then(()=>{
+    ['btn-copy-pane','btn-copy-final'].forEach(id=>{
+      const btn = document.getElementById(id);
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done','copied');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done','copied'); }, 1500);
+    });
+  });
+}
+
+function swapPanes(){
+  const inp = document.getElementById('input');
+  const out = document.getElementById('output');
+  const tmp = inp.value;
+  inp.value = out.value;
+  out.value = tmp;
+  const btn = document.getElementById('btn-swap');
+  btn.classList.add('spin');
+  setTimeout(()=>btn.classList.remove('spin'),300);
+  syncStats();
+}
+</script>
+</body>
+</html>
