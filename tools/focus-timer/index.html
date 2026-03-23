@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集中タイマー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0a0a0a;
+  --text:#ffffff;
+  --dim:rgba(255,255,255,.18);
+  --dimmer:rgba(255,255,255,.07);
+}
+
+html,body{
+  width:100%;height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  user-select:none;
+}
+
+/* ── Main screen ── */
+#app{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;
+  transition:background .8s ease;
+}
+
+/* Flash overlay on complete */
+#flash{
+  position:fixed;inset:0;
+  background:#ffffff;
+  opacity:0;pointer-events:none;
+  z-index:100;
+  transition:opacity .08s ease;
+}
+
+/* ── Setup screen ── */
+#setup-screen{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:32px;
+  animation:fadeIn .4s ease;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.setup-title{
+  font-size:14px;font-weight:300;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);
+}
+
+.preset-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;width:280px;
+}
+
+.preset-btn{
+  background:transparent;border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:300;
+  padding:14px 10px;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .1s;
+  line-height:1.3;text-align:center;
+}
+.preset-btn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.3)}
+.preset-btn:active{transform:scale(.97)}
+.preset-btn .pmin{font-size:22px;font-weight:800;display:block}
+.preset-btn .plbl{font-size:10px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+
+.divider-row{
+  display:flex;align-items:center;gap:12px;color:var(--dimmer);
+  font-size:12px;letter-spacing:.1em;width:280px;
+}
+.divider-row::before,.divider-row::after{
+  content:'';flex:1;height:1px;background:rgba(255,255,255,.08);
+}
+
+.custom-row{
+  display:flex;align-items:center;gap:8px;
+}
+.custom-input{
+  background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.18);
+  color:#fff;font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;
+  width:64px;text-align:center;outline:none;padding:4px 0;
+  -moz-appearance:textfield;
+  transition:border-color .18s;
+}
+.custom-input::-webkit-inner-spin-button,
+.custom-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.custom-input:focus{border-color:rgba(255,255,255,.5)}
+.custom-colon{font-size:28px;font-weight:800;color:var(--dim)}
+.custom-label{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+
+.btn-start-custom{
+  background:#fff;color:#0a0a0a;border:none;
+  border-radius:100px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:.06em;
+  padding:11px 24px;cursor:pointer;
+  transition:opacity .15s,transform .1s;margin-top:4px;
+}
+.btn-start-custom:hover{opacity:.9}
+.btn-start-custom:active{transform:scale(.97)}
+
+/* ── Timer screen ── */
+#timer-screen{
+  display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  width:100%;height:100%;
+  position:absolute;inset:0;
+}
+
+/* Big time */
+.time-display{
+  font-size:clamp(96px,22vw,220px);
+  font-weight:800;
+  letter-spacing:-.04em;
+  line-height:1;
+  color:#fff;
+  font-variant-numeric:tabular-nums;
+  transition:color .5s,opacity .3s;
+  text-align:center;
+  cursor:default;
+}
+
+.time-display.dim-color{color:rgba(255,255,255,.35)}
+.time-display.warning{color:#ff9f0a !important}
+.time-display.done{color:#30d158 !important}
+
+/* Progress ring */
+.ring-wrap{
+  position:absolute;
+  width:min(85vw,85vh);height:min(85vw,85vh);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:2}
+.ring-fill{
+  fill:none;stroke:rgba(255,255,255,.15);stroke-width:2;
+  stroke-linecap:round;
+  transition:stroke-dashoffset .9s linear,stroke .5s;
+}
+.ring-fill.warning{stroke:rgba(255,159,10,.3)}
+.ring-fill.done   {stroke:rgba(48,209,88,.4)}
+
+/* Label above */
+.timer-label{
+  font-size:13px;font-weight:300;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dim);
+  margin-bottom:16px;
+  transition:opacity .3s;
+}
+
+/* Below time */
+.timer-sub{
+  font-size:14px;font-weight:300;color:var(--dim);
+  margin-top:14px;letter-spacing:.04em;min-height:22px;
+  transition:opacity .3s;
+}
+
+/* Controls overlay (fade in on hover/touch) */
+.controls{
+  position:fixed;bottom:32px;left:0;right:0;
+  display:flex;justify-content:center;gap:14px;
+  opacity:0;transition:opacity .3s;
+  z-index:10;
+}
+body:hover .controls,.controls:hover{opacity:1}
+body.show-controls .controls{opacity:1}
+
+.ctrl-btn{
+  background:rgba(255,255,255,.08);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.1);border-radius:100px;
+  color:rgba(255,255,255,.7);font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:500;letter-spacing:.04em;
+  padding:10px 22px;cursor:pointer;
+  transition:background .15s,color .15s,transform .1s;
+}
+.ctrl-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+.ctrl-btn:active{transform:scale(.96)}
+.ctrl-btn.primary{background:rgba(255,255,255,.9);color:#0a0a0a}
+.ctrl-btn.primary:hover{background:#fff}
+
+/* Fullscreen hint */
+.fs-hint{
+  position:fixed;top:20px;right:20px;
+  font-size:11px;color:var(--dimmer);letter-spacing:.06em;
+  cursor:pointer;padding:6px 10px;border-radius:8px;
+  transition:color .2s,background .2s;opacity:0;
+  z-index:10;
+}
+body:hover .fs-hint{opacity:1}
+.fs-hint:hover{color:var(--dim);background:rgba(255,255,255,.05)}
+
+/* Done screen overlay */
+#done-overlay{
+  display:none;position:fixed;inset:0;
+  flex-direction:column;align-items:center;justify-content:center;
+  z-index:50;
+  animation:fadeIn .4s ease;
+}
+#done-overlay.show{display:flex}
+
+.done-icon{font-size:72px;margin-bottom:20px;animation:bounce .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes bounce{from{transform:scale(0)}to{transform:scale(1)}}
+.done-title{
+  font-size:clamp(32px,7vw,56px);font-weight:800;
+  color:#fff;letter-spacing:-.02em;margin-bottom:10px;
+}
+.done-sub{font-size:16px;color:var(--dim);margin-bottom:32px}
+.done-actions{display:flex;gap:10px}
+.btn-done{
+  padding:12px 28px;border-radius:100px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .15s;border:none;
+}
+.btn-done.primary{background:#fff;color:#0a0a0a}
+.btn-done.secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.btn-done:hover{opacity:.9;transform:scale(1.02)}
+
+/* Tap to pause hint */
+.tap-hint{
+  position:fixed;top:50%;left:0;right:0;
+  text-align:center;
+  font-size:12px;color:var(--dimmer);letter-spacing:.1em;
+  transform:translateY(calc(50% + clamp(60px,12vw,130px)));
+  pointer-events:none;
+  transition:opacity .3s;
+}
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div id="app">
+
+  <!-- ── Setup ── -->
+  <div id="setup-screen">
+    <div class="setup-title">集中タイマー</div>
+
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="startTimer(5*60)">
+        <span class="pmin">5</span><span class="plbl">分</span>
+      </button>
+      <button class="preset-btn" onclick="startTimer(10*60)">
+        <span class="pmin">10</span><span class="plbl">分</span>
+      </button>
+      <button class="preset-btn" onclick="startTimer(15*60)">
+        <span class="pmin">15</span><span class="plbl">分</span>
+      </button>
+      <button class="preset-btn" onclick="startTimer(25*60)">
+        <span class="pmin">25</span><span class="plbl">ポモドーロ</span>
+      </button>
+      <button class="preset-btn" onclick="startTimer(45*60)">
+        <span class="pmin">45</span><span class="plbl">分</span>
+      </button>
+      <button class="preset-btn" onclick="startTimer(60*60)">
+        <span class="pmin">60</span><span class="plbl">分</span>
+      </button>
+    </div>
+
+    <div class="divider-row">または</div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div class="custom-row">
+        <div style="text-align:center">
+          <input class="custom-input" id="custom-min" type="number" value="30" min="0" max="99" placeholder="30">
+          <div class="custom-label" style="margin-top:4px">分</div>
+        </div>
+        <span class="custom-colon">:</span>
+        <div style="text-align:center">
+          <input class="custom-input" id="custom-sec" type="number" value="00" min="0" max="59" placeholder="00">
+          <div class="custom-label" style="margin-top:4px">秒</div>
+        </div>
+      </div>
+      <button class="btn-start-custom" onclick="startCustom()">▶ スタート</button>
+    </div>
+  </div>
+
+  <!-- ── Timer ── -->
+  <div id="timer-screen">
+    <div class="ring-wrap">
+      <svg class="ring-svg" id="ring-svg" viewBox="0 0 400 400">
+        <circle class="ring-bg"   cx="200" cy="200" r="190"/>
+        <circle class="ring-fill" id="ring-fill" cx="200" cy="200" r="190"/>
+      </svg>
+    </div>
+
+    <div class="timer-label" id="timer-label">集中中</div>
+    <div class="time-display" id="time-display" onclick="togglePause()">00:00</div>
+    <div class="timer-sub"    id="timer-sub">画面をタップで一時停止</div>
+
+    <div class="tap-hint" id="tap-hint">tap to pause</div>
+  </div>
+
+  <!-- ── Controls ── -->
+  <div class="controls" id="controls" style="display:none">
+    <button class="ctrl-btn" onclick="togglePause()" id="ctrl-pause">⏸ 一時停止</button>
+    <button class="ctrl-btn" onclick="resetTimer()">↺ リセット</button>
+    <button class="ctrl-btn" onclick="backToSetup()">✕ 終了</button>
+  </div>
+
+  <div class="fs-hint" onclick="toggleFS()" id="fs-hint">⛶ 全画面</div>
+
+  <!-- ── Done overlay ── -->
+  <div id="done-overlay">
+    <div class="done-icon">🎉</div>
+    <div class="done-title">完了！</div>
+    <div class="done-sub" id="done-sub">お疲れ様でした</div>
+    <div class="done-actions">
+      <button class="btn-done primary"    onclick="backToSetup()">新しいタイマー</button>
+      <button class="btn-done secondary"  onclick="repeatTimer()">もう一度</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CIRC = 2 * Math.PI * 190; // ≈ 1194
+
+let totalSec   = 0;
+let remaining  = 0;
+let timer      = null;
+let paused     = false;
+let phase      = 'setup'; // setup | running | done
+let lastTotal  = 0;
+
+// ── Helpers ──
+function fmt(s){
+  const m = Math.floor(s/60);
+  const sec = s % 60;
+  if(m >= 60){
+    const h = Math.floor(m/60);
+    return String(h).padStart(2,'0') + ':' + String(m%60).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+  return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function fmtLabel(sec){
+  if(sec >= 3600) return Math.floor(sec/3600) + '時間' + Math.floor((sec%3600)/60) + '分';
+  if(sec >= 60)   return Math.floor(sec/60) + '分';
+  return sec + '秒';
+}
+
+// ── Start ──
+function startCustom(){
+  const m = parseInt(document.getElementById('custom-min').value)||0;
+  const s = parseInt(document.getElementById('custom-sec').value)||0;
+  const total = m*60 + s;
+  if(total <= 0) return;
+  startTimer(total);
+}
+
+function startTimer(sec){
+  totalSec  = sec;
+  lastTotal = sec;
+  remaining = sec;
+  paused    = false;
+
+  document.getElementById('setup-screen').style.display  = 'none';
+  document.getElementById('timer-screen').style.display  = 'flex';
+  document.getElementById('done-overlay').classList.remove('show');
+  document.getElementById('controls').style.display      = 'flex';
+  document.getElementById('ctrl-pause').textContent      = '⏸ 一時停止';
+
+  document.getElementById('timer-label').textContent = fmtLabel(sec) + ' タイマー';
+  document.getElementById('app').style.background    = '#0a0a0a';
+
+  updateRing(1);
+  tick();
+  timer = setInterval(tick, 1000);
+  phase = 'running';
+  document.title = fmt(remaining) + ' – 集中タイマー';
+
+  // Notify permission
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+}
+
+// ── Tick ──
+function tick(){
+  if(paused) return;
+  updateDisplay();
+  if(remaining <= 0){
+    clearInterval(timer);
+    onDone();
+    return;
+  }
+  remaining--;
+}
+
+function updateDisplay(){
+  const disp = document.getElementById('time-display');
+  const sub  = document.getElementById('timer-sub');
+  const ring = document.getElementById('ring-fill');
+  const app  = document.getElementById('app');
+
+  disp.textContent = fmt(remaining);
+  document.title   = fmt(remaining) + ' – 集中タイマー';
+
+  const pct = remaining / totalSec;
+  updateRing(pct);
+
+  // Color states
+  if(remaining <= 0){
+    disp.className = 'time-display done';
+    ring.className = 'ring-fill done';
+  } else if(remaining <= 60){
+    disp.className = 'time-display warning';
+    ring.className = 'ring-fill warning';
+    app.style.background = 'rgba(255,159,10,.04)';
+  } else {
+    disp.className = 'time-display';
+    ring.className = 'ring-fill';
+    app.style.background = '#0a0a0a';
+  }
+
+  sub.textContent = paused
+    ? '⏸ 一時停止中 — もう一度タップで再開'
+    : (remaining <= 60 ? '⚡ もうすぐ終わります！' : '画面をタップで一時停止');
+}
+
+function updateRing(pct){
+  const ring = document.getElementById('ring-fill');
+  const offset = CIRC * (1 - Math.max(0,Math.min(1,pct)));
+  ring.style.strokeDasharray  = CIRC;
+  ring.style.strokeDashoffset = offset;
+}
+
+// ── Pause / Resume ──
+function togglePause(){
+  if(phase !== 'running') return;
+  paused = !paused;
+  const btn = document.getElementById('ctrl-pause');
+  btn.textContent = paused ? '▶ 再開' : '⏸ 一時停止';
+
+  const disp = document.getElementById('time-display');
+  disp.classList.toggle('dim-color', paused);
+  updateDisplay();
+}
+
+// ── Reset ──
+function resetTimer(){
+  clearInterval(timer);
+  remaining = totalSec;
+  paused    = false;
+  document.getElementById('ctrl-pause').textContent = '⏸ 一時停止';
+  document.getElementById('time-display').className = 'time-display';
+  document.getElementById('app').style.background = '#0a0a0a';
+  tick();
+  timer = setInterval(tick, 1000);
+}
+
+function repeatTimer(){ startTimer(lastTotal) }
+
+// ── Done ──
+function onDone(){
+  phase = 'done';
+  document.title = '✅ 完了！– 集中タイマー';
+
+  // Flash sequence
+  doFlash();
+
+  // Chime
+  playDoneChime();
+
+  // System notification
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('✅ タイマー完了！', {
+      body:fmtLabel(lastTotal) + 'の集中、お疲れ様でした。',
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏱</text></svg>'
+    });
+  }
+
+  // Show done overlay after flash
+  setTimeout(()=>{
+    document.getElementById('done-overlay').classList.add('show');
+    document.getElementById('done-sub').textContent =
+      fmtLabel(lastTotal) + 'の集中、お疲れ様でした！';
+    document.getElementById('app').style.background = 'rgba(48,209,88,.06)';
+  }, 400);
+}
+
+function doFlash(){
+  const fl = document.getElementById('flash');
+  fl.style.transition = 'none';
+  fl.style.opacity = '1';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fl.style.transition = 'opacity 1.2s ease';
+      fl.style.opacity = '0';
+    });
+  });
+}
+
+// ── Back / Finish ──
+function backToSetup(){
+  clearInterval(timer);
+  phase = 'setup';
+  remaining = 0;
+  document.title = '集中タイマー';
+
+  document.getElementById('timer-screen').style.display  = 'none';
+  document.getElementById('setup-screen').style.display  = 'flex';
+  document.getElementById('done-overlay').classList.remove('show');
+  document.getElementById('controls').style.display      = 'none';
+  document.getElementById('app').style.background        = '#0a0a0a';
+  document.getElementById('time-display').className      = 'time-display';
+}
+
+// ── Fullscreen ──
+function toggleFS(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+    document.getElementById('fs-hint').textContent = '✕ 全画面終了';
+  } else {
+    document.exitFullscreen();
+    document.getElementById('fs-hint').textContent = '⛶ 全画面';
+  }
+}
+
+document.addEventListener('fullscreenchange',()=>{
+  document.getElementById('fs-hint').textContent =
+    document.fullscreenElement ? '✕ 全画面終了' : '⛶ 全画面';
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e=>{
+  if(e.key === ' ' && phase === 'running'){ e.preventDefault(); togglePause(); }
+  if(e.key === 'r' || e.key === 'R') resetTimer();
+  if(e.key === 'Escape' && phase === 'running') backToSetup();
+  if(e.key === 'f' || e.key === 'F') toggleFS();
+});
+
+// ── Audio ──
+function playDoneChime(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const notes = [[523,.25,0],[659,.25,.22],[784,.25,.44],[1047,.6,.66]];
+    notes.forEach(([f,d,delay])=>{
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = f;
+      const t = ctx.currentTime + delay;
+      gain.gain.setValueAtTime(.3, t);
+      gain.gain.exponentialRampToValueAtTime(.001, t+d+.1);
+      osc.start(t); osc.stop(t+d+.15);
+    });
+  }catch(e){}
+}
+
+// Show controls hint briefly on start
+function showControlsHint(){
+  document.body.classList.add('show-controls');
+  setTimeout(()=>document.body.classList.remove('show-controls'), 2000);
+}
+</script>
+</body>
+</html>
