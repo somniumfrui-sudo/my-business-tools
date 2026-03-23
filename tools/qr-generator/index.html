@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秒速！QRコード作成機</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:480px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;
+}
+
+textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  padding:12px 14px;outline:none;resize:none;line-height:1.7;
+  min-height:90px;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+textarea:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+textarea::placeholder{color:var(--light)}
+
+/* char counter */
+.char-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;
+}
+.char-count{font-size:11px;color:var(--light)}
+
+/* Presets */
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.preset{
+  font-size:11px;padding:4px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .14s;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Options */
+.options-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:14px;
+}
+.opt-group label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px}
+.opt-group select,.opt-group input[type=color]{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:7px 10px;outline:none;cursor:pointer;
+  transition:border-color .15s;appearance:none;
+}
+.opt-group select:focus{border-color:var(--accent)}
+.opt-group input[type=color]{
+  padding:4px 6px;height:36px;cursor:pointer;
+}
+
+/* ── QR card ── */
+.qr-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:28px 20px 22px;
+  box-shadow:var(--shadow-md);text-align:center;
+  margin-bottom:14px;
+  transition:opacity .2s;
+}
+
+.qr-wrap{
+  display:inline-block;
+  padding:16px;
+  background:#fff;
+  border-radius:12px;
+  border:1px solid var(--border);
+  margin-bottom:18px;
+  position:relative;
+}
+
+/* center logo */
+.qr-logo{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:22px;line-height:1;
+  background:#fff;border-radius:6px;padding:2px;
+  display:none;
+}
+
+#qr-box{line-height:0}
+#qr-box canvas,#qr-box img{border-radius:4px}
+
+.qr-empty{
+  width:220px;height:220px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  color:var(--light);font-size:13px;
+}
+.qr-empty-icon{font-size:40px;opacity:.4}
+
+/* URL display */
+.qr-url{
+  font-size:12px;color:var(--muted);
+  word-break:break-all;line-height:1.5;
+  max-width:300px;margin:0 auto 16px;
+  display:none;
+}
+
+/* Action buttons */
+.action-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+.btn-dl{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:11px 22px;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+  display:none;
+}
+.btn-dl:hover{opacity:.9}
+.btn-dl:active{transform:scale(.98)}
+.btn-dl.done{background:var(--green)}
+
+.btn-copy-url{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:11px 16px;cursor:pointer;
+  transition:color .15s,border-color .15s;
+  display:none;
+}
+.btn-copy-url:hover{color:var(--accent);border-color:var(--accent)}
+.btn-copy-url.done{color:var(--green);border-color:var(--green)}
+
+/* ── History ── */
+.hist-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);
+}
+.hist-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.hist-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.btn-clr{font-size:11px;color:var(--light);background:none;border:none;cursor:pointer;transition:color .14s}
+.btn-clr:hover{color:var(--accent)}
+
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;background:var(--bg);border-radius:8px;
+  cursor:pointer;transition:background .14s;
+}
+.hist-item:hover{background:#eef2ff}
+.hist-item-text{
+  font-size:12px;color:var(--muted);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.hist-item-time{font-size:10px;color:var(--light);flex-shrink:0}
+.hist-icon{font-size:14px;flex-shrink:0}
+
+.hist-empty{font-size:12px;color:var(--light);text-align:center;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>⬛ 秒速！QRコード作成機</h1>
+    <p>URLやテキストを入力するだけでリアルタイムにQRコードを生成・保存できます。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="card-label">URLまたはテキストを入力</div>
+    <textarea id="qr-input" placeholder="https://example.com" oninput="onInput()"></textarea>
+    <div class="char-row">
+      <div class="preset-row">
+        <button class="preset" onclick="setPreset('https://')">🌐 URL</button>
+        <button class="preset" onclick="setPreset('tel:')">📞 電話番号</button>
+        <button class="preset" onclick="setPreset('mailto:')">✉️ メール</button>
+        <button class="preset" onclick="setPreset('WIFI:T:WPA;S:;P:;;')">📶 Wi-Fi</button>
+      </div>
+      <span class="char-count" id="char-count">0文字</span>
+    </div>
+
+    <div class="options-row">
+      <div class="opt-group">
+        <label>サイズ</label>
+        <select id="opt-size" onchange="generate()">
+          <option value="160">小 (160px)</option>
+          <option value="220" selected>中 (220px)</option>
+          <option value="300">大 (300px)</option>
+          <option value="400">特大 (400px)</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>誤り訂正レベル</label>
+        <select id="opt-ecl" onchange="generate()">
+          <option value="L">L（低）</option>
+          <option value="M" selected>M（中）</option>
+          <option value="Q">Q（高）</option>
+          <option value="H">H（最高）</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>前景色（暗）</label>
+        <input type="color" id="opt-dark" value="#000000" oninput="generate()">
+      </div>
+      <div class="opt-group">
+        <label>背景色（明）</label>
+        <input type="color" id="opt-light" value="#ffffff" oninput="generate()">
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Output -->
+  <div class="qr-card" id="qr-card">
+    <div class="qr-wrap">
+      <div id="qr-box">
+        <div class="qr-empty">
+          <span class="qr-empty-icon">⬛</span>
+          テキストを入力すると<br>QRコードが表示されます
+        </div>
+      </div>
+    </div>
+    <div class="qr-url" id="qr-url"></div>
+    <div class="action-row">
+      <button class="btn-dl" id="btn-dl" onclick="download()">⬇ PNGで保存</button>
+      <button class="btn-copy-url" id="btn-copy-url" onclick="copyUrl()">🔗 URLをコピー</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="hist-card">
+    <div class="hist-header">
+      <span class="hist-title">生成履歴</span>
+      <button class="btn-clr" onclick="clearHist()">クリア</button>
+    </div>
+    <div class="hist-list" id="hist-list">
+      <div class="hist-empty">まだ生成されていません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let debounceTimer = null;
+let currentText   = '';
+let history       = JSON.parse(localStorage.getItem('qr-hist') || '[]');
+
+const eclMap = {L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H};
+
+renderHist();
+
+function setPreset(val){
+  const ta = document.getElementById('qr-input');
+  ta.value = val;
+  ta.focus();
+  ta.setSelectionRange(val.length, val.length);
+  onInput();
+}
+
+function onInput(){
+  const text = document.getElementById('qr-input').value;
+  document.getElementById('char-count').textContent = text.length + '文字';
+  clearTimeout(debounceTimer);
+  if(!text.trim()){
+    clearQR(); return;
+  }
+  debounceTimer = setTimeout(()=>generate(), 300);
+}
+
+function generate(){
+  const text = document.getElementById('qr-input').value.trim();
+  if(!text){ clearQR(); return; }
+
+  const size  = parseInt(document.getElementById('opt-size').value);
+  const ecl   = document.getElementById('opt-ecl').value;
+  const dark  = document.getElementById('opt-dark').value;
+  const light = document.getElementById('opt-light').value;
+
+  currentText = text;
+
+  const box = document.getElementById('qr-box');
+  box.innerHTML = '';
+
+  try{
+    new QRCode(box, {
+      text,
+      width:  size,
+      height: size,
+      colorDark:  dark,
+      colorLight: light,
+      correctLevel: eclMap[ecl] || QRCode.CorrectLevel.M,
+    });
+  }catch(e){
+    box.innerHTML = '<div class="qr-empty"><span class="qr-empty-icon">⚠️</span>生成に失敗しました</div>';
+    return;
+  }
+
+  // Show URL preview
+  const urlEl = document.getElementById('qr-url');
+  urlEl.textContent = text.length > 60 ? text.slice(0,60)+'…' : text;
+  urlEl.style.display = 'block';
+
+  // Show buttons
+  document.getElementById('btn-dl').style.display      = 'inline-flex';
+  document.getElementById('btn-copy-url').style.display = 'inline-flex';
+
+  addHist(text);
+}
+
+function clearQR(){
+  document.getElementById('qr-box').innerHTML =
+    '<div class="qr-empty"><span class="qr-empty-icon">⬛</span>テキストを入力すると<br>QRコードが表示されます</div>';
+  document.getElementById('qr-url').style.display         = 'none';
+  document.getElementById('btn-dl').style.display         = 'none';
+  document.getElementById('btn-copy-url').style.display   = 'none';
+  currentText = '';
+}
+
+function download(){
+  const canvas = document.querySelector('#qr-box canvas');
+  if(!canvas) return;
+  const a = document.createElement('a');
+  a.href     = canvas.toDataURL('image/png');
+  a.download = 'qrcode.png';
+  a.click();
+
+  const btn = document.getElementById('btn-dl');
+  btn.textContent = '✓ 保存しました';
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='⬇ PNGで保存'; btn.classList.remove('done'); }, 2000);
+}
+
+function copyUrl(){
+  if(!currentText) return;
+  navigator.clipboard.writeText(currentText).then(()=>{
+    const btn = document.getElementById('btn-copy-url');
+    btn.textContent = '✓ コピー済み';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='🔗 URLをコピー'; btn.classList.remove('done'); }, 1500);
+  });
+}
+
+// ── History ──
+function addHist(text){
+  history = [
+    {text, time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})},
+    ...history.filter(h=>h.text !== text)
+  ].slice(0, 10);
+  localStorage.setItem('qr-hist', JSON.stringify(history));
+  renderHist();
+}
+
+function renderHist(){
+  const el = document.getElementById('hist-list');
+  if(!history.length){
+    el.innerHTML = '<div class="hist-empty">まだ生成されていません</div>'; return;
+  }
+  el.innerHTML = history.map(h=>`
+    <div class="hist-item" onclick="loadHist('${escAttr(h.text)}')">
+      <span class="hist-icon">${h.text.startsWith('http') ? '🌐' : h.text.startsWith('tel') ? '📞' : h.text.startsWith('mailto') ? '✉️' : '📝'}</span>
+      <span class="hist-item-text">${escHtml(h.text)}</span>
+      <span class="hist-item-time">${h.time}</span>
+    </div>`).join('');
+}
+
+function loadHist(text){
+  document.getElementById('qr-input').value = text;
+  document.getElementById('char-count').textContent = text.length + '文字';
+  generate();
+}
+
+function clearHist(){
+  history = [];
+  localStorage.setItem('qr-hist','[]');
+  renderHist();
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return s.replace(/'/g,"\\'").replace(/"/g,'&quot;') }
+</script>
+</body>
+</html>
