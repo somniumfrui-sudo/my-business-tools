@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秒速・時給計算シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.07);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --gold:#d97706;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:520px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:16px;
+}
+
+.field{margin-bottom:14px}
+.field:last-of-type{margin-bottom:0}
+
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);margin-bottom:6px;
+}
+.field label .hint{font-size:11px;color:var(--light)}
+
+.input-wrap{position:relative}
+.input-wrap .pre{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:14px;color:var(--muted);pointer-events:none;
+}
+.input-wrap .suf{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+.input-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;
+  padding:10px 44px 10px 32px;outline:none;
+  -moz-appearance:textfield;letter-spacing:-.01em;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.input-wrap input::-webkit-inner-spin-button,
+.input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.input-wrap input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.input-wrap input::placeholder{color:var(--light)}
+
+/* Presets */
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.preset{
+  font-size:11px;padding:3px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .14s;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* Hours sliders */
+.hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+@media(max-width:380px){.hours-grid{grid-template-columns:1fr}}
+
+.hours-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+}
+.hours-box-label{font-size:11px;color:var(--muted);margin-bottom:5px}
+.hours-box-val{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--text);
+  line-height:1;margin-bottom:5px;
+}
+.hours-box-val span{font-size:13px;font-weight:400;color:var(--muted)}
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--white);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,87,255,.25);transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+
+.btn-calc{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  margin-top:14px;transition:opacity .15s,transform .1s;
+}
+.btn-calc:hover{opacity:.88}
+.btn-calc:active{transform:scale(.99)}
+
+/* ── Results ── */
+#results{display:none}
+
+/* Ticker card */
+.ticker-card{
+  background:var(--text);border-radius:16px;padding:24px;
+  margin-bottom:12px;text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+  position:relative;overflow:hidden;
+}
+.ticker-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,87,255,.18) 0%,transparent 70%);
+}
+.ticker-inner{position:relative;z-index:1}
+
+.ticker-label{
+  font-size:10px;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px;
+}
+.ticker-val{
+  font-family:'Outfit',sans-serif;font-size:clamp(48px,13vw,80px);
+  font-weight:800;letter-spacing:-.04em;line-height:1;
+  color:#fff;
+  animation:popIn .35s cubic-bezier(.34,1.4,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.ticker-unit{font-size:18px;font-weight:400;color:rgba(255,255,255,.6);margin-left:4px}
+.ticker-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:6px}
+
+/* Live ticker */
+.live-row{
+  display:flex;justify-content:center;gap:6px;margin-top:14px;
+  flex-wrap:wrap;
+}
+.live-chip{
+  display:flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;
+  min-width:80px;
+}
+.live-chip-val{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;
+  color:#fff;letter-spacing:-.02em;line-height:1;
+}
+.live-chip-label{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;letter-spacing:.04em}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:380px){.metrics{grid-template-columns:repeat(2,1fr)}}
+
+.metric{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:13px 12px;box-shadow:var(--shadow);text-align:center;
+}
+.metric-val{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);line-height:1;margin-bottom:3px;
+}
+.metric-val.blue {color:var(--accent)}
+.metric-val.green{color:var(--green)}
+.metric-val.gold {color:var(--gold)}
+.metric-label{font-size:10px;color:var(--light);letter-spacing:.04em}
+
+/* ── Benchmark card ── */
+.bench-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.bench-title{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.bench-list{display:flex;flex-direction:column;gap:8px}
+.bench-row{
+  display:flex;align-items:center;gap:10px;
+}
+.bench-label{font-size:12px;color:var(--muted);min-width:120px;flex-shrink:0}
+.bench-track{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bench-fill{
+  height:100%;border-radius:3px;
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+.bench-val{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  min-width:52px;text-align:right;
+}
+
+/* ── Waste card ── */
+.waste-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);
+  font-size:13px;color:var(--muted);line-height:1.75;
+}
+.waste-card strong{color:var(--text)}
+.waste-card .big{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;
+  color:var(--red);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>⚡ 秒速・時給計算シミュレーター</h1>
+    <p>月収と稼働時間から「本当の時給」と「1秒あたりの報酬」を可視化します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="card-label">収入・稼働情報を入力</div>
+
+    <div class="field">
+      <label>月収・月間報酬 <span class="hint">手取りでも額面でも可</span></label>
+      <div class="input-wrap">
+        <span class="pre">¥</span>
+        <input type="number" id="income" placeholder="300000" min="1" oninput="liveCalc()">
+        <span class="suf">円</span>
+      </div>
+      <div class="preset-row">
+        <button class="preset" onclick="setIncome(200000)">20万</button>
+        <button class="preset" onclick="setIncome(300000)">30万</button>
+        <button class="preset" onclick="setIncome(500000)">50万</button>
+        <button class="preset" onclick="setIncome(1000000)">100万</button>
+        <button class="preset" onclick="setIncome(3000000)">300万</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field">
+      <label>月間稼働時間</label>
+      <div class="hours-grid">
+        <div class="hours-box">
+          <div class="hours-box-label">1日の勤務時間</div>
+          <div class="hours-box-val" id="daily-val">8<span>時間</span></div>
+          <input type="range" id="daily-hours" min="1" max="16" step="0.5" value="8"
+            oninput="syncHours();liveCalc()">
+        </div>
+        <div class="hours-box">
+          <div class="hours-box-label">月間稼働日数</div>
+          <div class="hours-box-val" id="days-val">20<span>日</span></div>
+          <input type="range" id="work-days" min="1" max="31" step="1" value="20"
+            oninput="syncHours();liveCalc()">
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted);text-align:right">
+        月間合計：<strong id="total-hours-label" style="font-family:'Outfit',sans-serif;color:var(--accent)">160</strong> 時間
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calc()">⚡ 時給を計算する</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Ticker -->
+    <div class="ticker-card">
+      <div class="ticker-inner">
+        <div class="ticker-label">あなたの本当の時給</div>
+        <div class="ticker-val" id="hourly-val">¥0<span class="ticker-unit">/h</span></div>
+        <div class="ticker-sub" id="hourly-sub">—</div>
+        <div class="live-row">
+          <div class="live-chip">
+            <div class="live-chip-val" id="chip-min">—</div>
+            <div class="live-chip-label">1分あたり</div>
+          </div>
+          <div class="live-chip">
+            <div class="live-chip-val" id="chip-sec">—</div>
+            <div class="live-chip-label">1秒あたり</div>
+          </div>
+          <div class="live-chip">
+            <div class="live-chip-val" id="chip-day">—</div>
+            <div class="live-chip-label">1日あたり</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-val blue" id="m-monthly">—</div>
+        <div class="metric-label">月収</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val green" id="m-yearly">—</div>
+        <div class="metric-label">年収換算</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val gold" id="m-hours">—</div>
+        <div class="metric-label">月間稼働時間</div>
+      </div>
+    </div>
+
+    <!-- Benchmark -->
+    <div class="bench-card">
+      <div class="bench-title">時給ベンチマーク比較</div>
+      <div class="bench-list" id="bench-list"></div>
+    </div>
+
+    <!-- Waste calc -->
+    <div class="waste-card" id="waste-card">—</div>
+
+  </div>
+</div>
+
+<script>
+function setIncome(v){
+  document.getElementById('income').value = v;
+  liveCalc();
+}
+
+function syncHours(){
+  const d = parseFloat(document.getElementById('daily-hours').value);
+  const w = parseInt(document.getElementById('work-days').value);
+  document.getElementById('daily-val').innerHTML = d + '<span>時間</span>';
+  document.getElementById('days-val').innerHTML  = w + '<span>日</span>';
+  document.getElementById('total-hours-label').textContent = (d * w).toFixed(1);
+}
+
+function liveCalc(){
+  const inc = parseFloat(document.getElementById('income').value);
+  if(inc > 0 && document.getElementById('results').style.display !== 'none') calc();
+}
+
+function fmt(n){
+  if(n >= 100000000) return (n/100000000).toFixed(1) + '億';
+  if(n >= 10000)     return (n/10000).toFixed(1) + '万円';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtShort(n){
+  return '¥' + (n < 1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString());
+}
+
+const BENCHMARKS = [
+  {label:'最低賃金（全国平均）', hourly:1055, color:'#60a5fa'},
+  {label:'コンビニアルバイト',   hourly:1100, color:'#818cf8'},
+  {label:'一般事務（正社員）',   hourly:1600, color:'#a78bfa'},
+  {label:'日本の平均年収換算',   hourly:2400, color:'#c084fc'},
+  {label:'フリーランス平均',     hourly:3000, color:'#e879f9'},
+  {label:'外資系コンサル',       hourly:6000, color:'#f472b6'},
+];
+
+function calc(){
+  const income = parseFloat(document.getElementById('income').value);
+  if(!income || income <= 0){ alert('月収を入力してください'); return; }
+
+  const daily  = parseFloat(document.getElementById('daily-hours').value);
+  const days   = parseInt(document.getElementById('work-days').value);
+  const totalH = daily * days;
+
+  const hourly  = income / totalH;
+  const perMin  = hourly / 60;
+  const perSec  = hourly / 3600;
+  const perDay  = hourly * daily;
+  const yearly  = income * 12;
+
+  // Re-trigger animation
+  const tv = document.getElementById('hourly-val');
+  tv.style.animation='none'; void tv.offsetWidth; tv.style.animation='';
+
+  document.getElementById('hourly-val').innerHTML =
+    fmtShort(hourly) + '<span class="ticker-unit">/h</span>';
+  document.getElementById('hourly-sub').textContent =
+    `月 ${totalH}時間稼働 / 月収 ${fmt(income)}`;
+
+  document.getElementById('chip-min').textContent = fmtShort(perMin);
+  document.getElementById('chip-sec').textContent = '¥' + perSec.toFixed(3);
+  document.getElementById('chip-day').textContent = fmtShort(perDay);
+
+  // Metrics
+  document.getElementById('m-monthly').textContent = fmt(income);
+  document.getElementById('m-yearly').textContent  = fmt(yearly);
+  document.getElementById('m-hours').textContent   = totalH.toFixed(1) + 'h';
+
+  // Benchmark
+  const maxH = Math.max(hourly, ...BENCHMARKS.map(b=>b.hourly));
+  document.getElementById('bench-list').innerHTML = BENCHMARKS.map(b=>{
+    const pct  = Math.min(b.hourly / maxH * 100, 100).toFixed(1);
+    const myPct= Math.min(hourly  / maxH * 100, 100).toFixed(1);
+    const isOver = hourly >= b.hourly;
+    return `<div class="bench-row">
+      <span class="bench-label">${b.label}</span>
+      <div class="bench-track">
+        <div class="bench-fill" style="width:${pct}%;background:${b.color};opacity:${isOver?.55:1}"></div>
+      </div>
+      <span class="bench-val" style="color:${isOver?'var(--green)':'var(--muted)'}">${fmtShort(b.hourly)}</span>
+    </div>`;
+  }).concat([`<div class="bench-row">
+    <span class="bench-label" style="color:var(--accent);font-weight:500">▶ あなたの時給</span>
+    <div class="bench-track">
+      <div class="bench-fill" style="width:${Math.min(hourly/maxH*100,100).toFixed(1)}%;background:var(--accent)"></div>
+    </div>
+    <span class="bench-val" style="color:var(--accent)">${fmtShort(hourly)}</span>
+  </div>`]).join('');
+
+  // Waste card
+  const waste30  = perMin * 30;
+  const wasteYT  = perMin * 60 * 3;
+  const wasteSNS = perMin * 60;
+  document.getElementById('waste-card').innerHTML = `
+    <strong>⚠ この時給で計算すると…</strong><br>
+    ・ダラダラした30分のSNSは <span class="big">${fmtShort(waste30)}</span> の損失<br>
+    ・3時間のYouTube視聴は <span class="big">${fmtShort(wasteYT)}</span> 相当<br>
+    ・通勤の無駄な1時間は <span class="big">${fmtShort(perDay / daily)}</span> 相当<br>
+    <span style="font-size:11px;color:var(--light);margin-top:4px;display:block">
+      ※ 時間の価値を意識する参考値です。すべての時間を生産性で測る必要はありません。
+    </span>`;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+syncHours();
+</script>
+</body>
+</html>
