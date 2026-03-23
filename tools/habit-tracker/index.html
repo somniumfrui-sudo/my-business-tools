@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30日習慣トラッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#6b7280;
+  --light:#b0b7c3;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:600px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Add habit card ── */
+.add-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:18px 18px 16px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+}
+.add-row{display:flex;gap:8px;margin-bottom:10px}
+
+.habit-input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:300;
+  padding:10px 14px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.habit-input:focus{
+  border-color:#0057ff;background:var(--white);
+  box-shadow:0 0 0 3px rgba(0,87,255,.08);
+}
+.habit-input::placeholder{color:var(--light)}
+
+/* Color picker dots */
+.color-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.color-label{font-size:11px;color:var(--muted)}
+.color-dot{
+  width:22px;height:22px;border-radius:50%;cursor:pointer;
+  border:2.5px solid transparent;transition:transform .15s,border-color .15s;
+}
+.color-dot:hover{transform:scale(1.15)}
+.color-dot.selected{border-color:var(--text);transform:scale(1.18)}
+
+.btn-add-habit{
+  background:#111318;color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:10px 20px;cursor:pointer;
+  white-space:nowrap;transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-add-habit:hover{opacity:.88}
+.btn-add-habit:active{transform:scale(.98)}
+
+/* Preset chips */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.preset-chip{
+  font-size:11px;padding:4px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.preset-chip:hover{border-color:#0057ff;color:#0057ff}
+
+/* ── Habit cards ── */
+.habits-list{display:flex;flex-direction:column;gap:12px}
+
+.habit-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+  animation:slideIn .25s ease both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.habit-head{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 16px 10px;
+}
+.habit-icon{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.habit-name{
+  font-size:14px;font-weight:500;color:var(--text);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* Progress bar */
+.habit-progress-wrap{
+  display:flex;align-items:center;gap:8px;
+  padding:0 16px;margin-bottom:10px;
+}
+.habit-progress-track{
+  flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden;
+}
+.habit-progress-fill{
+  height:100%;border-radius:2px;
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.habit-progress-pct{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+  color:var(--muted);min-width:36px;text-align:right;
+}
+
+/* Dot grid */
+.dot-grid{
+  display:grid;grid-template-columns:repeat(10,1fr);
+  gap:6px;padding:0 16px 14px;
+}
+
+.dot{
+  aspect-ratio:1;border-radius:50%;
+  background:var(--bg);border:1.5px solid var(--border);
+  cursor:pointer;transition:transform .12s,background .18s,border-color .18s;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+.dot:hover{transform:scale(1.12)}
+.dot.done{border-color:transparent;}
+.dot.done::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:inherit;opacity:.15;
+}
+.dot.today{
+  box-shadow:0 0 0 2px var(--text);
+}
+.dot.today:not(.done){background:rgba(0,0,0,.04)}
+
+/* Day number inside dot */
+.dot-num{
+  font-family:'Outfit',sans-serif;font-size:9px;font-weight:600;
+  color:var(--light);line-height:1;pointer-events:none;
+  position:relative;z-index:1;
+}
+.dot.done .dot-num{color:rgba(255,255,255,.8)}
+
+/* Head right actions */
+.habit-head-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.streak-badge{
+  display:flex;align-items:center;gap:3px;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:100px;padding:2px 8px;color:var(--muted);
+}
+.btn-del-habit{
+  background:none;border:none;color:var(--light);
+  cursor:pointer;font-size:15px;padding:2px 4px;
+  border-radius:5px;transition:color .13s,background .13s;
+}
+.btn-del-habit:hover{color:#dc2626;background:rgba(220,38,38,.07)}
+
+/* Completion banner */
+.done-banner{
+  display:none;margin:0 16px 12px;
+  background:linear-gradient(135deg,#f0fdf8,#ecfdf5);
+  border:1px solid rgba(5,150,105,.2);border-radius:10px;
+  padding:10px 14px;font-size:12px;color:#059669;
+  text-align:center;font-weight:500;
+}
+.done-banner.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── Empty state ── */
+.empty-state{
+  text-align:center;padding:40px 20px;
+  color:var(--light);font-size:13px;line-height:1.8;
+}
+.empty-icon{font-size:36px;display:block;margin-bottom:10px;opacity:.4}
+
+/* ── Summary bar ── */
+.summary-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;
+}
+.sb-item{text-align:center;flex:1;min-width:60px}
+.sb-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  color:#111;line-height:1;
+}
+.sb-label{font-size:10px;color:var(--light);margin-top:2px;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🟢 30日習慣トラッカー</h1>
+    <p>達成した日にドットを塗る。色が埋まっていく達成感で習慣が続きます。</p>
+  </div>
+
+  <!-- Add habit -->
+  <div class="add-card">
+    <div class="add-row">
+      <input type="text" class="habit-input" id="habit-input"
+        placeholder="習慣を入力（例：腹筋10回、読書30分）"
+        onkeydown="if(event.key==='Enter')addHabit()">
+      <button class="btn-add-habit" onclick="addHabit()">＋ 追加</button>
+    </div>
+    <div class="color-row">
+      <span class="color-label">色：</span>
+      <!-- 10 colors -->
+      <div class="color-dot selected" style="background:#3b82f6" data-color="#3b82f6" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#10b981" data-color="#10b981" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#f59e0b" data-color="#f59e0b" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#ef4444" data-color="#ef4444" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#8b5cf6" data-color="#8b5cf6" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#ec4899" data-color="#ec4899" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#06b6d4" data-color="#06b6d4" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#84cc16" data-color="#84cc16" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#f97316" data-color="#f97316" onclick="selectColor(this)"></div>
+      <div class="color-dot" style="background:#6b7280" data-color="#6b7280" onclick="selectColor(this)"></div>
+    </div>
+    <div class="presets">
+      <span style="font-size:11px;color:var(--light);align-self:center">例：</span>
+      <button class="preset-chip" onclick="setPreset('腹筋10回')">💪 腹筋10回</button>
+      <button class="preset-chip" onclick="setPreset('読書30分')">📚 読書30分</button>
+      <button class="preset-chip" onclick="setPreset('早起き6時')">🌅 早起き6時</button>
+      <button class="preset-chip" onclick="setPreset('水2L飲む')">💧 水2L飲む</button>
+      <button class="preset-chip" onclick="setPreset('英語1時間')">🗣 英語1時間</button>
+      <button class="preset-chip" onclick="setPreset('散歩30分')">🚶 散歩30分</button>
+      <button class="preset-chip" onclick="setPreset('日記を書く')">✍️ 日記を書く</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar" id="summary-bar" style="display:none">
+    <div class="sb-item">
+      <div class="sb-val" id="sb-habits">0</div>
+      <div class="sb-label">習慣数</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-val" id="sb-checks">0</div>
+      <div class="sb-label">総達成数</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-val" id="sb-rate">0%</div>
+      <div class="sb-label">全体達成率</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-val" id="sb-streak">0</div>
+      <div class="sb-label">最長連続</div>
+    </div>
+  </div>
+
+  <!-- Habits list -->
+  <div class="habits-list" id="habits-list">
+    <div class="empty-state">
+      <span class="empty-icon">🟢</span>
+      習慣を追加すると<br>30日分のドットグリッドが表示されます
+    </div>
+  </div>
+
+</div>
+
+<script>
+const KEY = 'habit-tracker-v2';
+let habits      = load();
+let selectedColor = '#3b82f6';
+
+// ── Today's index (1-based, within 30) ──
+// We track the start date of each habit to know which dot = "today"
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function dayDiff(startDate){
+  const s = new Date(startDate);
+  const t = new Date(todayStr());
+  return Math.floor((t - s) / 86400000);
+}
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)||'[]') }
+  catch(e){ return [] }
+}
+
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(habits));
+}
+
+// ── Color selection ──
+function selectColor(el){
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColor = el.dataset.color;
+}
+
+function setPreset(text){
+  document.getElementById('habit-input').value = text;
+  document.getElementById('habit-input').focus();
+}
+
+// ── Add habit ──
+function addHabit(){
+  const inp  = document.getElementById('habit-input');
+  const name = inp.value.trim();
+  if(!name) return;
+
+  habits.push({
+    id:      Date.now(),
+    name,
+    color:   selectedColor,
+    start:   todayStr(),
+    done:    [],   // array of day indices (0-based) that are checked
+  });
+
+  save();
+  inp.value = '';
+  render();
+}
+
+// ── Toggle day ──
+function toggleDay(habitId, dayIdx){
+  const h = habits.find(h=>h.id===habitId);
+  if(!h) return;
+  const i = h.done.indexOf(dayIdx);
+  if(i >= 0) h.done.splice(i,1);
+  else h.done.push(dayIdx);
+  save();
+  renderHabit(h);
+  updateSummary();
+}
+
+// ── Delete habit ──
+function deleteHabit(id){
+  if(!confirm('この習慣を削除しますか？（進捗もリセットされます）')) return;
+  habits = habits.filter(h=>h.id!==id);
+  save();
+  render();
+}
+
+// ── Streak calc ──
+function calcStreak(done){
+  if(!done.length) return 0;
+  const sorted = [...done].sort((a,b)=>a-b);
+  let maxS=1, cur=1;
+  for(let i=1;i<sorted.length;i++){
+    cur = sorted[i]===sorted[i-1]+1 ? cur+1 : 1;
+    if(cur>maxS) maxS=cur;
+  }
+  return maxS;
+}
+
+function currentStreak(done, todayIdx){
+  let s=0, d=todayIdx;
+  while(done.includes(d)){ s++; d--; if(d<0)break; }
+  return s;
+}
+
+// ── Render single habit card ──
+function renderHabit(h){
+  const el = document.getElementById('hcard-'+h.id);
+  if(!el) return;
+
+  const todayOff = Math.min(dayDiff(h.start), 29);
+  const total    = 30;
+  const checked  = h.done.filter(d=>d<30).length;
+  const pct      = Math.round(checked/total*100);
+  const streak   = calcStreak(h.done);
+  const curStr   = currentStreak(h.done, todayOff);
+  const complete = checked === 30;
+
+  // Progress
+  el.querySelector('.habit-progress-fill').style.width  = pct + '%';
+  el.querySelector('.habit-progress-fill').style.background = h.color;
+  el.querySelector('.habit-progress-pct').textContent   = pct + '%';
+
+  // Streak
+  el.querySelector('.streak-val').textContent = curStr + '日';
+
+  // Dots
+  const grid = el.querySelector('.dot-grid');
+  grid.innerHTML = '';
+  for(let d=0; d<30; d++){
+    const isDone   = h.done.includes(d);
+    const isToday  = d === todayOff;
+    const isFuture = d > todayOff;
+
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (isDone?' done':'') + (isToday?' today':'');
+    dot.title     = `${d+1}日目${isToday?' (今日)':isFuture?' (未来)':''}`;
+
+    if(isDone){
+      dot.style.background = h.color;
+    }
+
+    dot.innerHTML = `<span class="dot-num">${d+1}</span>`;
+
+    if(!isFuture){
+      dot.addEventListener('click',()=>toggleDay(h.id, d));
+    } else {
+      dot.style.opacity = '.35';
+      dot.style.cursor  = 'default';
+    }
+
+    grid.appendChild(dot);
+  }
+
+  // Completion banner
+  const banner = el.querySelector('.done-banner');
+  if(complete){
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  updateSummary();
+}
+
+// ── Full render ──
+function render(){
+  const list = document.getElementById('habits-list');
+
+  if(habits.length === 0){
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">🟢</span>習慣を追加すると<br>30日分のドットグリッドが表示されます</div>';
+    document.getElementById('summary-bar').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('summary-bar').style.display = 'flex';
+
+  list.innerHTML = habits.map(h=>`
+    <div class="habit-card" id="hcard-${h.id}">
+      <div class="habit-head">
+        <div class="habit-icon" style="background:${h.color}"></div>
+        <div class="habit-name">${escHtml(h.name)}</div>
+        <div class="habit-head-right">
+          <div class="streak-badge">🔥 <span class="streak-val">0日</span></div>
+          <button class="btn-del-habit" onclick="deleteHabit(${h.id})" title="削除">✕</button>
+        </div>
+      </div>
+      <div class="habit-progress-wrap">
+        <div class="habit-progress-track">
+          <div class="habit-progress-fill" style="width:0%;background:${h.color}"></div>
+        </div>
+        <span class="habit-progress-pct">0%</span>
+      </div>
+      <div class="dot-grid"></div>
+      <div class="done-banner">🎉 30日チャレンジ完了！おめでとうございます！</div>
+    </div>`).join('');
+
+  habits.forEach(h=>renderHabit(h));
+  updateSummary();
+}
+
+function updateSummary(){
+  if(!habits.length) return;
+  const total   = habits.reduce((s,h)=>s + h.done.filter(d=>d<30).length, 0);
+  const maxPoss = habits.length * 30;
+  const rate    = Math.round(total/maxPoss*100);
+  const maxStr  = Math.max(0, ...habits.map(h=>calcStreak(h.done)));
+
+  document.getElementById('sb-habits').textContent  = habits.length;
+  document.getElementById('sb-checks').textContent  = total;
+  document.getElementById('sb-rate').textContent    = rate + '%';
+  document.getElementById('sb-streak').textContent  = maxStr + '日';
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+render();
+</script>
+</body>
+</html>
