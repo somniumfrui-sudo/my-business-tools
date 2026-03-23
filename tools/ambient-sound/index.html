@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安眠・環境音ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --border:#21262d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --light:#484f58;
+}
+
+html,body{height:100%}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 16px 80px;
+}
+
+/* stars */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 12%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 40%,rgba(255,255,255,.3)  0%,transparent 100%),
+    radial-gradient(1px 1px at 30% 70%,rgba(255,255,255,.2)  0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 80%,rgba(255,255,255,.28) 0%,transparent 100%),
+    radial-gradient(1px 1px at 45% 55%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 15%,rgba(255,255,255,.22) 0%,transparent 100%),
+    radial-gradient(1px 1px at 10% 90%,rgba(255,255,255,.2)  0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:480px}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:40px}
+.header-moon{font-size:44px;display:block;margin-bottom:12px;animation:float 5s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;
+  color:var(--text);letter-spacing:-.01em;margin-bottom:5px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Sound cards ── */
+.sounds{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+
+.sound-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:18px 20px;
+  cursor:pointer;
+  transition:border-color .2s,background .2s,transform .12s;
+  position:relative;overflow:hidden;
+  user-select:none;
+}
+
+.sound-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--glow,transparent);
+  opacity:0;transition:opacity .4s;
+  pointer-events:none;
+}
+.sound-card.active::before{opacity:1}
+.sound-card.active{border-color:var(--accent,rgba(255,255,255,.3))}
+.sound-card:hover{transform:translateY(-1px)}
+.sound-card:active{transform:scale(.99)}
+
+.sound-inner{
+  display:flex;align-items:center;gap:16px;
+  position:relative;z-index:1;
+}
+
+.sound-icon{
+  font-size:36px;line-height:1;flex-shrink:0;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.sound-card.active .sound-icon{transform:scale(1.12)}
+
+.sound-info{flex:1}
+.sound-name{
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  color:var(--text);letter-spacing:-.01em;margin-bottom:3px;
+}
+.sound-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+.sound-status{
+  display:flex;align-items:center;gap:6px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  color:var(--muted);flex-shrink:0;
+}
+.sound-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--light);
+  transition:background .3s;flex-shrink:0;
+}
+.sound-card.active .sound-dot{
+  background:var(--accent-dot,#fff);
+  box-shadow:0 0 6px var(--accent-dot,#fff);
+  animation:pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.5}}
+.sound-card.active .sound-status{color:var(--text)}
+
+/* ── Volume + timer row ── */
+.control-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px;
+}
+.control-label{
+  font-size:10px;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.vol-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.vol-icon{font-size:16px;flex-shrink:0}
+input[type=range]{
+  flex:1;height:4px;border-radius:2px;appearance:none;-webkit-appearance:none;
+  background:linear-gradient(to right,rgba(255,255,255,.6) 0%,rgba(255,255,255,.6) var(--pct,70%),rgba(255,255,255,.1) var(--pct,70%));
+  outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:#fff;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.vol-val{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);min-width:34px;text-align:right;
+}
+
+/* Timer row */
+.timer-row{display:flex;gap:6px;flex-wrap:wrap}
+.timer-btn{
+  font-size:12px;font-weight:500;padding:5px 12px;border-radius:100px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;font-family:'Outfit',sans-serif;
+  transition:all .15s;
+}
+.timer-btn:hover{border-color:rgba(255,255,255,.3);color:var(--text)}
+.timer-btn.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:var(--text)}
+
+/* ── Now playing bar ── */
+.now-playing{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.np-left{display:flex;align-items:center;gap:10px}
+.np-icon{font-size:20px}
+.np-info{}
+.np-label{font-size:10px;color:var(--light);letter-spacing:.06em;text-transform:uppercase}
+.np-name{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  color:var(--text);margin-top:1px;
+}
+.np-timer{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  color:var(--muted);
+}
+
+.btn-stop{
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  border-radius:8px;color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:12px;padding:7px 14px;cursor:pointer;
+  transition:background .15s,color .15s;flex-shrink:0;
+}
+.btn-stop:hover{background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.3);color:#f87171}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-moon">🌙</span>
+    <h1>安眠・環境音ジェネレーター</h1>
+    <p>ボタンを押すだけ。集中・リラックス・眠れない夜に。<br>すべてブラウザ内で生成するので外部ファイル不要。</p>
+  </div>
+
+  <!-- Sound cards -->
+  <div class="sounds" id="sounds">
+
+    <div class="sound-card" id="card-white"
+      style="--glow:linear-gradient(135deg,rgba(148,163,184,.06) 0%,transparent 60%);--accent:rgba(148,163,184,.4);--accent-dot:#94a3b8"
+      onclick="toggle('white')">
+      <div class="sound-inner">
+        <div class="sound-icon">🌫️</div>
+        <div class="sound-info">
+          <div class="sound-name">ホワイトノイズ</div>
+          <div class="sound-desc">全周波数が均一なノイズ。耳障りなく、集中力を高める定番音。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-pink"
+      style="--glow:linear-gradient(135deg,rgba(244,114,182,.06) 0%,transparent 60%);--accent:rgba(244,114,182,.35);--accent-dot:#f472b6"
+      onclick="toggle('pink')">
+      <div class="sound-inner">
+        <div class="sound-icon">🌸</div>
+        <div class="sound-info">
+          <div class="sound-name">ピンクノイズ</div>
+          <div class="sound-desc">低音域が豊かで柔らかい音。ホワイトより自然に聞こえ、睡眠に最適。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-brown"
+      style="--glow:linear-gradient(135deg,rgba(180,120,60,.08) 0%,transparent 60%);--accent:rgba(180,120,60,.4);--accent-dot:#b87c3c"
+      onclick="toggle('brown')">
+      <div class="sound-inner">
+        <div class="sound-icon">🌊</div>
+        <div class="sound-info">
+          <div class="sound-name">ブラウンノイズ</div>
+          <div class="sound-desc">さらに低音寄り。波の音・滝に近く、深いリラクゼーションに。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-rain"
+      style="--glow:linear-gradient(135deg,rgba(56,189,248,.07) 0%,transparent 60%);--accent:rgba(56,189,248,.35);--accent-dot:#38bdf8"
+      onclick="toggle('rain')">
+      <div class="sound-inner">
+        <div class="sound-icon">🌧️</div>
+        <div class="sound-info">
+          <div class="sound-name">雨の音</div>
+          <div class="sound-desc">窓ガラスを叩く雨粒のリズム。読書・作業BGMの定番。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-fire"
+      style="--glow:linear-gradient(135deg,rgba(251,146,60,.08) 0%,transparent 60%);--accent:rgba(251,146,60,.4);--accent-dot:#fb923c"
+      onclick="toggle('fire')">
+      <div class="sound-inner">
+        <div class="sound-icon">🔥</div>
+        <div class="sound-info">
+          <div class="sound-name">焚き火</div>
+          <div class="sound-desc">パチパチとはじける炎の音。冬の夜や瞑想タイムに。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-cafe"
+      style="--glow:linear-gradient(135deg,rgba(161,110,70,.08) 0%,transparent 60%);--accent:rgba(161,110,70,.4);--accent-dot:#a16e46"
+      onclick="toggle('cafe')">
+      <div class="sound-inner">
+        <div class="sound-icon">☕</div>
+        <div class="sound-info">
+          <div class="sound-name">カフェの雑踪</div>
+          <div class="sound-desc">適度な人の気配と低いBGM。自宅での孤独感を和らげる。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-forest"
+      style="--glow:linear-gradient(135deg,rgba(74,222,128,.07) 0%,transparent 60%);--accent:rgba(74,222,128,.35);--accent-dot:#4ade80"
+      onclick="toggle('forest')">
+      <div class="sound-inner">
+        <div class="sound-icon">🌲</div>
+        <div class="sound-info">
+          <div class="sound-name">森・鳥のさえずり</div>
+          <div class="sound-desc">木々のざわめきと鳥の声。自然のアルファ波リズムで癒される。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+    <div class="sound-card" id="card-ocean"
+      style="--glow:linear-gradient(135deg,rgba(34,211,238,.07) 0%,transparent 60%);--accent:rgba(34,211,238,.35);--accent-dot:#22d3ee"
+      onclick="toggle('ocean')">
+      <div class="sound-inner">
+        <div class="sound-icon">🏖️</div>
+        <div class="sound-info">
+          <div class="sound-name">海辺・波の音</div>
+          <div class="sound-desc">寄せては返す波のリズム。規則的なパターンが眠りを誘う。</div>
+        </div>
+        <div class="sound-status"><div class="sound-dot"></div><span>停止中</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <div class="control-card">
+    <div class="control-label">音量 & タイマー</div>
+    <div class="vol-row">
+      <span class="vol-icon">🔈</span>
+      <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+      <span class="vol-icon">🔊</span>
+      <span class="vol-val" id="vol-val">70%</span>
+    </div>
+    <div class="timer-row">
+      <button class="timer-btn active" onclick="setTimer(0,this)">∞ 無制限</button>
+      <button class="timer-btn" onclick="setTimer(15,this)">15分</button>
+      <button class="timer-btn" onclick="setTimer(30,this)">30分</button>
+      <button class="timer-btn" onclick="setTimer(45,this)">45分</button>
+      <button class="timer-btn" onclick="setTimer(60,this)">60分</button>
+      <button class="timer-btn" onclick="setTimer(90,this)">90分</button>
+    </div>
+  </div>
+
+  <!-- Now playing -->
+  <div class="now-playing" id="now-playing">
+    <div class="np-left">
+      <span class="np-icon" id="np-icon">—</span>
+      <div class="np-info">
+        <div class="np-label">Now Playing</div>
+        <div class="np-name" id="np-name">停止中</div>
+      </div>
+    </div>
+    <span class="np-timer" id="np-timer"></span>
+    <button class="btn-stop" onclick="stopAll()">■ 停止</button>
+  </div>
+
+</div>
+
+<script>
+// ── Audio context ──
+let ctx = null;
+function getCtx(){
+  if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if(ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+// ── State ──
+let currentId   = null;
+let masterGain  = null;
+let timerMins   = 0;
+let timerEnd    = null;
+let timerInterval= null;
+let stoppers    = {};   // id → stop function
+
+const SOUNDS = {
+  white:  { name:'ホワイトノイズ', icon:'🌫️' },
+  pink:   { name:'ピンクノイズ',   icon:'🌸' },
+  brown:  { name:'ブラウンノイズ', icon:'🌊' },
+  rain:   { name:'雨の音',         icon:'🌧️' },
+  fire:   { name:'焚き火',         icon:'🔥' },
+  cafe:   { name:'カフェの雑踪',   icon:'☕' },
+  forest: { name:'森・鳥のさえずり', icon:'🌲' },
+  ocean:  { name:'海辺・波の音',   icon:'🏖️' },
+};
+
+// ── Volume ──
+function setVolume(v){
+  document.getElementById('vol-val').textContent = v + '%';
+  const slider = document.getElementById('vol-slider');
+  slider.style.setProperty('--pct', v + '%');
+  if(masterGain) masterGain.gain.setTargetAtTime(v/100, getCtx().currentTime, 0.05);
+}
+
+// init slider track
+setVolume(70);
+
+// ── Timer ──
+function setTimer(mins, btn){
+  timerMins = mins;
+  document.querySelectorAll('.timer-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(timerInterval) clearInterval(timerInterval);
+  timerEnd = mins > 0 ? Date.now() + mins*60*1000 : null;
+  if(mins > 0 && currentId) startCountdown();
+  else document.getElementById('np-timer').textContent = '';
+}
+
+function startCountdown(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    if(!timerEnd){ clearInterval(timerInterval); return; }
+    const left = timerEnd - Date.now();
+    if(left <= 0){
+      clearInterval(timerInterval);
+      stopAll();
+      return;
+    }
+    const m = Math.floor(left/60000);
+    const s = Math.floor((left%60000)/1000);
+    document.getElementById('np-timer').textContent =
+      String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }, 500);
+}
+
+// ── Toggle / Stop ──
+function toggle(id){
+  if(currentId === id){ stopAll(); return; }
+  stopAll(false);
+  play(id);
+}
+
+function stopAll(updateUI=true){
+  if(currentId && stoppers[currentId]){
+    stoppers[currentId]();
+    delete stoppers[currentId];
+  }
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  if(updateUI){
+    Object.keys(SOUNDS).forEach(id => setCardUI(id, false));
+    document.getElementById('np-name').textContent  = '停止中';
+    document.getElementById('np-icon').textContent  = '—';
+    document.getElementById('np-timer').textContent = '';
+    currentId = null;
+  }
+}
+
+function setCardUI(id, active){
+  const card   = document.getElementById('card-'+id);
+  const status = card.querySelector('.sound-status span');
+  card.classList.toggle('active', active);
+  status.textContent = active ? '再生中' : '停止中';
+}
+
+// ── Play ──
+function play(id){
+  const ac = getCtx();
+
+  // Master gain
+  masterGain = ac.createGain();
+  masterGain.gain.value = document.getElementById('vol-slider').value / 100;
+  masterGain.connect(ac.destination);
+
+  let stopFn;
+
+  switch(id){
+    case 'white':  stopFn = makeWhiteNoise(ac, masterGain);  break;
+    case 'pink':   stopFn = makePinkNoise(ac, masterGain);   break;
+    case 'brown':  stopFn = makeBrownNoise(ac, masterGain);  break;
+    case 'rain':   stopFn = makeRain(ac, masterGain);        break;
+    case 'fire':   stopFn = makeFire(ac, masterGain);        break;
+    case 'cafe':   stopFn = makeCafe(ac, masterGain);        break;
+    case 'forest': stopFn = makeForest(ac, masterGain);      break;
+    case 'ocean':  stopFn = makeOcean(ac, masterGain);       break;
+    default: return;
+  }
+
+  stoppers[id] = ()=>{ stopFn(); masterGain.disconnect(); };
+  currentId = id;
+
+  setCardUI(id, true);
+  document.getElementById('np-name').textContent = SOUNDS[id].name;
+  document.getElementById('np-icon').textContent = SOUNDS[id].icon;
+
+  if(timerEnd && timerEnd > Date.now()) startCountdown();
+  else document.getElementById('np-timer').textContent = '';
+}
+
+// ═══════════════════════════════════════════
+// ── Sound generators ──
+// ═══════════════════════════════════════════
+
+// ── White noise ──
+function makeWhiteNoise(ac, dest){
+  const buf  = ac.createBuffer(1, ac.sampleRate*2, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+  const src  = ac.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ac.createGain(); gain.gain.value = 0.4;
+  src.connect(gain); gain.connect(dest);
+  src.start();
+  return ()=>{ try{src.stop()}catch(e){} };
+}
+
+// ── Pink noise (Paul Kellet's method) ──
+function makePinkNoise(ac, dest){
+  const bufLen = ac.sampleRate * 4;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for(let i=0;i<bufLen;i++){
+    const w = Math.random()*2-1;
+    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+    b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+    b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+    data[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
+    b6=w*0.115926;
+  }
+  const src = ac.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ac.createGain(); gain.gain.value = 0.55;
+  src.connect(gain); gain.connect(dest);
+  src.start();
+  return ()=>{ try{src.stop()}catch(e){} };
+}
+
+// ── Brown noise ──
+function makeBrownNoise(ac, dest){
+  const bufLen = ac.sampleRate * 4;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  let last = 0;
+  for(let i=0;i<bufLen;i++){
+    const w = Math.random()*2-1;
+    last = (last + 0.02*w) / 1.02;
+    data[i] = last * 3.5;
+    if(data[i] > 1) data[i] = 1;
+    if(data[i] < -1) data[i] = -1;
+  }
+  const src = ac.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ac.createGain(); gain.gain.value = 0.7;
+  src.connect(gain); gain.connect(dest);
+  src.start();
+  return ()=>{ try{src.stop()}catch(e){} };
+}
+
+// ── Rain ──
+function makeRain(ac, dest){
+  // base: filtered brown noise
+  const bufLen = ac.sampleRate * 3;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  let last = 0;
+  for(let i=0;i<bufLen;i++){
+    last = (last + 0.02*(Math.random()*2-1))/1.02;
+    data[i] = last * 3;
+  }
+  const base = ac.createBufferSource();
+  base.buffer = buf; base.loop = true;
+  const hipass = ac.createBiquadFilter();
+  hipass.type = 'highpass'; hipass.frequency.value = 500;
+  const baseGain = ac.createGain(); baseGain.gain.value = 0.5;
+  base.connect(hipass); hipass.connect(baseGain); baseGain.connect(dest);
+  base.start();
+
+  // drip clicks
+  const stops = [()=>{ try{base.stop()}catch(e){} }];
+  function drip(){
+    if(!stops.length) return;
+    const g  = ac.createGain();
+    const osc= ac.createOscillator();
+    const f  = 1500 + Math.random()*3000;
+    osc.frequency.value = f;
+    osc.type = 'sine';
+    g.gain.setValueAtTime(Math.random()*0.06+0.01, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.04);
+    osc.connect(g); g.connect(dest);
+    osc.start(ac.currentTime); osc.stop(ac.currentTime+0.05);
+    const t = setTimeout(drip, 20+Math.random()*80);
+    stops.push(()=>clearTimeout(t));
+  }
+  drip();
+  return ()=>{ const s=[...stops]; stops.length=0; s.forEach(fn=>fn()); };
+}
+
+// ── Fire ──
+function makeFire(ac, dest){
+  // rumble: brown noise lowpass
+  const bufLen = ac.sampleRate * 3;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  let last = 0;
+  for(let i=0;i<bufLen;i++){
+    last = (last + 0.02*(Math.random()*2-1))/1.02;
+    data[i] = last*4;
+  }
+  const rumble = ac.createBufferSource();
+  rumble.buffer = buf; rumble.loop = true;
+  const lpf = ac.createBiquadFilter();
+  lpf.type = 'lowpass'; lpf.frequency.value = 400;
+  const rumbleGain = ac.createGain(); rumbleGain.gain.value = 0.4;
+  rumble.connect(lpf); lpf.connect(rumbleGain); rumbleGain.connect(dest);
+  rumble.start();
+
+  // crackles
+  const stops = [()=>{ try{rumble.stop()}catch(e){} }];
+  function crackle(){
+    if(!stops.length) return;
+    const g   = ac.createGain();
+    const src = ac.createBufferSource();
+    const cb  = ac.createBuffer(1, ac.sampleRate*0.05, ac.sampleRate);
+    const cd  = cb.getChannelData(0);
+    for(let i=0;i<cd.length;i++) cd[i] = (Math.random()*2-1)*Math.exp(-i/(cd.length*0.2));
+    src.buffer = cb;
+    g.gain.setValueAtTime(Math.random()*0.15+0.03, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.05);
+    src.connect(g); g.connect(dest);
+    src.start(ac.currentTime);
+    const t = setTimeout(crackle, 60+Math.random()*300);
+    stops.push(()=>clearTimeout(t));
+  }
+  crackle();
+  return ()=>{ const s=[...stops]; stops.length=0; s.forEach(fn=>fn()); };
+}
+
+// ── Cafe ──
+function makeCafe(ac, dest){
+  // low rumble + band-passed noise to simulate chatter
+  const bufLen = ac.sampleRate * 4;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
+
+  const src1 = ac.createBufferSource(); src1.buffer=buf; src1.loop=true;
+  const bpf1 = ac.createBiquadFilter(); bpf1.type='bandpass'; bpf1.frequency.value=400; bpf1.Q.value=0.5;
+  const g1   = ac.createGain(); g1.gain.value = 0.12;
+  src1.connect(bpf1); bpf1.connect(g1); g1.connect(dest); src1.start();
+
+  const src2 = ac.createBufferSource(); src2.buffer=buf; src2.loop=true; src2.playbackRate.value=0.97;
+  const bpf2 = ac.createBiquadFilter(); bpf2.type='bandpass'; bpf2.frequency.value=700; bpf2.Q.value=0.8;
+  const g2   = ac.createGain(); g2.gain.value = 0.07;
+  src2.connect(bpf2); bpf2.connect(g2); g2.connect(dest); src2.start();
+
+  // cup clink & spoon taps
+  const stops = [
+    ()=>{ try{src1.stop()}catch(e){} },
+    ()=>{ try{src2.stop()}catch(e){} },
+  ];
+
+  function clink(){
+    if(!stops.length) return;
+    const g   = ac.createGain();
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2200+Math.random()*800, ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ac.currentTime+0.15);
+    g.gain.setValueAtTime(0.04+Math.random()*0.04, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.2);
+    osc.connect(g); g.connect(dest);
+    osc.start(ac.currentTime); osc.stop(ac.currentTime+0.22);
+    const t = setTimeout(clink, 2000+Math.random()*6000);
+    stops.push(()=>clearTimeout(t));
+  }
+  clink();
+  return ()=>{ const s=[...stops]; stops.length=0; s.forEach(fn=>fn()); };
+}
+
+// ── Forest ──
+function makeForest(ac, dest){
+  // wind: bandpassed white noise
+  const bufLen = ac.sampleRate * 4;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
+  const wind = ac.createBufferSource(); wind.buffer=buf; wind.loop=true;
+  const bpf  = ac.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=600; bpf.Q.value=0.3;
+  const wg   = ac.createGain(); wg.gain.value=0.08;
+  wind.connect(bpf); bpf.connect(wg); wg.connect(dest); wind.start();
+
+  // wind sway LFO
+  const lfo = ac.createOscillator(); const lfog = ac.createGain();
+  lfo.frequency.value=0.1; lfog.gain.value=0.04;
+  lfo.connect(lfog); lfog.connect(wg.gain); lfo.start();
+
+  // bird calls
+  const stops = [
+    ()=>{ try{wind.stop()}catch(e){} },
+    ()=>{ try{lfo.stop()}catch(e){} },
+  ];
+
+  function bird(){
+    if(!stops.length) return;
+    const calls = Math.floor(2+Math.random()*4);
+    for(let i=0;i<calls;i++){
+      const t  = ac.currentTime + i*0.18;
+      const g  = ac.createGain();
+      const o  = ac.createOscillator();
+      const bf = 1800+Math.random()*2000;
+      o.type = 'sine';
+      o.frequency.setValueAtTime(bf, t);
+      o.frequency.linearRampToValueAtTime(bf*(0.85+Math.random()*0.3), t+0.1);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.06+Math.random()*0.04, t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.14);
+      o.connect(g); g.connect(dest);
+      o.start(t); o.stop(t+0.16);
+    }
+    const td = setTimeout(bird, 1500+Math.random()*5000);
+    stops.push(()=>clearTimeout(td));
+  }
+  bird();
+  return ()=>{ const s=[...stops]; stops.length=0; s.forEach(fn=>fn()); };
+}
+
+// ── Ocean ──
+function makeOcean(ac, dest){
+  const bufLen = ac.sampleRate * 4;
+  const buf    = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data   = buf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<bufLen;i++){
+    last=(last+0.015*(Math.random()*2-1))/1.015;
+    data[i]=last*5;
+  }
+  const src = ac.createBufferSource(); src.buffer=buf; src.loop=true;
+
+  const lpf  = ac.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=800;
+  const wave = ac.createGain(); wave.gain.value=0.5;
+
+  // wave swell LFO
+  const lfo  = ac.createOscillator(); lfo.frequency.value=0.08;
+  const lfog = ac.createGain(); lfog.gain.value=0.3;
+  lfo.connect(lfog); lfog.connect(wave.gain); lfo.start();
+
+  src.connect(lpf); lpf.connect(wave); wave.connect(dest); src.start();
+
+  // surf sparkle
+  const buf2 = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const d2   = buf2.getChannelData(0);
+  for(let i=0;i<d2.length;i++) d2[i]=Math.random()*2-1;
+  const src2 = ac.createBufferSource(); src2.buffer=buf2; src2.loop=true;
+  const hpf  = ac.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=3000;
+  const sg   = ac.createGain(); sg.gain.value=0.04;
+  src2.connect(hpf); hpf.connect(sg); sg.connect(dest); src2.start();
+
+  return ()=>{
+    try{src.stop()}catch(e){}
+    try{src2.stop()}catch(e){}
+    try{lfo.stop()}catch(e){}
+  };
+}
+</script>
+</body>
+</html>
