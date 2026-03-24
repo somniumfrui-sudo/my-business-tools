@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NGワード・公序良俗チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+  /* severity colors */
+  --c-red:#dc2626;   --bg-red:rgba(220,38,38,.10);   --br-red:rgba(220,38,38,.25);
+  --c-org:#d97706;   --bg-org:rgba(217,119,6,.10);   --br-org:rgba(217,119,6,.25);
+  --c-yel:#b45309;   --bg-yel:rgba(217,119,6,.07);   --br-yel:rgba(217,119,6,.18);
+  --c-blu:#1d4ed8;   --bg-blu:rgba(29,78,216,.08);   --br-blu:rgba(29,78,216,.20);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:800px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Main layout ── */
+.layout{display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+
+/* ── Input area ── */
+.editor-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.editor-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.editor-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.editor-actions{display:flex;gap:6px}
+.e-btn{
+  font-size:11px;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;
+  transition:color .13s,background .13s;font-weight:500;
+}
+.e-btn:hover{color:var(--text);background:var(--border)}
+
+textarea#input-text{
+  width:100%;min-height:260px;background:var(--white);
+  border:none;outline:none;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  color:var(--text);padding:16px;resize:vertical;line-height:1.8;
+}
+textarea#input-text::placeholder{color:var(--light)}
+
+/* Highlighted output */
+#output-text{
+  display:none;
+  min-height:260px;padding:16px;font-size:14px;line-height:1.8;
+  white-space:pre-wrap;word-break:break-all;
+  border-top:2px solid var(--border);
+}
+
+/* NG word highlight styles */
+.hl-red{
+  background:var(--bg-red);color:var(--c-red);
+  border-bottom:2px solid var(--c-red);border-radius:2px;
+  font-weight:600;padding:0 1px;cursor:help;
+}
+.hl-org{
+  background:var(--bg-org);color:var(--c-org);
+  border-bottom:2px solid var(--c-org);border-radius:2px;
+  font-weight:600;padding:0 1px;cursor:help;
+}
+.hl-yel{
+  background:var(--bg-yel);color:var(--c-yel);
+  border-bottom:2px dashed var(--c-yel);border-radius:2px;
+  padding:0 1px;cursor:help;
+}
+.hl-blu{
+  background:var(--bg-blu);color:var(--c-blu);
+  border-bottom:2px dashed var(--c-blu);border-radius:2px;
+  padding:0 1px;cursor:help;
+}
+
+.editor-foot{
+  padding:8px 16px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--light);font-weight:500;
+  display:flex;gap:12px;background:var(--bg);
+}
+
+/* ── Sidebar ── */
+.sidebar{display:flex;flex-direction:column;gap:10px}
+
+/* Score card */
+.score-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px;box-shadow:var(--shadow);
+  text-align:center;
+}
+.score-ring-wrap{position:relative;width:80px;height:80px;margin:0 auto 8px}
+.score-svg{width:80px;height:80px;transform:rotate(-90deg)}
+.sc-bg{fill:none;stroke:#f0f0f0;stroke-width:8}
+.sc-fill{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:0;transition:stroke-dashoffset .6s ease,stroke .4s}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;color:var(--text);line-height:1}
+.score-max{font-size:10px;color:var(--light)}
+.score-label{font-size:12px;font-weight:600;color:var(--muted)}
+
+/* Severity counts */
+.severity-counts{
+  display:flex;flex-direction:column;gap:6px;margin-top:10px;
+}
+.sev-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-radius:8px;font-size:12px;font-weight:500;
+}
+.sev-row.red {background:var(--bg-red);color:var(--c-red)}
+.sev-row.org {background:var(--bg-org);color:var(--c-org)}
+.sev-row.yel {background:var(--bg-yel);color:var(--c-yel)}
+.sev-row.blu {background:var(--bg-blu);color:var(--c-blu)}
+.sev-badge{
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;
+}
+
+/* Check button */
+.btn-check{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+}
+.btn-check:hover{opacity:.88}
+.btn-check:active{transform:scale(.99)}
+
+/* Found words list */
+.found-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.found-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+}
+.found-list{max-height:300px;overflow-y:auto}
+.found-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  font-size:12px;
+}
+.found-item:last-child{border-bottom:none}
+.found-word{font-weight:600}
+.found-cat{
+  font-size:10px;font-weight:500;padding:2px 7px;border-radius:100px;
+}
+.found-count{
+  font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;
+}
+.found-empty{padding:16px 14px;text-align:center;font-size:12px;color:var(--light)}
+
+/* Custom NG words */
+.custom-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:14px;box-shadow:var(--shadow);
+}
+.custom-head{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:8px;
+}
+.custom-input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:8px 10px;outline:none;resize:none;min-height:60px;
+  transition:border-color .15s;
+}
+.custom-input:focus{border-color:#111318}
+.custom-hint{font-size:10px;color:var(--light);margin-top:4px}
+
+/* Category toggle */
+.cat-toggles{display:flex;flex-direction:column;gap:5px}
+.cat-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);cursor:pointer;
+  padding:4px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg);transition:all .13s;user-select:none;font-weight:500;
+}
+.cat-toggle.off{opacity:.5}
+.cat-toggle:hover{border-color:var(--text)}
+.toggle-switch{
+  width:32px;height:17px;border-radius:9px;background:var(--border);
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+.cat-toggle.on .toggle-switch{background:#111318}
+.toggle-switch::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:13px;height:13px;border-radius:50%;background:#fff;
+  transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+.cat-toggle.on .toggle-switch::after{transform:translateX(15px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>⚠️ NGワード・公序良俗チェッカー</h1>
+    <p>ブログ・note・LP等のテキストを貼り付けると、問題になりやすい表現をリアルタイムで検出・ハイライトします。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Editor -->
+    <div class="editor-card">
+      <div class="editor-head">
+        <span class="editor-label">チェックするテキスト</span>
+        <div class="editor-actions">
+          <button class="e-btn" onclick="pasteText()">貼り付け</button>
+          <button class="e-btn" onclick="clearText()">クリア</button>
+          <button class="e-btn" onclick="showInput()">編集に戻る</button>
+        </div>
+      </div>
+      <textarea id="input-text"
+        placeholder="ここにブログ・LP・SNS投稿のテキストを貼り付けてください。&#10;&#10;例：このサービスを使えば絶対に稼げます。必ず成功します。&#10;完全無料で100%効果が出ることを保証します。"
+        oninput="updateMeta()"></textarea>
+      <div id="output-text"></div>
+      <div class="editor-foot">
+        <span id="meta-chars">0文字</span>
+        <span id="meta-words">0語</span>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Score -->
+      <div class="score-card">
+        <div class="score-ring-wrap">
+          <svg class="score-svg" viewBox="0 0 80 80">
+            <circle class="sc-bg"   cx="40" cy="40" r="32"/>
+            <circle class="sc-fill" id="sc-fill" cx="40" cy="40" r="32"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="score-num">—</div>
+            <div class="score-max">/100</div>
+          </div>
+        </div>
+        <div class="score-label" id="score-label">テキストを入力してください</div>
+        <div class="severity-counts">
+          <div class="sev-row red"><span>🔴 法的リスク</span><span class="sev-badge" id="cnt-red">0</span></div>
+          <div class="sev-row org"><span>🟠 景表法・薬機法</span><span class="sev-badge" id="cnt-org">0</span></div>
+          <div class="sev-row yel"><span>🟡 誇大表現</span><span class="sev-badge" id="cnt-yel">0</span></div>
+          <div class="sev-row blu"><span>🔵 要注意表現</span><span class="sev-badge" id="cnt-blu">0</span></div>
+        </div>
+      </div>
+
+      <button class="btn-check" onclick="runCheck()">🔍 チェック開始</button>
+
+      <!-- Found words -->
+      <div class="found-card">
+        <div class="found-head">検出されたNGワード</div>
+        <div class="found-list" id="found-list">
+          <div class="found-empty">まだチェックされていません</div>
+        </div>
+      </div>
+
+      <!-- Category toggles -->
+      <div class="custom-card">
+        <div class="custom-head">チェックカテゴリ</div>
+        <div class="cat-toggles" id="cat-toggles">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Custom words -->
+      <div class="custom-card">
+        <div class="custom-head">カスタムNGワード</div>
+        <textarea class="custom-input" id="custom-words"
+          placeholder="独自のNGワードをスペースまたは改行で区切って入力"></textarea>
+        <div class="custom-hint">例：競合社名　特定人物名　社内禁止用語</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// ── NG Word Database ──
+// ══════════════════════════════════════════════════════
+const NG_CATEGORIES = [
+  {
+    id:'legal', label:'🔴 法的リスク', cls:'red', severity:4, on:true,
+    words:[
+      '絶対に稼げる','絶対稼げる','必ず稼げる','確実に稼げる','100%稼げる',
+      '必ず成功する','絶対成功','100%成功','完全保証','返金保証します',
+      '効果を保証','治ります','治る','完治','病気が治','がんが治',
+      '副業で月収100万','月収100万円保証','不労所得で生活',
+      '法的手段を取る','訴える','脅す','個人情報を公開',
+      '無限連鎖講','ネットワークビジネス参加必須',
+    ]
+  },
+  {
+    id:'keihyo', label:'🟠 景表法・薬機法', cls:'org', severity:3, on:true,
+    words:[
+      '絶対に','必ず','100%','確実に','完全に','間違いなく',
+      '日本一','世界一','業界最安値','最高品質','No.1',
+      '飲むだけで痩せる','食べるだけで','塗るだけで',
+      '副作用なし','副作用ゼロ','安全が確認された',
+      '医師が推薦','医師監修','厚生労働省認可',
+      '即効性','劇的効果','驚きの効果','効果抜群',
+    ]
+  },
+  {
+    id:'exaggerate', label:'🟡 誇大表現', cls:'yel', severity:2, on:true,
+    words:[
+      '爆益','爆稼ぎ','ガッポリ','ガッポガッポ','ザクザク',
+      '月収100万','月収1000万','年収1億','不労所得',
+      '楽して稼ぐ','努力なし','ほったらかし','自動で稼ぐ',
+      '一瞬で','秒で','今すぐ','即日','翌日には',
+      '完全無料','タダ','無限に','無限大','青天井',
+      '裏技','抜け道','禁断の','秘密の方法','知られたくない',
+      '今だけ','期間限定','先着','残りわずか','最後のチャンス',
+    ]
+  },
+  {
+    id:'sensitive', label:'🔵 要注意表現', cls:'blu', severity:1, on:true,
+    words:[
+      '稼げる','儲かる','利益確定','勝てる','勝率',
+      '簡単に','誰でも','初心者でも','主婦でも','老人でも',
+      'FXで稼ぐ','仮想通貨で稼ぐ','副業','内職','在宅ワーク',
+      'クーリングオフ','返金','解約','キャンセル不可',
+      'お前','てめえ','バカ','アホ','死ね','消えろ',
+      '差別','ヘイト','侮辱','誹謗中傷',
+      '未成年','18歳未満','子供に',
+    ]
+  },
+];
+
+// ── State ──
+let catState = {};
+NG_CATEGORIES.forEach(c=>{ catState[c.id] = c.on; });
+
+// ── Init category toggles ──
+function renderCatToggles(){
+  document.getElementById('cat-toggles').innerHTML = NG_CATEGORIES.map(c=>`
+    <div class="cat-toggle ${catState[c.id]?'on':'off'}" onclick="toggleCat('${c.id}',this)">
+      <span>${c.label}</span>
+      <div class="toggle-switch"></div>
+    </div>`).join('');
+}
+
+function toggleCat(id, el){
+  catState[id] = !catState[id];
+  el.classList.toggle('on', catState[id]);
+  el.classList.toggle('off', !catState[id]);
+}
+
+renderCatToggles();
+
+// ── Meta ──
+function updateMeta(){
+  const t = document.getElementById('input-text').value;
+  document.getElementById('meta-chars').textContent = t.length + '文字';
+  document.getElementById('meta-words').textContent = (t.match(/\S+/g)||[]).length + '語';
+}
+
+// ── Clipboard ──
+async function pasteText(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('input-text').value = t;
+    updateMeta();
+  }catch(e){ document.getElementById('input-text').focus(); }
+}
+
+function clearText(){
+  document.getElementById('input-text').value='';
+  document.getElementById('output-text').style.display='none';
+  document.getElementById('input-text').style.display='';
+  document.getElementById('found-list').innerHTML='<div class="found-empty">まだチェックされていません</div>';
+  document.getElementById('score-num').textContent='—';
+  document.getElementById('score-label').textContent='テキストを入力してください';
+  ['red','org','yel','blu'].forEach(c=>document.getElementById('cnt-'+c).textContent='0');
+  document.getElementById('sc-fill').style.strokeDashoffset=220;
+  updateMeta();
+}
+
+function showInput(){
+  document.getElementById('output-text').style.display='none';
+  document.getElementById('input-text').style.display='';
+}
+
+// ── Main check ──
+function runCheck(){
+  const text = document.getElementById('input-text').value;
+  if(!text.trim()){ alert('テキストを入力してください'); return; }
+
+  // Build active word list
+  const activeCategories = NG_CATEGORIES.filter(c=>catState[c.id]);
+
+  // Custom words
+  const customRaw = document.getElementById('custom-words').value;
+  const customWords = customRaw.split(/[\s\n,、，]+/).filter(w=>w.trim().length>0);
+  if(customWords.length){
+    activeCategories.push({
+      id:'custom', label:'🛑 カスタム', cls:'red', severity:4,
+      words: customWords
+    });
+  }
+
+  // Find all hits
+  const hits = []; // {word, cat, cls, start, end, count}
+  const countMap = {}; // word→{cat,cls,count}
+
+  activeCategories.forEach(cat=>{
+    cat.words.forEach(word=>{
+      const regex = new RegExp(escRegex(word), 'g');
+      let m;
+      let cnt = 0;
+      while((m = regex.exec(text)) !== null){
+        hits.push({word, cat:cat.label, cls:cat.cls, start:m.index, end:m.index+word.length});
+        cnt++;
+      }
+      if(cnt > 0){
+        const key = word;
+        if(!countMap[key] || cat.severity > (NG_CATEGORIES.find(c=>c.label===countMap[key].cat)?.severity||0)){
+          countMap[key] = {cat:cat.label, cls:cat.cls, count:(countMap[key]?.count||0)+cnt};
+        } else {
+          countMap[key].count = (countMap[key].count||0)+cnt;
+        }
+      }
+    });
+  });
+
+  // Severity counts
+  const sevCounts = {red:0,org:0,yel:0,blu:0};
+  Object.values(countMap).forEach(v=>{
+    const key = v.cls.replace('custom','red');
+    if(sevCounts[key] !== undefined) sevCounts[key]++;
+  });
+  ['red','org','yel','blu'].forEach(c=>{
+    document.getElementById('cnt-'+c).textContent = sevCounts[c];
+  });
+
+  // Score (100 = clean)
+  const total = Object.values(sevCounts).reduce((a,b)=>a+b,0);
+  const penalty = sevCounts.red*20 + sevCounts.org*12 + sevCounts.yel*6 + sevCounts.blu*3;
+  const score   = Math.max(0, 100 - penalty);
+
+  const CIRC = 201;
+  const fill  = document.getElementById('sc-fill');
+  fill.style.strokeDashoffset = CIRC * (1 - score/100);
+  fill.style.stroke = score >= 80 ? '#059669' : score >= 60 ? '#0057ff' : score >= 40 ? '#d97706' : '#dc2626';
+  document.getElementById('score-num').textContent = score;
+  document.getElementById('score-label').textContent =
+    score >= 80 ? '✅ 概ね問題なし' :
+    score >= 60 ? '⚠ 一部要確認' :
+    score >= 40 ? '🔶 修正を推奨' : '🚨 要修正';
+
+  // Found list
+  const sorted = Object.entries(countMap).sort((a,b)=>{
+    const sa = NG_CATEGORIES.find(c=>c.label===a[1].cat)?.severity||0;
+    const sb = NG_CATEGORIES.find(c=>c.label===b[1].cat)?.severity||0;
+    return sb - sa;
+  });
+
+  if(!sorted.length){
+    document.getElementById('found-list').innerHTML='<div class="found-empty">🎉 NGワードは検出されませんでした</div>';
+  } else {
+    document.getElementById('found-list').innerHTML = sorted.map(([word,v])=>`
+      <div class="found-item">
+        <span class="found-word" style="color:var(--c-${v.cls})">${escHtml(word)}</span>
+        <span class="found-cat" style="background:var(--bg-${v.cls});color:var(--c-${v.cls})">${v.cat.replace(/^[^ ]+ /,'')}</span>
+        <span class="found-count" style="color:var(--c-${v.cls})">${v.count}件</span>
+      </div>`).join('');
+  }
+
+  // Highlight text
+  if(hits.length > 0){
+    // Build non-overlapping sorted ranges
+    const sorted2 = [...hits].sort((a,b)=>a.start-b.start);
+    const merged  = [];
+    for(const h of sorted2){
+      if(merged.length && h.start < merged[merged.length-1].end) continue;
+      merged.push(h);
+    }
+
+    let result = '';
+    let pos = 0;
+    merged.forEach(h=>{
+      result += escHtml(text.slice(pos, h.start));
+      const tooltip = `${h.cat}：「${h.word}」`;
+      result += `<span class="hl-${h.cls}" title="${escAttr(tooltip)}">${escHtml(text.slice(h.start, h.end))}</span>`;
+      pos = h.end;
+    });
+    result += escHtml(text.slice(pos));
+
+    const out = document.getElementById('output-text');
+    out.innerHTML = result;
+    out.style.display = 'block';
+    document.getElementById('input-text').style.display = 'none';
+  } else {
+    showInput();
+  }
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return s.replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+function escRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') }
+</script>
+</body>
+</html>
