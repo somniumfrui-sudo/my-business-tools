@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文字コード・実体参照一括変換</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.08);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --purple:#7c3aed;
+  --purple-l:rgba(124,58,237,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:720px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:26px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Mode tabs ── */
+.mode-tabs{
+  display:flex;gap:6px;flex-wrap:wrap;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:13px;padding:10px 14px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.mode-label{font-size:11px;font-weight:600;color:var(--light);letter-spacing:.06em;align-self:center;white-space:nowrap}
+.mode-tab{
+  font-size:12px;font-weight:500;padding:5px 13px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.mode-tab:hover{border-color:var(--text);color:var(--text)}
+.mode-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* ── Editor layout ── */
+.editor{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-bottom:12px;
+}
+@media(max-width:560px){.editor{grid-template-columns:1fr}}
+
+.pane{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+
+.pane-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+}
+.pane-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.pane-acts{display:flex;gap:4px}
+.pane-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 7px;border-radius:4px;
+  transition:color .12s,background .12s;
+}
+.pane-btn:hover{color:var(--accent);background:var(--accent-l)}
+.pane-btn.done{color:var(--green)}
+
+textarea{
+  flex:1;width:100%;background:var(--white);border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;
+  color:var(--text);padding:13px;resize:none;line-height:1.8;
+  min-height:200px;
+}
+textarea::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+textarea[readonly]{background:#fafbfc;cursor:default}
+
+.pane-foot{
+  padding:5px 13px 7px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--light);font-weight:500;
+  display:flex;gap:8px;flex-shrink:0;
+  background:var(--bg);
+}
+
+/* ── Convert button ── */
+.convert-bar{
+  display:flex;gap:8px;margin-bottom:12px;
+}
+.btn-convert{
+  flex:1;background:var(--text);color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+}
+.btn-convert:hover{opacity:.88}
+.btn-convert:active{transform:scale(.99)}
+
+.btn-swap{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:11px;
+  font-size:16px;width:48px;cursor:pointer;
+  transition:color .13s,border-color .13s,transform .3s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-swap:hover{color:var(--accent);border-color:var(--accent)}
+.btn-swap.spin{transform:rotate(180deg)}
+
+/* ── Quick ref table ── */
+.ref-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  margin-bottom:12px;
+}
+.ref-head{
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ref-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{
+  background:var(--bg);color:var(--muted);font-weight:600;
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+td{
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  color:var(--muted);vertical-align:middle;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8f9ff}
+td.char{
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500;
+  color:var(--text);text-align:center;width:50px;
+}
+td.named{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--accent);
+}
+td.numeric{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--purple);
+}
+td.hex{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--green);
+}
+td.desc{font-size:11px;color:var(--light)}
+.btn-insert{
+  font-size:10px;font-weight:600;color:var(--muted);background:var(--bg);
+  border:1px solid var(--border);border-radius:4px;padding:2px 7px;
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.btn-insert:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-l)}
+
+/* ── Options ── */
+.options-row{
+  display:flex;flex-wrap:wrap;gap:6px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.opt-label{font-size:11px;font-weight:600;color:var(--light);align-self:center;white-space:nowrap}
+.opt-check{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;
+  padding:4px 10px;border-radius:7px;border:1.5px solid var(--border);
+  background:var(--bg);transition:all .12s;user-select:none;
+}
+.opt-check:hover{border-color:var(--accent);color:var(--text)}
+.opt-check.on{background:var(--accent-l);border-color:rgba(0,87,255,.25);color:var(--accent)}
+.opt-check input{accent-color:var(--accent);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🔤 文字コード・実体参照一括変換</h1>
+    <p>HTMLエンティティ・数値参照・URL エンコード・Unicode をワンクリックで相互変換します。</p>
+  </div>
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <span class="mode-label">変換モード：</span>
+    <button class="mode-tab active" onclick="setMode('html-named',this)">HTML実体参照（名前）</button>
+    <button class="mode-tab" onclick="setMode('html-numeric',this)">HTML数値参照（10進）</button>
+    <button class="mode-tab" onclick="setMode('html-hex',this)">HTML数値参照（16進）</button>
+    <button class="mode-tab" onclick="setMode('url',this)">URLエンコード</button>
+    <button class="mode-tab" onclick="setMode('url-decode',this)">URLデコード</button>
+    <button class="mode-tab" onclick="setMode('unicode',this)">Unicode エスケープ</button>
+    <button class="mode-tab" onclick="setMode('html-decode',this)">HTML デコード</button>
+  </div>
+
+  <!-- Options -->
+  <div class="options-row">
+    <span class="opt-label">オプション：</span>
+    <label class="opt-check on" id="opt-basic" onclick="toggleOpt(this)">
+      <input type="checkbox" checked> 基本記号（&amp; &lt; &gt; " '）
+    </label>
+    <label class="opt-check on" id="opt-space" onclick="toggleOpt(this)">
+      <input type="checkbox" checked> スペース → &amp;nbsp;
+    </label>
+    <label class="opt-check" id="opt-all" onclick="toggleOpt(this)">
+      <input type="checkbox"> 全文字を変換（ASCII以外も）
+    </label>
+    <label class="opt-check on" id="opt-newline" onclick="toggleOpt(this)">
+      <input type="checkbox" checked> 改行を保持
+    </label>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">入力</span>
+        <div class="pane-acts">
+          <button class="pane-btn" onclick="pasteIn()">貼り付け</button>
+          <button class="pane-btn" onclick="clearAll()">クリア</button>
+        </div>
+      </div>
+      <textarea id="input" placeholder="変換したいテキストを貼り付けてください。&#10;&#10;例：<div class=&quot;box&quot;>Hello &amp; World</div>" oninput="liveConvert()"></textarea>
+      <div class="pane-foot">
+        <span id="in-chars">0文字</span>
+        <span id="in-lines">0行</span>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">出力</span>
+        <div class="pane-acts">
+          <button class="pane-btn" id="btn-copy-out" onclick="copyOut()">コピー</button>
+          <button class="pane-btn" onclick="swapPanes()">⇄ 入替</button>
+        </div>
+      </div>
+      <textarea id="output" readonly placeholder="変換結果がここに表示されます"></textarea>
+      <div class="pane-foot">
+        <span id="out-chars">0文字</span>
+        <span id="out-lines">0行</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Convert bar -->
+  <div class="convert-bar">
+    <button class="btn-convert" onclick="convert()">⚡ 変換する</button>
+    <button class="btn-swap" id="btn-swap" onclick="swapPanes()">⇄</button>
+  </div>
+
+  <!-- Quick reference -->
+  <div class="ref-card">
+    <div class="ref-head">
+      <span>よく使う実体参照クイックリファレンス</span>
+      <span style="font-size:10px;color:var(--light)">クリックで入力欄に挿入</span>
+    </div>
+    <div class="ref-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>文字</th>
+            <th>名前参照</th>
+            <th>10進参照</th>
+            <th>16進参照</th>
+            <th>説明</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ref-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Reference table data ──
+const REF = [
+  {ch:'&',  named:'&amp;',   dec:'&#38;',   hex:'&#x26;', desc:'アンパサンド'},
+  {ch:'<',  named:'&lt;',    dec:'&#60;',   hex:'&#x3C;', desc:'小なり記号'},
+  {ch:'>',  named:'&gt;',    dec:'&#62;',   hex:'&#x3E;', desc:'大なり記号'},
+  {ch:'"',  named:'&quot;',  dec:'&#34;',   hex:'&#x22;', desc:'ダブルクォート'},
+  {ch:"'",  named:'&apos;',  dec:'&#39;',   hex:'&#x27;', desc:'シングルクォート'},
+  {ch:' ',  named:'&nbsp;',  dec:'&#160;',  hex:'&#xA0;', desc:'ノーブレークスペース'},
+  {ch:'©',  named:'&copy;',  dec:'&#169;',  hex:'&#xA9;', desc:'著作権マーク'},
+  {ch:'®',  named:'&reg;',   dec:'&#174;',  hex:'&#xAE;', desc:'登録商標'},
+  {ch:'™',  named:'&trade;', dec:'&#8482;', hex:'&#x2122;',desc:'商標記号'},
+  {ch:'¥',  named:'&yen;',   dec:'&#165;',  hex:'&#xA5;', desc:'円マーク'},
+  {ch:'€',  named:'&euro;',  dec:'&#8364;', hex:'&#x20AC;',desc:'ユーロ'},
+  {ch:'¡',  named:'&iexcl;', dec:'&#161;',  hex:'&#xA1;', desc:'逆感嘆符'},
+  {ch:'±',  named:'&plusmn;',dec:'&#177;',  hex:'&#xB1;', desc:'プラスマイナス'},
+  {ch:'×',  named:'&times;', dec:'&#215;',  hex:'&#xD7;', desc:'掛け算記号'},
+  {ch:'÷',  named:'&divide;',dec:'&#247;',  hex:'&#xF7;', desc:'割り算記号'},
+  {ch:'←',  named:'&larr;',  dec:'&#8592;', hex:'&#x2190;',desc:'左矢印'},
+  {ch:'→',  named:'&rarr;',  dec:'&#8594;', hex:'&#x2192;',desc:'右矢印'},
+  {ch:'↑',  named:'&uarr;',  dec:'&#8593;', hex:'&#x2191;',desc:'上矢印'},
+  {ch:'↓',  named:'&darr;',  dec:'&#8595;', hex:'&#x2193;',desc:'下矢印'},
+  {ch:'♠',  named:'&spades;',dec:'&#9824;', hex:'&#x2660;',desc:'スペード'},
+  {ch:'♥',  named:'&hearts;',dec:'&#9829;', hex:'&#x2665;',desc:'ハート'},
+  {ch:'♦',  named:'&diams;', dec:'&#9830;', hex:'&#x2666;',desc:'ダイヤ'},
+  {ch:'♣',  named:'&clubs;', dec:'&#9827;', hex:'&#x2663;',desc:'クラブ'},
+  {ch:'…',  named:'&hellip;',dec:'&#8230;', hex:'&#x2026;',desc:'三点リーダー'},
+  {ch:'—',  named:'&mdash;', dec:'&#8212;', hex:'&#x2014;',desc:'Mダッシュ'},
+  {ch:'–',  named:'&ndash;', dec:'&#8211;', hex:'&#x2013;',desc:'Nダッシュ'},
+  {ch:'"',  named:'&ldquo;', dec:'&#8220;', hex:'&#x201C;',desc:'左二重引用符'},
+  {ch:'"',  named:'&rdquo;', dec:'&#8221;', hex:'&#x201D;',desc:'右二重引用符'},
+];
+
+// ── Named entity map ──
+const NAMED_MAP = {
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;',
+  '\u00A0':'&nbsp;','©':'&copy;','®':'&reg;','™':'&trade;',
+  '¥':'&yen;','€':'&euro;','¡':'&iexcl;','±':'&plusmn;',
+  '×':'&times;','÷':'&divide;','←':'&larr;','→':'&rarr;',
+  '↑':'&uarr;','↓':'&darr;','♠':'&spades;','♥':'&hearts;',
+  '♦':'&diams;','♣':'&clubs;','…':'&hellip;','—':'&mdash;',
+  '–':'&ndash;','\u201C':'&ldquo;','\u201D':'&rdquo;',
+};
+const NAMED_DECODE = Object.fromEntries(Object.entries(NAMED_MAP).map(([k,v])=>[v,k]));
+
+// ── State ──
+let currentMode = 'html-named';
+let opts = {basic:true, space:true, all:false, newline:true};
+
+// ── Init ──
+function renderRefTable(){
+  document.getElementById('ref-table').innerHTML = REF.map(r=>`
+    <tr>
+      <td class="char">${r.ch === ' ' ? '&nbsp;' : escHtml(r.ch)}</td>
+      <td class="named">${escHtml(r.named)}</td>
+      <td class="numeric">${escHtml(r.dec)}</td>
+      <td class="hex">${escHtml(r.hex)}</td>
+      <td class="desc">${r.desc}</td>
+      <td><button class="btn-insert" onclick="insertChar('${escAttr(r.ch)}')">${r.ch === ' ' ? 'SP' : escHtml(r.ch)} を挿入</button></td>
+    </tr>`).join('');
+}
+
+function insertChar(ch){
+  const ta = document.getElementById('input');
+  const s  = ta.selectionStart;
+  ta.value = ta.value.slice(0,s) + ch + ta.value.slice(s);
+  ta.selectionStart = ta.selectionEnd = s + ch.length;
+  ta.focus();
+  liveConvert();
+}
+
+// ── Mode ──
+function setMode(mode, btn){
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  liveConvert();
+}
+
+// ── Options ──
+function toggleOpt(el){
+  const map = {'opt-basic':'basic','opt-space':'space','opt-all':'all','opt-newline':'newline'};
+  const key = map[el.id];
+  if(!key) return;
+  opts[key] = !opts[key];
+  el.classList.toggle('on', opts[key]);
+  el.querySelector('input').checked = opts[key];
+  liveConvert();
+}
+
+// ── Convert ──
+function liveConvert(){
+  const inp = document.getElementById('input').value;
+  if(!inp){ clearOutput(); return; }
+  document.getElementById('output').value = doConvert(inp);
+  syncStats();
+}
+
+function convert(){
+  liveConvert();
+}
+
+function doConvert(text){
+  switch(currentMode){
+    case 'html-named':   return htmlEncodeNamed(text);
+    case 'html-numeric': return htmlEncodeNumeric(text, false);
+    case 'html-hex':     return htmlEncodeNumeric(text, true);
+    case 'url':          return urlEncode(text);
+    case 'url-decode':   return urlDecode(text);
+    case 'unicode':      return unicodeEscape(text);
+    case 'html-decode':  return htmlDecode(text);
+    default:             return text;
+  }
+}
+
+// ── HTML encode (named) ──
+function htmlEncodeNamed(text){
+  let result = '';
+  for(const ch of text){
+    if(ch === '\n'){ result += opts.newline ? '\n' : '&#10;'; continue; }
+    if(ch === '\r'){ continue; }
+    if(ch === ' ' && opts.space){ result += '&nbsp;'; continue; }
+
+    // Basic entities always
+    if(opts.basic && NAMED_MAP[ch]){ result += NAMED_MAP[ch]; continue; }
+
+    // Named map (non-basic)
+    if(!opts.basic && NAMED_MAP[ch] && !'&<>"\'' .includes(ch)){
+      result += NAMED_MAP[ch]; continue;
+    }
+
+    // All mode: encode any non-ASCII
+    if(opts.all){
+      const cp = ch.codePointAt(0);
+      if(cp > 127){ result += `&#${cp};`; continue; }
+    }
+
+    result += escHtmlBasic(ch);
+  }
+  return result;
+}
+
+// ── HTML encode (numeric) ──
+function htmlEncodeNumeric(text, useHex){
+  let result = '';
+  for(const ch of text){
+    if(ch === '\n'){ result += opts.newline ? '\n' : (useHex ? '&#xA;' : '&#10;'); continue; }
+    if(ch === '\r') continue;
+    if(ch === ' ' && opts.space){ result += '&nbsp;'; continue; }
+
+    const cp = ch.codePointAt(0);
+    const shouldEncode = opts.basic
+      ? ('&<>"\'' .includes(ch) || (opts.all && cp > 127) || NAMED_MAP[ch])
+      : (opts.all && cp > 127);
+
+    if(shouldEncode){
+      result += useHex ? `&#x${cp.toString(16).toUpperCase()};` : `&#${cp};`;
+    } else {
+      result += escHtmlBasic(ch);
+    }
+  }
+  return result;
+}
+
+// ── HTML decode ──
+function htmlDecode(text){
+  return text
+    .replace(/&[a-zA-Z]+;/g, m => NAMED_DECODE[m] ?? m)
+    .replace(/&#(\d+);/g,    (_,n) => String.fromCodePoint(parseInt(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_,h) => String.fromCodePoint(parseInt(h,16)));
+}
+
+// ── URL encode ──
+function urlEncode(text){
+  try{ return encodeURIComponent(text); }catch(e){ return text; }
+}
+
+// ── URL decode ──
+function urlDecode(text){
+  try{ return decodeURIComponent(text); }catch(e){ return text; }
+}
+
+// ── Unicode escape ──
+function unicodeEscape(text){
+  let result = '';
+  for(const ch of text){
+    if(ch === '\n'){ result += opts.newline ? '\n' : '\\n'; continue; }
+    const cp = ch.codePointAt(0);
+    if(cp > 127 || opts.all){
+      if(cp > 0xFFFF){
+        result += `\\u{${cp.toString(16).toUpperCase()}}`;
+      } else {
+        result += `\\u${cp.toString(16).toUpperCase().padStart(4,'0')}`;
+      }
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
+// ── Helpers ──
+function escHtmlBasic(ch){
+  const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'};
+  return m[ch] || ch;
+}
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+function escAttr(s){ return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'") }
+
+// ── UI helpers ──
+function clearOutput(){
+  document.getElementById('output').value = '';
+  syncStats();
+}
+
+function clearAll(){
+  document.getElementById('input').value  = '';
+  document.getElementById('output').value = '';
+  syncStats();
+}
+
+async function pasteIn(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('input').value = t;
+    liveConvert();
+  }catch(e){ document.getElementById('input').focus(); }
+}
+
+function copyOut(){
+  const out = document.getElementById('output').value;
+  if(!out) return;
+  navigator.clipboard.writeText(out).then(()=>{
+    const btns = [document.getElementById('btn-copy-out')];
+    btns.forEach(btn=>{
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); }, 1500);
+    });
+  });
+}
+
+function swapPanes(){
+  const inp = document.getElementById('input');
+  const out = document.getElementById('output');
+  const tmp = inp.value;
+  inp.value = out.value;
+  out.value = tmp;
+  const btn = document.getElementById('btn-swap');
+  btn.classList.add('spin');
+  setTimeout(()=>btn.classList.remove('spin'),300);
+  liveConvert();
+  syncStats();
+}
+
+function syncStats(){
+  const inp = document.getElementById('input').value;
+  const out = document.getElementById('output').value;
+  document.getElementById('in-chars').textContent  = inp.length + '文字';
+  document.getElementById('in-lines').textContent  = inp ? inp.split('\n').length + '行' : '0行';
+  document.getElementById('out-chars').textContent = out.length + '文字';
+  document.getElementById('out-lines').textContent = out ? out.split('\n').length + '行' : '0行';
+}
+
+renderRefTable();
+</script>
+</body>
+</html>
