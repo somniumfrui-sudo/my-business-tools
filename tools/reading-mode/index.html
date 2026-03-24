@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ブルーライトカット・読書モード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── Theme variables ── */
+body{
+  --bg:#f5f7fa;
+  --surface:#ffffff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --card-shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
+
+  transition:background .5s ease,color .5s ease;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  min-height:100vh;
+}
+
+/* ── Themes ── */
+body.theme-paper{
+  --bg:#f5f0e8;
+  --surface:#faf6ee;
+  --border:#d8cfc0;
+  --text:#2c1f0e;
+  --muted:#6b5c44;
+  --light:#9c8c76;
+}
+body.theme-sepia{
+  --bg:#e8dcc8;
+  --surface:#f0e6d0;
+  --border:#c8b898;
+  --text:#1e1408;
+  --muted:#5c4c34;
+  --light:#8c7c60;
+}
+body.theme-night{
+  --bg:#12100e;
+  --surface:#1a1714;
+  --border:#2e2820;
+  --text:#e8d8b8;
+  --muted:#a8987c;
+  --light:#6c5c44;
+}
+body.theme-warm{
+  --bg:#1c1208;
+  --surface:#241808;
+  --border:#3c2c18;
+  --text:#f0c898;
+  --muted:#c8a070;
+  --light:#886040;
+}
+body.theme-green{
+  --bg:#0a100a;
+  --surface:#0e140e;
+  --border:#1e2c1e;
+  --text:#80c880;
+  --muted:#5c9860;
+  --light:#305830;
+}
+body.theme-focus{
+  --bg:#0a0a0a;
+  --surface:#111111;
+  --border:#222;
+  --text:#e8e8e8;
+  --muted:#888;
+  --light:#444;
+}
+
+/* ── Overlay filter ── */
+#filter-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  transition:background .5s ease,opacity .5s ease;
+  mix-blend-mode:multiply;
+  opacity:0;
+}
+body.theme-paper  #filter-overlay{background:rgba(200,160,80,.08);opacity:1}
+body.theme-sepia  #filter-overlay{background:rgba(180,120,40,.12);opacity:1}
+body.theme-night  #filter-overlay{background:rgba(255,140,0,.04);opacity:1}
+body.theme-warm   #filter-overlay{background:rgba(255,100,0,.06);opacity:1}
+body.theme-green  #filter-overlay,
+body.theme-focus  #filter-overlay{opacity:0}
+
+/* ── Layout ── */
+.wrap{
+  max-width:760px;margin:0 auto;
+  padding:36px 16px 100px;
+  transition:max-width .6s cubic-bezier(.4,0,.2,1);
+}
+body.focus-mode .wrap{max-width:640px}
+
+/* ── Top bar ── */
+.topbar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:14px 18px;
+  margin-bottom:20px;
+  box-shadow:var(--card-shadow);
+  transition:background .5s,border-color .5s,box-shadow .5s;
+  position:sticky;top:12px;z-index:100;
+}
+
+.topbar-row1{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;margin-bottom:12px;
+}
+
+.topbar-title{
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text);transition:color .5s;
+  display:flex;align-items:center;gap:7px;
+}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px;transition:color .5s}
+
+/* Brightness slider */
+.brightness-row{
+  display:flex;align-items:center;gap:8px;
+}
+.brightness-label{font-size:11px;color:var(--muted);white-space:nowrap;transition:color .5s}
+input[type=range]{
+  width:100px;height:3px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+  transition:background .5s;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--text);cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);transition:background .5s,transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+
+/* ── Theme buttons ── */
+.theme-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+.theme-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  transition:color .5s;white-space:nowrap;
+}
+
+.theme-btn{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:500;padding:6px 13px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s,transform .1s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.theme-btn:hover{border-color:var(--text);color:var(--text);transform:scale(1.03)}
+.theme-btn:active{transform:scale(.97)}
+.theme-btn.active{background:var(--text);border-color:var(--text);color:var(--bg)}
+
+.theme-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid rgba(0,0,0,.1);
+}
+
+/* Font size control */
+.font-row{
+  display:flex;align-items:center;gap:8px;
+  padding-top:10px;border-top:1px solid var(--border);
+  transition:border-color .5s;flex-wrap:wrap;
+}
+.font-label{font-size:11px;color:var(--muted);transition:color .5s}
+.font-btn{
+  font-size:12px;font-weight:700;padding:4px 11px;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;
+  transition:all .2s;
+}
+.font-btn:hover{border-color:var(--text);color:var(--text)}
+.font-size-val{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;
+  color:var(--text);min-width:36px;text-align:center;
+  transition:color .5s;
+}
+.focus-toggle{
+  margin-left:auto;
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--muted);cursor:pointer;
+  padding:5px 12px;border-radius:7px;border:1.5px solid var(--border);
+  background:var(--bg);transition:all .2s;user-select:none;
+  font-family:'Noto Sans JP',sans-serif;font-weight:500;
+}
+.focus-toggle:hover{border-color:var(--text);color:var(--text)}
+.focus-toggle.on{background:var(--text);border-color:var(--text);color:var(--bg)}
+
+/* ── Demo article ── */
+.article-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:36px 40px;
+  box-shadow:var(--card-shadow);
+  transition:background .5s,border-color .5s,box-shadow .5s,padding .5s;
+}
+
+@media(max-width:500px){.article-card{padding:22px 18px}}
+
+body.focus-mode .article-card{
+  border:none;box-shadow:none;border-radius:0;
+  background:transparent;padding:32px 0;
+}
+
+.article-tag{
+  display:inline-block;font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--border);
+  border-radius:4px;padding:3px 9px;margin-bottom:16px;
+  transition:color .5s,border-color .5s;
+}
+
+.article-title{
+  font-family:'Noto Serif JP',serif;font-weight:500;
+  font-size:clamp(20px,4vw,28px);line-height:1.45;
+  color:var(--text);margin-bottom:12px;
+  transition:color .5s;letter-spacing:.01em;
+}
+
+.article-meta{
+  font-size:12px;color:var(--light);
+  margin-bottom:24px;display:flex;gap:14px;flex-wrap:wrap;
+  transition:color .5s;
+}
+
+.article-lead{
+  font-family:'Noto Serif JP',serif;font-weight:400;
+  font-size:16px;line-height:2.0;color:var(--text);
+  margin-bottom:20px;transition:color .5s,font-size .3s;
+}
+
+.article-body{
+  font-family:'Noto Serif JP',serif;font-weight:300;
+  line-height:2.1;color:var(--muted);
+  margin-bottom:18px;transition:color .5s,font-size .3s;
+}
+
+.article-h2{
+  font-family:'Noto Serif JP',serif;font-weight:500;
+  font-size:17px;color:var(--text);
+  margin:28px 0 12px;padding-left:12px;
+  border-left:3px solid var(--muted);
+  transition:color .5s,border-color .5s;line-height:1.5;
+}
+
+blockquote{
+  border-left:3px solid var(--border);
+  padding:12px 18px;margin:18px 0;
+  color:var(--light);font-style:italic;
+  font-family:'Noto Serif JP',serif;font-weight:300;
+  font-size:14px;line-height:1.9;
+  transition:color .5s,border-color .5s;
+}
+
+/* ── Divider ── */
+.article-hr{
+  border:none;border-top:1px solid var(--border);
+  margin:24px 0;transition:border-color .5s;
+}
+
+/* Focus mode hide decorations */
+body.focus-mode .article-tag,
+body.focus-mode .article-meta,
+body.focus-mode .article-hr{ display:none }
+
+/* ── Notification toast ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--text);color:var(--bg);
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:11px 18px;border-radius:10px;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .25s,transform .25s;
+  pointer-events:none;z-index:10000;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="filter-overlay"></div>
+
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div>
+        <div class="topbar-title">👓 ブルーライトカット・読書モード</div>
+        <div class="topbar-sub">画面フィルターとテーマを切り替えて、目に優しい読書環境を作ります</div>
+      </div>
+      <div class="brightness-row">
+        <span class="brightness-label">☀ 輝度</span>
+        <input type="range" id="brightness" min="50" max="120" value="100" oninput="setBrightness(this.value)">
+        <span class="brightness-label" id="brightness-val">100%</span>
+      </div>
+    </div>
+
+    <div class="theme-row">
+      <span class="theme-label">テーマ：</span>
+
+      <button class="theme-btn active" onclick="setTheme('',this)" id="btn-default">
+        <span class="theme-dot" style="background:#f5f7fa;border-color:#ccc"></span>デフォルト
+      </button>
+      <button class="theme-btn" onclick="setTheme('paper',this)" id="btn-paper">
+        <span class="theme-dot" style="background:#f5f0e8"></span>📄 ペーパー
+      </button>
+      <button class="theme-btn" onclick="setTheme('sepia',this)" id="btn-sepia">
+        <span class="theme-dot" style="background:#e8dcc8"></span>📜 セピア
+      </button>
+      <button class="theme-btn" onclick="setTheme('night',this)" id="btn-night">
+        <span class="theme-dot" style="background:#12100e"></span>🌙 夜間
+      </button>
+      <button class="theme-btn" onclick="setTheme('warm',this)" id="btn-warm">
+        <span class="theme-dot" style="background:#1c1208"></span>🕯 暖色
+      </button>
+      <button class="theme-btn" onclick="setTheme('green',this)" id="btn-green">
+        <span class="theme-dot" style="background:#0a100a"></span>💚 グリーン
+      </button>
+      <button class="theme-btn" onclick="setTheme('focus',this)" id="btn-focus">
+        <span class="theme-dot" style="background:#0a0a0a"></span>🖤 ダーク
+      </button>
+    </div>
+
+    <div class="font-row">
+      <span class="font-label">文字サイズ：</span>
+      <button class="font-btn" onclick="adjustFont(-1)">A−</button>
+      <span class="font-size-val" id="font-val">14px</span>
+      <button class="font-btn" onclick="adjustFont(1)">A＋</button>
+
+      <span style="font-size:11px;color:var(--light);margin-left:8px;transition:color .5s">行間：</span>
+      <button class="font-btn" onclick="adjustLine(-0.1)">狭</button>
+      <span class="font-size-val" id="line-val">2.0</span>
+      <button class="font-btn" onclick="adjustLine(0.1)">広</button>
+
+      <button class="focus-toggle" id="focus-btn" onclick="toggleFocus()">
+        📖 集中モード
+      </button>
+    </div>
+  </div>
+
+  <!-- Demo article -->
+  <div class="article-card" id="article">
+    <span class="article-tag">読書モード デモ</span>
+    <h1 class="article-title">複利の力と時間の価値 ―― お金と人生の本質的な関係について</h1>
+    <div class="article-meta">
+      <span>2025年6月10日</span>
+      <span>著者：編集部</span>
+      <span>読了時間：約5分</span>
+    </div>
+
+    <p class="article-lead">
+      アインシュタインは複利を「人類最大の発明」と呼んだとされる。それが真実かどうかはともかく、複利という概念が持つ力の大きさは、数式よりも実体験を通して初めて理解できるものだ。
+    </p>
+
+    <hr class="article-hr">
+
+    <h2 class="article-h2">時間は最も平等な資源である</h2>
+    <p class="article-body">
+      富める者も貧しい者も、一日に与えられる時間は等しく24時間だ。しかしその時間の使い方の差が、10年後・20年後に圧倒的な格差を生む。これは単に努力の話ではない。「どの方向に力を使うか」という選択の話だ。
+    </p>
+    <p class="article-body">
+      投資の世界では、この原理は数字として鮮明に現れる。月3万円を年利5%で30年間積み立てた場合、元本は1,080万円だが、最終的な資産は約2,496万円になる。差額の1,416万円は、一切の労働なしに生まれた「時間の産物」だ。
+    </p>
+
+    <blockquote>
+      「長期投資の本質は、優れた企業を適正な価格で買い、それを保有し続けることである。市場の短期的な動きに振り回されないことが、最大の武器になる。」
+    </blockquote>
+
+    <h2 class="article-h2">なぜ人は長期的に考えられないのか</h2>
+    <p class="article-body">
+      行動経済学の研究によれば、人間の脳は「今すぐ手に入るもの」を過大評価し、「将来手に入るもの」を著しく過小評価する傾向がある。これを「双曲割引」と呼ぶ。
+    </p>
+    <p class="article-body">
+      つまり、今日の1万円は将来の1万円よりも価値があると感じるのは、単なる計算上の理由ではなく、脳の構造的な問題だということだ。これを知っているだけで、衝動的な消費を抑え、長期的な判断をしやすくなる。
+    </p>
+
+    <h2 class="article-h2">今日始めることの意味</h2>
+    <p class="article-body">
+      複利の恩恵を最大化するためのもっとも重要な要素は「時間」である。30歳から始めるのと40歳から始めるのとでは、同じ利回りでも最終資産に数百万円から場合によっては数千万円の差が生まれる。
+    </p>
+    <p class="article-body">
+      「最良の木を植えるタイミングは20年前だった。次に良いタイミングは今日だ」という格言がある。投資に限らず、習慣・知識・健康への投資も、始めた瞬間から複利の時計が動き始める。
+    </p>
+
+    <hr class="article-hr">
+
+    <p class="article-body" style="font-style:italic">
+      ※ このテキストは読書モードのデモ用サンプルです。テーマや文字サイズを切り替えて、目に優しい読書環境をお試しください。
+    </p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let currentTheme  = '';
+let fontSize      = 14;
+let lineHeight    = 2.0;
+let focusMode     = false;
+
+// ── Theme ──
+function setTheme(theme, btn){
+  // Remove old theme
+  ['paper','sepia','night','warm','green','focus'].forEach(t=>{
+    document.body.classList.remove('theme-'+t);
+  });
+
+  currentTheme = theme;
+  if(theme) document.body.classList.add('theme-'+theme);
+
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Save pref
+  try{ localStorage.setItem('reading-theme', theme); }catch(e){}
+
+  const labels = {
+    '':'デフォルト', paper:'ペーパー', sepia:'セピア',
+    night:'夜間モード', warm:'暖色モード', green:'グリーンモード', focus:'ダークモード'
+  };
+  showToast('🎨 ' + labels[theme] + ' に切り替えました');
+}
+
+// ── Brightness ──
+function setBrightness(val){
+  document.body.style.filter = `brightness(${val}%)`;
+  document.getElementById('brightness-val').textContent = val + '%';
+  try{ localStorage.setItem('reading-brightness', val); }catch(e){}
+}
+
+// ── Font size ──
+function adjustFont(delta){
+  fontSize = Math.min(22, Math.max(10, fontSize + delta));
+  applyFontSize();
+  document.getElementById('font-val').textContent = fontSize + 'px';
+  try{ localStorage.setItem('reading-fontsize', fontSize); }catch(e){}
+}
+
+function applyFontSize(){
+  document.querySelectorAll('.article-lead,.article-body,.article-h2').forEach(el=>{
+    el.style.fontSize = fontSize + 'px';
+  });
+}
+
+// ── Line height ──
+function adjustLine(delta){
+  lineHeight = Math.round((Math.min(3.0, Math.max(1.4, lineHeight + delta)))*10)/10;
+  applyLineHeight();
+  document.getElementById('line-val').textContent = lineHeight.toFixed(1);
+  try{ localStorage.setItem('reading-lineheight', lineHeight); }catch(e){}
+}
+
+function applyLineHeight(){
+  document.querySelectorAll('.article-lead,.article-body').forEach(el=>{
+    el.style.lineHeight = lineHeight;
+  });
+}
+
+// ── Focus mode ──
+function toggleFocus(){
+  focusMode = !focusMode;
+  document.body.classList.toggle('focus-mode', focusMode);
+  const btn = document.getElementById('focus-btn');
+  btn.classList.toggle('on', focusMode);
+  btn.textContent = focusMode ? '✕ 集中モードOFF' : '📖 集中モード';
+  showToast(focusMode ? '📖 集中モードON — 装飾を非表示にしました' : '✕ 集中モードOFF');
+  try{ localStorage.setItem('reading-focus', focusMode); }catch(e){}
+}
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ── Restore preferences ──
+function restorePrefs(){
+  try{
+    const theme = localStorage.getItem('reading-theme') || '';
+    if(theme){
+      const btn = document.getElementById('btn-' + (theme||'default'));
+      if(btn) setTheme(theme, btn);
+    }
+    const br = localStorage.getItem('reading-brightness');
+    if(br){ document.getElementById('brightness').value = br; setBrightness(br); }
+    const fs = parseInt(localStorage.getItem('reading-fontsize'));
+    if(fs){ fontSize = fs; applyFontSize(); document.getElementById('font-val').textContent = fs+'px'; }
+    const lh = parseFloat(localStorage.getItem('reading-lineheight'));
+    if(lh){ lineHeight = lh; applyLineHeight(); document.getElementById('line-val').textContent = lh.toFixed(1); }
+    const fc = localStorage.getItem('reading-focus');
+    if(fc === 'true'){ toggleFocus(); }
+  }catch(e){}
+}
+
+restorePrefs();
+</script>
+</body>
+</html>
