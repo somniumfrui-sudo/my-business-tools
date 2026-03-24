@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGP・SNSシェア画像プレビュー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --yellow:#d97706;
+  --red:#dc2626;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:#374151;line-height:1.7}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;box-shadow:var(--shadow);
+  position:sticky;top:20px;
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:#4b5563;margin-bottom:14px;display:block;
+}
+
+.field{margin-bottom:13px}
+.field:last-of-type{margin-bottom:0}
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:#374151;margin-bottom:5px;font-weight:500;
+}
+.field label .len{font-size:11px;color:var(--light)}
+
+.field input,.field textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:400;
+  padding:9px 12px;outline:none;resize:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.field input:focus,.field textarea:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--light)}
+
+/* Image preview in input */
+.img-preview-wrap{
+  margin-top:7px;border-radius:8px;overflow:hidden;
+  background:var(--bg);border:1px solid var(--border);
+  min-height:60px;display:flex;align-items:center;justify-content:center;
+}
+.img-preview-wrap img{width:100%;height:auto;max-height:160px;object-fit:cover;display:block}
+.img-preview-wrap .no-img{font-size:12px;color:var(--light);padding:16px;text-align:center}
+
+/* Char limit indicator */
+.char-bar{height:2px;background:var(--border);border-radius:1px;margin-top:5px;overflow:hidden}
+.char-fill{height:100%;border-radius:1px;transition:width .2s,background .2s;background:var(--green)}
+.char-fill.warn{background:var(--yellow)}
+.char-fill.over{background:var(--red)}
+
+/* Site domain */
+.domain-row{display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.domain-row .favicon{
+  width:14px;height:14px;border-radius:2px;
+  background:linear-gradient(135deg,#667eea,#764ba2);flex-shrink:0;
+}
+.domain-text{font-size:11px;color:var(--muted)}
+
+.btn-update{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:11px;cursor:pointer;
+  margin-top:14px;transition:opacity .14s,transform .1s;
+}
+.btn-update:hover{opacity:.88}
+.btn-update:active{transform:scale(.99)}
+
+/* ── Preview area ── */
+.preview-col{display:flex;flex-direction:column;gap:14px}
+
+/* Platform tab */
+.platform-tabs{
+  display:flex;flex-wrap:wrap;gap:6px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;box-shadow:var(--shadow);
+}
+.plat-tab{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:#374151;cursor:pointer;transition:all .13s;font-family:'Outfit',sans-serif;font-weight:600;
+}
+.plat-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+.plat-tab:hover:not(.active){border-color:var(--text);color:var(--text)}
+
+/* ── Preview cards ── */
+.preview-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.preview-head{
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.preview-head-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4b5563}
+.preview-head-badge{
+  font-size:10px;font-weight:500;padding:2px 8px;border-radius:100px;
+  border:1px solid var(--border);color:#374151;
+}
+
+.preview-body{padding:20px;background:#f0f2f5}
+
+/* ── Twitter/X card ── */
+.x-card{
+  border-radius:14px;overflow:hidden;
+  border:1px solid #2f3336;background:#000;
+  max-width:504px;margin:0 auto;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+
+.x-post-meta{
+  display:flex;align-items:center;gap:8px;padding:12px 14px 8px;
+}
+.x-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);flex-shrink:0}
+.x-user{flex:1}
+.x-name{font-size:14px;font-weight:700;color:#fff}
+.x-handle{font-size:13px;color:#71767b}
+
+.x-text{padding:0 14px 10px;font-size:14px;color:#e7e9ea;line-height:1.55}
+
+.x-og-wrap{border:1px solid #2f3336;border-radius:14px;overflow:hidden;margin:0 14px 12px}
+.x-og-img{
+  width:100%;aspect-ratio:1.91/1;object-fit:cover;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:rgba(255,255,255,.2);overflow:hidden;
+}
+.x-og-img img{width:100%;height:100%;object-fit:cover}
+.x-og-img .no-img{font-size:12px;color:#555}
+.x-og-text{padding:10px 14px;background:#000}
+.x-og-domain{font-size:12px;color:#71767b;margin-bottom:3px}
+.x-og-title{
+  font-size:14px;font-weight:700;color:#e7e9ea;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.x-og-desc{
+  font-size:13px;color:#71767b;margin-top:2px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+.x-actions{
+  display:flex;justify-content:space-around;
+  padding:4px 14px 10px;
+}
+.x-action{display:flex;align-items:center;gap:4px;font-size:13px;color:#71767b;cursor:default}
+
+/* ── Facebook card ── */
+.fb-card{
+  background:#fff;border:1px solid #ddd;border-radius:8px;
+  overflow:hidden;max-width:504px;margin:0 auto;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+.fb-og-img{
+  width:100%;aspect-ratio:1.91/1;object-fit:cover;
+  background:linear-gradient(135deg,#e8f4fd,#d0e8f8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:rgba(0,0,0,.15);overflow:hidden;
+}
+.fb-og-img img{width:100%;height:100%;object-fit:cover}
+.fb-og-body{padding:10px 12px;background:#f0f2f5;border-top:1px solid #ddd}
+.fb-og-domain{font-size:11px;color:#606770;text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.fb-og-title{
+  font-size:15px;font-weight:600;color:#1c1e21;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;
+}
+.fb-og-desc{
+  font-size:13px;color:#606770;margin-top:4px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.fb-post-actions{
+  display:flex;gap:0;border-top:1px solid #ddd;
+  background:#fff;padding:4px 0;
+}
+.fb-action{
+  flex:1;text-align:center;font-size:13px;font-weight:600;
+  color:#606770;padding:8px;cursor:default;
+}
+
+/* ── LINE card ── */
+.line-card{
+  background:#fff;border-radius:12px;
+  overflow:hidden;max-width:360px;margin:0 auto;
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Kaku Gothic ProN',sans-serif;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+.line-og-img{
+  width:100%;aspect-ratio:1.91/1;
+  background:linear-gradient(135deg,#dcf8c6,#b5f0a0);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:rgba(0,0,0,.2);overflow:hidden;
+}
+.line-og-img img{width:100%;height:100%;object-fit:cover}
+.line-og-body{padding:10px 12px}
+.line-og-title{
+  font-size:13px;font-weight:700;color:#111;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;
+}
+.line-og-desc{
+  font-size:11px;color:#888;margin-top:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.line-og-domain{font-size:10px;color:#aaa;margin-top:4px}
+
+/* ── Slack card ── */
+.slack-card{
+  background:#1a1d21;border-radius:6px;overflow:hidden;
+  max-width:480px;margin:0 auto;border-left:4px solid #4a154b;
+  padding:12px 14px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+.slack-site{font-size:12px;font-weight:700;color:#fff;margin-bottom:6px}
+.slack-title{
+  font-size:14px;font-weight:700;color:#1d9bd1;margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.slack-desc{
+  font-size:13px;color:#d1d2d3;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.slack-img{
+  margin-top:8px;border-radius:4px;overflow:hidden;
+  max-width:360px;
+}
+.slack-img-inner{
+  aspect-ratio:1.91/1;background:linear-gradient(135deg,#1a1a2e,#0d0d1a);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  color:rgba(255,255,255,.2);overflow:hidden;
+}
+.slack-img-inner img{width:100%;height:100%;object-fit:cover}
+
+/* ── Checklist ── */
+.check-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);
+}
+.check-title{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:#4b5563;margin-bottom:12px;
+}
+.check-list{display:flex;flex-direction:column;gap:7px}
+.check-item{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12px;padding:7px 10px;border-radius:8px;font-weight:400;
+}
+.check-item.ok  {background:rgba(5,150,105,.06);color:var(--green)}
+.check-item.warn{background:rgba(217,119,6,.05);color:var(--yellow)}
+.check-item.fail{background:rgba(220,38,38,.05);color:var(--red)}
+.check-icon{flex-shrink:0;font-size:13px}
+.check-text{line-height:1.5}
+.check-text strong{font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🔗 OGP・SNSシェア画像プレビュー</h1>
+    <p>タイトル・説明・画像URLを入力して、各SNSでの表示をシミュレーションします。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Input -->
+    <div class="input-card">
+      <span class="card-label">OGP情報を入力</span>
+
+      <div class="field">
+        <label>サイトURL <span class="len" id="len-url"></span></label>
+        <input type="text" id="f-url" placeholder="https://example.com/page" oninput="liveUpdate()">
+      </div>
+
+      <div class="field">
+        <label>og:title <span class="len" id="len-title">0/70</span></label>
+        <input type="text" id="f-title" placeholder="ページのタイトル（60〜70文字推奨）" maxlength="120" oninput="liveUpdate();updateLen('f-title','len-title',70)">
+        <div class="char-bar"><div class="char-fill" id="bar-title" style="width:0%"></div></div>
+      </div>
+
+      <div class="field">
+        <label>og:description <span class="len" id="len-desc">0/120</span></label>
+        <textarea id="f-desc" rows="3" placeholder="ページの説明文（100〜120文字推奨）" maxlength="300" oninput="liveUpdate();updateLen('f-desc','len-desc',120)"></textarea>
+        <div class="char-bar"><div class="char-fill" id="bar-desc" style="width:0%"></div></div>
+      </div>
+
+      <div class="field">
+        <label>og:image URL</label>
+        <input type="text" id="f-img" placeholder="https://example.com/ogp.png" oninput="liveUpdate()">
+        <div class="img-preview-wrap" id="img-preview">
+          <div class="no-img">推奨サイズ：1200×630px</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>og:site_name</label>
+        <input type="text" id="f-site" placeholder="サイト名" oninput="liveUpdate()">
+      </div>
+
+      <button class="btn-update" onclick="liveUpdate()">🔄 プレビュー更新</button>
+    </div>
+
+    <!-- Previews -->
+    <div class="preview-col">
+
+      <!-- Tabs -->
+      <div class="platform-tabs">
+        <button class="plat-tab active" onclick="showPlatform('x',this)">𝕏 Twitter/X</button>
+        <button class="plat-tab" onclick="showPlatform('fb',this)">📘 Facebook</button>
+        <button class="plat-tab" onclick="showPlatform('line',this)">💬 LINE</button>
+        <button class="plat-tab" onclick="showPlatform('slack',this)">🟣 Slack</button>
+        <button class="plat-tab" onclick="showPlatform('all',this)">📋 全部表示</button>
+      </div>
+
+      <!-- X / Twitter -->
+      <div class="preview-card plat-preview" id="prev-x">
+        <div class="preview-head">
+          <span class="preview-head-label">𝕏 Twitter / X カード</span>
+          <span class="preview-head-badge">summary_large_image</span>
+        </div>
+        <div class="preview-body" style="background:#000">
+          <div class="x-card">
+            <div class="x-post-meta">
+              <div class="x-avatar"></div>
+              <div class="x-user">
+                <div class="x-name">あなたのアカウント</div>
+                <div class="x-handle">@yourhandle · 今</div>
+              </div>
+            </div>
+            <div class="x-text">このページをシェアしました 🔗</div>
+            <div class="x-og-wrap">
+              <div class="x-og-img" id="x-img"><div class="no-img">画像URLを入力してください</div></div>
+              <div class="x-og-text">
+                <div class="x-og-domain" id="x-domain">example.com</div>
+                <div class="x-og-title" id="x-title">タイトルがここに表示されます</div>
+                <div class="x-og-desc" id="x-desc">説明文がここに表示されます</div>
+              </div>
+            </div>
+            <div class="x-actions">
+              <div class="x-action">💬 24</div>
+              <div class="x-action">🔁 8</div>
+              <div class="x-action">❤️ 142</div>
+              <div class="x-action">📊</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Facebook -->
+      <div class="preview-card plat-preview" id="prev-fb" style="display:none">
+        <div class="preview-head">
+          <span class="preview-head-label">📘 Facebook 投稿カード</span>
+          <span class="preview-head-badge">og:type=website</span>
+        </div>
+        <div class="preview-body">
+          <div class="fb-card">
+            <div class="fb-og-img" id="fb-img"><div>画像URLを入力してください</div></div>
+            <div class="fb-og-body">
+              <div class="fb-og-domain" id="fb-domain">EXAMPLE.COM</div>
+              <div class="fb-og-title" id="fb-title">タイトルがここに表示されます</div>
+              <div class="fb-og-desc" id="fb-desc">説明文がここに表示されます</div>
+            </div>
+            <div class="fb-post-actions">
+              <div class="fb-action">👍 いいね！</div>
+              <div class="fb-action">💬 コメント</div>
+              <div class="fb-action">↗️ シェア</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE -->
+      <div class="preview-card plat-preview" id="prev-line" style="display:none">
+        <div class="preview-head">
+          <span class="preview-head-label">💬 LINE シェアカード</span>
+          <span class="preview-head-badge">トーク内プレビュー</span>
+        </div>
+        <div class="preview-body" style="background:#87ceeb">
+          <div class="line-card">
+            <div class="line-og-img" id="line-img"><div>画像URLを入力</div></div>
+            <div class="line-og-body">
+              <div class="line-og-title" id="line-title">タイトルがここに表示されます</div>
+              <div class="line-og-desc" id="line-desc">説明文がここに表示されます</div>
+              <div class="line-og-domain" id="line-domain">example.com</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slack -->
+      <div class="preview-card plat-preview" id="prev-slack" style="display:none">
+        <div class="preview-head">
+          <span class="preview-head-label">🟣 Slack リンク展開</span>
+          <span class="preview-head-badge">unfurl</span>
+        </div>
+        <div class="preview-body" style="background:#1a1d21">
+          <div class="slack-card">
+            <div class="slack-site" id="slack-site">サイト名</div>
+            <div class="slack-title" id="slack-title">タイトルがここに表示されます</div>
+            <div class="slack-desc" id="slack-desc">説明文がここに表示されます</div>
+            <div class="slack-img">
+              <div class="slack-img-inner" id="slack-img"><div>画像URLを入力</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checklist -->
+      <div class="check-card">
+        <div class="check-title">OGP チェックリスト</div>
+        <div class="check-list" id="check-list">
+          <div class="check-item warn"><span class="check-icon">💡</span><span class="check-text">情報を入力するとチェック結果が表示されます</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPlatform = 'x';
+
+function showPlatform(p, btn){
+  currentPlatform = p;
+  document.querySelectorAll('.plat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.plat-preview').forEach(el=>{
+    el.style.display = 'none';
+  });
+
+  if(p === 'all'){
+    document.querySelectorAll('.plat-preview').forEach(el=>{
+      el.style.display = 'block';
+    });
+  } else {
+    const el = document.getElementById('prev-'+p);
+    if(el) el.style.display = 'block';
+  }
+}
+
+function getDomain(url){
+  try{
+    const u = new URL(url.startsWith('http') ? url : 'https://'+url);
+    return u.hostname;
+  }catch(e){ return url || 'example.com'; }
+}
+
+function updateLen(inputId, lenId, max){
+  const v   = document.getElementById(inputId).value.length;
+  const pct = Math.min(v/max*100, 100);
+  const bar = document.getElementById('bar-' + (inputId==='f-title'?'title':'desc'));
+  bar.style.width = pct + '%';
+  bar.className   = 'char-fill' + (pct > 100 ? ' over' : pct > 80 ? ' warn' : '');
+  document.getElementById(lenId).textContent = v + '/' + max;
+}
+
+function setImg(wrapId, src){
+  const el = document.getElementById(wrapId);
+  if(src){
+    el.innerHTML = `<img src="${escAttr(src)}" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>画像を読み込めません</div>'" alt="OGP">`;
+  } else {
+    el.innerHTML = '<div>画像URLを入力してください</div>';
+  }
+}
+
+function liveUpdate(){
+  const url   = document.getElementById('f-url').value.trim();
+  const title = document.getElementById('f-title').value.trim();
+  const desc  = document.getElementById('f-desc').value.trim();
+  const img   = document.getElementById('f-img').value.trim();
+  const site  = document.getElementById('f-site').value.trim();
+
+  const domain = getDomain(url);
+
+  // Image preview in input
+  const ipw = document.getElementById('img-preview');
+  if(img){
+    ipw.innerHTML = `<img src="${escAttr(img)}" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'>画像を読み込めません</div>'" style="width:100%;height:auto;max-height:160px;object-fit:cover;display:block">`;
+  } else {
+    ipw.innerHTML = '<div class="no-img">推奨サイズ：1200×630px</div>';
+  }
+
+  // URL domain len
+  document.getElementById('len-url').textContent = domain;
+
+  // ── X ──
+  document.getElementById('x-domain').textContent = domain;
+  document.getElementById('x-title').textContent  = title || 'タイトルがここに表示されます';
+  document.getElementById('x-desc').textContent   = desc  || '説明文がここに表示されます';
+  setImg('x-img', img);
+
+  // ── Facebook ──
+  document.getElementById('fb-domain').textContent = domain.toUpperCase();
+  document.getElementById('fb-title').textContent  = title || 'タイトルがここに表示されます';
+  document.getElementById('fb-desc').textContent   = desc  || '説明文がここに表示されます';
+  setImg('fb-img', img);
+
+  // ── LINE ──
+  document.getElementById('line-title').textContent  = title  || 'タイトルがここに表示されます';
+  document.getElementById('line-desc').textContent   = desc   || '説明文がここに表示されます';
+  document.getElementById('line-domain').textContent = domain;
+  setImg('line-img', img);
+
+  // ── Slack ──
+  document.getElementById('slack-site').textContent  = site   || domain;
+  document.getElementById('slack-title').textContent = title  || 'タイトルがここに表示されます';
+  document.getElementById('slack-desc').textContent  = desc   || '説明文がここに表示されます';
+  setImg('slack-img', img);
+
+  // ── Checklist ──
+  runChecks(url, title, desc, img, site);
+}
+
+function runChecks(url, title, desc, img, site){
+  const checks = [];
+
+  // title
+  const tlen = title.length;
+  if(!title){
+    checks.push({s:'fail', t:'<strong>og:title が未入力</strong>です。タイトルはOGPで最も重要な要素です。'});
+  } else if(tlen <= 35){
+    checks.push({s:'warn', t:`<strong>タイトルが短め</strong>（${tlen}文字）。35〜70文字が理想的です。`});
+  } else if(tlen > 70){
+    checks.push({s:'warn', t:`<strong>タイトルが長め</strong>（${tlen}文字）。Xでは60〜70文字で切れる場合があります。`});
+  } else {
+    checks.push({s:'ok', t:`<strong>タイトル文字数OK</strong>（${tlen}文字）。`});
+  }
+
+  // description
+  const dlen = desc.length;
+  if(!desc){
+    checks.push({s:'fail', t:'<strong>og:description が未入力</strong>です。説明文はクリック率に影響します。'});
+  } else if(dlen < 60){
+    checks.push({s:'warn', t:`<strong>説明文が短め</strong>（${dlen}文字）。80〜120文字が理想的です。`});
+  } else if(dlen > 160){
+    checks.push({s:'warn', t:`<strong>説明文が長め</strong>（${dlen}文字）。Facebookは120文字超で省略されます。`});
+  } else {
+    checks.push({s:'ok', t:`<strong>説明文の文字数OK</strong>（${dlen}文字）。`});
+  }
+
+  // image
+  if(!img){
+    checks.push({s:'fail', t:'<strong>og:image が未設定</strong>です。画像なしの場合CTRが大きく下がります。'});
+  } else if(!img.startsWith('http')){
+    checks.push({s:'warn', t:'<strong>画像URLの形式を確認</strong>してください。https:// から始まる絶対URLが必要です。'});
+  } else {
+    checks.push({s:'ok', t:'<strong>og:image が設定されています</strong>。推奨サイズ：1200×630px。'});
+  }
+
+  // URL
+  if(!url){
+    checks.push({s:'warn', t:'<strong>URLが未入力</strong>です。og:url も設定することを推奨します。'});
+  } else {
+    try{
+      new URL(url.startsWith('http') ? url : 'https://'+url);
+      checks.push({s:'ok', t:'<strong>URL形式OK</strong>。'});
+    }catch(e){
+      checks.push({s:'fail', t:'<strong>URLの形式が正しくありません</strong>。'});
+    }
+  }
+
+  // site name
+  if(!site){
+    checks.push({s:'warn', t:'<strong>og:site_name が未設定</strong>です。サイト名を設定するとFacebook等で表示されます。'});
+  } else {
+    checks.push({s:'ok', t:`<strong>og:site_name OK</strong>（${escHtml(site)}）`});
+  }
+
+  // image size hint
+  checks.push({s:'ok', t:'<strong>推奨画像サイズ</strong>：1200×630px（1.91:1）。最低 600×314px 以上。'});
+
+  document.getElementById('check-list').innerHTML = checks.map(c=>`
+    <div class="check-item ${c.s}">
+      <span class="check-icon">${c.s==='ok'?'✅':c.s==='warn'?'💡':'❌'}</span>
+      <span class="check-text">${c.t}</span>
+    </div>`).join('');
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return s.replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+
+// Init
+liveUpdate();
+</script>
+</body>
+</html>
