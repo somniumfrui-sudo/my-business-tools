@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重複行・一括削除ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.08);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:800px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Options bar ── */
+.options-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:13px;padding:12px 14px;
+  box-shadow:var(--shadow);margin-bottom:11px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+}
+.opt-section-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  white-space:nowrap;
+}
+.opt-divider{width:1px;height:20px;background:var(--border);margin:0 2px}
+
+.opt-chip{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:500;color:var(--muted);
+  padding:5px 11px;border-radius:7px;
+  border:1.5px solid var(--border);background:var(--bg);
+  cursor:pointer;transition:all .13s;user-select:none;
+}
+.opt-chip:hover{border-color:var(--text);color:var(--text)}
+.opt-chip.on{background:var(--accent-l);border-color:rgba(0,87,255,.3);color:var(--accent)}
+.opt-chip input{accent-color:var(--accent);pointer-events:none;width:12px;height:12px}
+
+/* Sort tabs */
+.sort-tabs{display:flex;gap:4px}
+.sort-tab{
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.sort-tab:hover{border-color:var(--text);color:var(--text)}
+.sort-tab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* ── Editor ── */
+.editor{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:11px;margin-bottom:11px;
+}
+@media(max-width:560px){.editor{grid-template-columns:1fr}}
+
+.pane{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;
+}
+
+.pane-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+}
+.pane-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.pane-acts{display:flex;gap:4px}
+.pane-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 7px;border-radius:4px;
+  transition:color .12s,background .12s;
+}
+.pane-btn:hover{color:var(--accent);background:var(--accent-l)}
+.pane-btn.done{color:var(--green)}
+
+textarea{
+  flex:1;width:100%;background:var(--white);border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;
+  color:var(--text);padding:12px;resize:none;line-height:1.85;
+  min-height:280px;
+}
+textarea::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+textarea[readonly]{background:#fafbfc;cursor:default}
+
+.pane-foot{
+  padding:6px 13px 7px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--light);font-weight:500;
+  display:flex;gap:10px;flex-wrap:wrap;background:var(--bg);flex-shrink:0;
+}
+.pane-foot span.highlight{color:var(--red);font-weight:600}
+.pane-foot span.ok{color:var(--green);font-weight:600}
+
+/* ── Action bar ── */
+.action-bar{
+  display:flex;gap:8px;margin-bottom:11px;flex-wrap:wrap;
+}
+
+.btn-run{
+  flex:2;min-width:160px;background:#111318;color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px 16px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-run:hover{opacity:.88}
+.btn-run:active{transform:scale(.99)}
+
+.btn-sub{
+  flex:1;min-width:100px;background:var(--white);color:var(--muted);
+  border:1.5px solid var(--border);border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  padding:13px 10px;cursor:pointer;
+  transition:all .13s;text-align:center;
+}
+.btn-sub:hover{border-color:var(--text);color:var(--text)}
+.btn-sub.done{border-color:var(--green);color:var(--green)}
+
+/* ── Stats card ── */
+.stats-card{
+  display:none;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:13px;padding:14px 18px;
+  box-shadow:var(--shadow);
+  animation:fadeIn .25s ease;
+}
+.stats-card.show{display:block}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-bottom:12px;
+}
+@media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+
+.stat{
+  text-align:center;padding:10px;background:var(--bg);border-radius:9px;
+  border:1px solid var(--border);
+}
+.stat-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  color:var(--text);line-height:1;margin-bottom:3px;
+}
+.stat-val.green{color:var(--green)}
+.stat-val.red  {color:var(--red)}
+.stat-val.blue {color:var(--accent)}
+.stat-label{font-size:10px;color:var(--light);font-weight:500;letter-spacing:.03em}
+
+/* Dup highlight list */
+.dup-section{}
+.dup-title{
+  font-size:11px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+.dup-chips{display:flex;flex-wrap:wrap;gap:5px}
+.dup-chip{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:3px 9px;border-radius:5px;
+  background:var(--red-l);border:1px solid rgba(220,38,38,.2);
+  color:var(--red);font-weight:500;max-width:200px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dup-more{font-size:11px;color:var(--light);align-self:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🧹 重複行・一括削除ツール</h1>
+    <p>リストを貼り付けてボタンを押すだけ。重複行の削除・ソート・空行除去を一瞬で処理します。</p>
+  </div>
+
+  <!-- Options -->
+  <div class="options-bar">
+    <span class="opt-section-label">オプション</span>
+
+    <label class="opt-chip on" id="opt-blank" onclick="toggleOpt(this,'blank')">
+      <input type="checkbox" checked>空行を削除
+    </label>
+    <label class="opt-chip on" id="opt-trim" onclick="toggleOpt(this,'trim')">
+      <input type="checkbox" checked>前後スペース除去
+    </label>
+    <label class="opt-chip" id="opt-case" onclick="toggleOpt(this,'case')">
+      <input type="checkbox">大小文字を区別しない
+    </label>
+    <label class="opt-chip" id="opt-lower" onclick="toggleOpt(this,'lower')">
+      <input type="checkbox">小文字に統一して出力
+    </label>
+    <label class="opt-chip" id="opt-upper" onclick="toggleOpt(this,'upper')">
+      <input type="checkbox">大文字に統一して出力
+    </label>
+
+    <div class="opt-divider"></div>
+    <span class="opt-section-label">並び替え</span>
+    <div class="sort-tabs" id="sort-tabs">
+      <button class="sort-tab active" onclick="setSort('none',this)">変更なし</button>
+      <button class="sort-tab" onclick="setSort('asc',this)">A→Z 昇順</button>
+      <button class="sort-tab" onclick="setSort('desc',this)">Z→A 降順</button>
+      <button class="sort-tab" onclick="setSort('num-asc',this)">数値 昇順</button>
+      <button class="sort-tab" onclick="setSort('num-desc',this)">数値 降順</button>
+      <button class="sort-tab" onclick="setSort('len-asc',this)">短い順</button>
+      <button class="sort-tab" onclick="setSort('len-desc',this)">長い順</button>
+      <button class="sort-tab" onclick="setSort('random',this)">ランダム</button>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">入力（元のリスト）</span>
+        <div class="pane-acts">
+          <button class="pane-btn" onclick="pasteIn()">貼り付け</button>
+          <button class="pane-btn" onclick="clearAll()">クリア</button>
+        </div>
+      </div>
+      <textarea id="input"
+        placeholder="ここにリストを貼り付け&#10;&#10;apple&#10;banana&#10;apple&#10;cherry&#10;banana&#10;date&#10;APPLE&#10;cherry"
+        oninput="liveStats()"></textarea>
+      <div class="pane-foot">
+        <span id="in-lines">0行</span>
+        <span id="in-chars">0文字</span>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">出力（重複削除済み）</span>
+        <div class="pane-acts">
+          <button class="pane-btn" id="btn-copy-out" onclick="copyOut()">コピー</button>
+          <button class="pane-btn" onclick="swapPanes()">⇄ 入替</button>
+        </div>
+      </div>
+      <textarea id="output" readonly placeholder="処理結果がここに表示されます"></textarea>
+      <div class="pane-foot">
+        <span id="out-lines">0行</span>
+        <span id="out-chars">0文字</span>
+        <span id="out-removed"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-bar">
+    <button class="btn-run" onclick="run()">⚡ 重複を削除する</button>
+    <button class="btn-sub" onclick="run('dupsOnly')">📋 重複行だけ抽出</button>
+    <button class="btn-sub" onclick="run('keepFirst')">🔢 初回のみ残す</button>
+    <button class="btn-sub" id="btn-copy-all" onclick="copyOut()">コピー</button>
+    <button class="btn-sub" onclick="clearAll()">クリア</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-card" id="stats-card">
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-val" id="st-total">0</div>
+        <div class="stat-label">入力行数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val green" id="st-unique">0</div>
+        <div class="stat-label">ユニーク行数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val red" id="st-dups">0</div>
+        <div class="stat-label">重複行数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val blue" id="st-blank">0</div>
+        <div class="stat-label">空行数</div>
+      </div>
+    </div>
+    <div class="dup-section" id="dup-section" style="display:none">
+      <div class="dup-title">重複していた行</div>
+      <div class="dup-chips" id="dup-chips"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let sortMode = 'none';
+let opts = {blank:true, trim:true, case:false, lower:false, upper:false};
+
+// ── Options ──
+function toggleOpt(el, key){
+  opts[key] = !opts[key];
+  el.classList.toggle('on', opts[key]);
+  el.querySelector('input').checked = opts[key];
+  // lower/upper mutual exclusion
+  if(key === 'lower' && opts[key]){
+    opts.upper = false;
+    const uel = document.getElementById('opt-upper');
+    uel.classList.remove('on');
+    uel.querySelector('input').checked = false;
+  }
+  if(key === 'upper' && opts[key]){
+    opts.lower = false;
+    const lel = document.getElementById('opt-lower');
+    lel.classList.remove('on');
+    lel.querySelector('input').checked = false;
+  }
+}
+
+function setSort(mode, btn){
+  sortMode = mode;
+  document.querySelectorAll('.sort-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Live stats ──
+function liveStats(){
+  const text = document.getElementById('input').value;
+  const lines = text ? text.split('\n') : [];
+  const blank = lines.filter(l=>!l.trim()).length;
+  document.getElementById('in-lines').textContent = lines.length + '行';
+  document.getElementById('in-chars').textContent = text.length + '文字';
+}
+
+// ── Main process ──
+function run(mode = 'dedupe'){
+  const raw  = document.getElementById('input').value;
+  if(!raw.trim()){ alert('テキストを入力してください'); return; }
+
+  let lines = raw.split('\n');
+  const totalLines = lines.length;
+
+  // Trim
+  if(opts.trim) lines = lines.map(l=>l.trim());
+
+  // Count blanks
+  const blankCount = lines.filter(l=>!l.length).length;
+
+  // Remove blanks
+  if(opts.blank) lines = lines.filter(l=>l.length > 0);
+
+  // Build key for comparison
+  const key = l => opts.case ? l.toLowerCase() : l;
+
+  // Find duplicates
+  const seen     = new Map(); // key → first index
+  const dupKeys  = new Set();
+  lines.forEach((l,i) => {
+    const k = key(l);
+    if(seen.has(k)) dupKeys.add(k);
+    else seen.set(k, i);
+  });
+
+  const dupCount = dupKeys.size;
+
+  let result;
+
+  if(mode === 'dupsOnly'){
+    // Return only the duplicate lines (unique list of dups)
+    const shown = new Set();
+    result = lines.filter(l=>{
+      const k = key(l);
+      if(dupKeys.has(k) && !shown.has(k)){ shown.add(k); return true; }
+      return false;
+    });
+  } else if(mode === 'keepFirst'){
+    // Keep only first occurrence
+    const shown = new Set();
+    result = lines.filter(l=>{ const k=key(l); if(shown.has(k)) return false; shown.add(k); return true; });
+  } else {
+    // Default dedupe (same as keepFirst)
+    const shown = new Set();
+    result = lines.filter(l=>{ const k=key(l); if(shown.has(k)) return false; shown.add(k); return true; });
+  }
+
+  // Case transform
+  if(opts.lower) result = result.map(l=>l.toLowerCase());
+  if(opts.upper) result = result.map(l=>l.toUpperCase());
+
+  // Sort
+  result = applySort(result);
+
+  // Output
+  const outText = result.join('\n');
+  document.getElementById('output').value = outText;
+
+  // Stats
+  document.getElementById('st-total').textContent  = totalLines;
+  document.getElementById('st-unique').textContent = result.length;
+  document.getElementById('st-dups').textContent   = dupCount;
+  document.getElementById('st-blank').textContent  = blankCount;
+
+  // Footer
+  const removed = totalLines - result.length;
+  const remEl = document.getElementById('out-removed');
+  if(removed > 0){
+    remEl.textContent = removed + '行削除';
+    remEl.className = 'highlight';
+  } else {
+    remEl.textContent = '重複なし';
+    remEl.className = 'ok';
+  }
+  document.getElementById('out-lines').textContent = result.length + '行';
+  document.getElementById('out-chars').textContent = outText.length + '文字';
+
+  // Dup chips
+  const dupSec = document.getElementById('dup-section');
+  if(dupKeys.size > 0){
+    dupSec.style.display = 'block';
+    const shown = [...dupKeys].slice(0,30);
+    const more  = dupKeys.size - shown.length;
+    document.getElementById('dup-chips').innerHTML =
+      shown.map(d=>`<span class="dup-chip" title="${escHtml(d)}">${escHtml(d)}</span>`).join('') +
+      (more > 0 ? `<span class="dup-more">他 ${more} 件</span>` : '');
+  } else {
+    dupSec.style.display = 'none';
+  }
+
+  document.getElementById('stats-card').classList.add('show');
+}
+
+function applySort(arr){
+  switch(sortMode){
+    case 'asc':
+      return [...arr].sort((a,b)=>a.localeCompare(b,'ja'));
+    case 'desc':
+      return [...arr].sort((a,b)=>b.localeCompare(a,'ja'));
+    case 'num-asc':
+      return [...arr].sort((a,b)=>{
+        const na=parseFloat(a), nb=parseFloat(b);
+        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+        return a.localeCompare(b,'ja');
+      });
+    case 'num-desc':
+      return [...arr].sort((a,b)=>{
+        const na=parseFloat(a), nb=parseFloat(b);
+        if(!isNaN(na)&&!isNaN(nb)) return nb-na;
+        return b.localeCompare(a,'ja');
+      });
+    case 'len-asc':
+      return [...arr].sort((a,b)=>a.length-b.length||a.localeCompare(b,'ja'));
+    case 'len-desc':
+      return [...arr].sort((a,b)=>b.length-a.length||a.localeCompare(b,'ja'));
+    case 'random':
+      return [...arr].sort(()=>Math.random()-.5);
+    default:
+      return arr;
+  }
+}
+
+// ── UI helpers ──
+async function pasteIn(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('input').value = t;
+    liveStats();
+  }catch(e){ document.getElementById('input').focus(); }
+}
+
+function clearAll(){
+  document.getElementById('input').value  = '';
+  document.getElementById('output').value = '';
+  document.getElementById('in-lines').textContent  = '0行';
+  document.getElementById('in-chars').textContent  = '0文字';
+  document.getElementById('out-lines').textContent = '0行';
+  document.getElementById('out-chars').textContent = '0文字';
+  document.getElementById('out-removed').textContent = '';
+  document.getElementById('stats-card').classList.remove('show');
+}
+
+function copyOut(){
+  const out = document.getElementById('output').value;
+  if(!out) return;
+  navigator.clipboard.writeText(out).then(()=>{
+    ['btn-copy-out','btn-copy-all'].forEach(id=>{
+      const btn = document.getElementById(id);
+      if(!btn) return;
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); },1500);
+    });
+  });
+}
+
+function swapPanes(){
+  const inp = document.getElementById('input');
+  const out = document.getElementById('output');
+  const tmp = inp.value;
+  inp.value = out.value;
+  out.value = tmp;
+  liveStats();
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
