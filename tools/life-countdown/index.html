@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>残りの人生・カウントダウン時計</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;700;800&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#080a0d;
+  --surface:#0f1218;
+  --border:#1c2130;
+  --text:#e8eaf0;
+  --muted:#5a6480;
+  --dim:#2a3048;
+  --accent:#c8a040;
+  --accent2:#e0c060;
+}
+
+html,body{height:100%}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:300;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%,rgba(200,160,64,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60%  8%,rgba(200,160,64,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 35%,rgba(200,160,64,.25)0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 72%,rgba(200,160,64,.18)0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 82%,rgba(200,160,64,.22)0%,transparent 100%),
+    radial-gradient(400px 300px at 20% 0%,  rgba(200,160,64,.04)0%,transparent 60%),
+    radial-gradient(400px 300px at 80% 100%,rgba(200,160,64,.03)0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:32px;animation:fadeUp .6s ease both}
+.header-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:clamp(20px,5vw,30px);
+  font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:5px;
+}
+.header-sub{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:20px;margin-bottom:18px;
+  animation:fadeUp .6s .1s ease both;
+}
+.card-label{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;display:block;
+}
+.input-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;color:var(--muted);letter-spacing:.04em}
+
+input[type=date],input[type=number],select{
+  background:#0d1018;border:1px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:400;
+  padding:9px 12px;outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  appearance:none;-webkit-appearance:none;
+}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
+input[type=date]:focus,input[type=number]:focus,select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 2px rgba(200,160,64,.15);
+}
+input[type=number]{width:90px;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+select{
+  width:130px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6480' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  padding-right:30px;
+}
+select option{background:#0d1018}
+
+.btn-calc{
+  background:var(--accent);color:#080a0d;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:800;letter-spacing:.04em;
+  padding:10px 22px;cursor:pointer;
+  transition:opacity .14s,transform .1s;white-space:nowrap;
+}
+.btn-calc:hover{opacity:.9}
+.btn-calc:active{transform:scale(.98)}
+
+/* ── Results ── */
+#results{display:none}
+
+/* ── Countdown hero ── */
+.countdown-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:28px 20px 22px;
+  margin-bottom:12px;text-align:center;
+  position:relative;overflow:hidden;
+  animation:fadeUp .5s ease both;
+}
+.countdown-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+}
+
+.cd-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+
+.cd-numbers{
+  display:flex;justify-content:center;align-items:flex-start;
+  flex-wrap:wrap;gap:0;margin-bottom:6px;
+}
+.cd-block{text-align:center;padding:0 8px}
+.cd-val{
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(28px,7vw,58px);
+  font-weight:200;letter-spacing:-.04em;
+  color:var(--accent2);line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.cd-unit{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.cd-sep{
+  font-family:'Outfit',sans-serif;font-size:clamp(18px,4vw,36px);
+  font-weight:200;color:var(--dim);padding-top:5px;
+}
+
+.cd-sec-wrap{
+  margin-top:10px;padding-top:14px;border-top:1px solid var(--border);
+}
+.cd-sec-label{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.cd-sec-val{
+  font-family:'Outfit',sans-serif;font-size:clamp(16px,4vw,26px);font-weight:300;
+  color:var(--accent);letter-spacing:.02em;font-variant-numeric:tabular-nums;
+}
+
+.life-bar-wrap{margin-top:14px}
+.life-bar-row{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);margin-bottom:5px;
+}
+.life-bar-track{width:100%;height:4px;background:var(--dim);border-radius:2px;overflow:hidden}
+.life-bar-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .5s ease;
+}
+
+/* ── Stats grid ── */
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin-bottom:12px;
+  animation:fadeUp .5s .1s ease both;
+}
+@media(max-width:460px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+.stat-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:13px 10px;text-align:center;
+}
+.stat-icon{font-size:17px;margin-bottom:4px}
+.stat-val{
+  font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;
+  color:var(--text);letter-spacing:-.02em;line-height:1;margin-bottom:2px;
+}
+.stat-label{font-size:10px;color:var(--muted);letter-spacing:.03em}
+
+/* ── Activities ── */
+.activities{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 18px;
+  margin-bottom:12px;
+  animation:fadeUp .5s .2s ease both;
+}
+.act-title{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.act-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.act-list{display:flex;flex-direction:column;gap:10px}
+
+.act-row{display:flex;align-items:center;gap:10px}
+.act-icon{font-size:17px;flex-shrink:0;width:24px;text-align:center}
+.act-info{flex:1}
+.act-name{font-size:12px;color:var(--muted);margin-bottom:3px}
+.act-track{height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
+.act-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .6s ease}
+.act-right{text-align:right;min-width:90px}
+.act-val{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  color:var(--text);line-height:1;
+}
+.act-sub{font-size:10px;color:var(--muted);margin-top:1px}
+
+/* ── Thought ── */
+.thought-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  font-size:13px;color:var(--muted);line-height:1.85;text-align:center;
+  animation:fadeUp .5s .3s ease both;
+}
+.thought-card strong{color:var(--accent)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-eyebrow">Life Countdown Clock</div>
+    <h1>残りの人生・カウントダウン時計</h1>
+    <div class="header-sub">平均余命まで、あと何秒残っているか。時間の重みを実感します。</div>
+  </div>
+
+  <div class="input-card">
+    <span class="card-label">あなたの情報を入力</span>
+    <div class="input-row">
+      <div class="field">
+        <label>生年月日</label>
+        <input type="date" id="birthdate" value="1990-01-01">
+      </div>
+      <div class="field">
+        <label>性別</label>
+        <select id="sex">
+          <option value="m">男性（84歳）</option>
+          <option value="f">女性（87歳）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>目標寿命（任意）</label>
+        <input type="number" id="target-age" placeholder="80" min="1" max="150">
+      </div>
+      <button class="btn-calc" onclick="startCountdown()">計算開始</button>
+    </div>
+  </div>
+
+  <div id="results">
+
+    <div class="countdown-card">
+      <div class="cd-label">残りの人生</div>
+      <div class="cd-numbers">
+        <div class="cd-block"><div class="cd-val" id="cd-years">--</div><div class="cd-unit">年</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block"><div class="cd-val" id="cd-mo">--</div><div class="cd-unit">ヶ月</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block"><div class="cd-val" id="cd-days">--</div><div class="cd-unit">日</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block"><div class="cd-val" id="cd-hours">--</div><div class="cd-unit">時間</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block"><div class="cd-val" id="cd-mins">--</div><div class="cd-unit">分</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-block"><div class="cd-val" id="cd-secs">--</div><div class="cd-unit">秒</div></div>
+      </div>
+      <div class="cd-sec-wrap">
+        <div class="cd-sec-label">総残り秒数（リアルタイム）</div>
+        <div class="cd-sec-val" id="cd-total-sec">--</div>
+      </div>
+      <div class="life-bar-wrap">
+        <div class="life-bar-row">
+          <span>誕生</span>
+          <span id="life-pct-label">-- % 経過</span>
+          <span id="target-label">-- 歳</span>
+        </div>
+        <div class="life-bar-track">
+          <div class="life-bar-fill" id="life-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box"><div class="stat-icon">📅</div><div class="stat-val" id="s-days">--</div><div class="stat-label">残り日数</div></div>
+      <div class="stat-box"><div class="stat-icon">⏰</div><div class="stat-val" id="s-hours">--</div><div class="stat-label">残り時間数</div></div>
+      <div class="stat-box"><div class="stat-icon">🗓</div><div class="stat-val" id="s-weeks">--</div><div class="stat-label">残り週数</div></div>
+      <div class="stat-box"><div class="stat-icon">🎂</div><div class="stat-val" id="s-bd">--</div><div class="stat-label">残り誕生日</div></div>
+      <div class="stat-box"><div class="stat-icon">🌸</div><div class="stat-val" id="s-spring">--</div><div class="stat-label">残り春の回数</div></div>
+      <div class="stat-box"><div class="stat-icon">🌙</div><div class="stat-val" id="s-months">--</div><div class="stat-label">残り月数</div></div>
+    </div>
+
+    <div class="activities">
+      <div class="act-title">残りの活動換算</div>
+      <div class="act-list" id="act-list"></div>
+    </div>
+
+    <div class="thought-card" id="thought-card">—</div>
+
+  </div>
+</div>
+
+<script>
+let ticker  = null;
+let endDate = null;
+let birthMs = null;
+
+const LIFE_EXP = {m:84, f:87};
+
+const THOUGHTS = [
+  '残り <strong id="t-days"></strong> 日。今日1日を大切にすれば、それだけで十分です。',
+  '<strong>あなたの1時間は3,600秒</strong> です。今この瞬間も、カウントダウンは続いています。',
+  '残りの食事回数を見てください。一食一食が、かけがえない時間の一部です。',
+  '人生の残り時間は有限ですが、<strong>使い方を決めるのはあなた自身</strong>です。',
+  'スティーブ・ジョブズは言った。「毎朝鏡を見て、今日が人生最後の日だとしたら、今日やることをやりたいと思えるか？」',
+  '<strong>時間だけが、誰にでも平等に与えられた唯一の資源</strong>です。',
+];
+
+function fmt(n){
+  if(n >= 100000) return (Math.round(n/10000)).toLocaleString()+'万';
+  return Math.round(n).toLocaleString('ja-JP');
+}
+
+function pad(n,w=2){return String(Math.round(n)).padStart(w,'0')}
+
+function startCountdown(){
+  clearInterval(ticker);
+
+  const bd  = document.getElementById('birthdate').value;
+  const sex = document.getElementById('sex').value;
+  const ca  = parseInt(document.getElementById('target-age').value);
+  if(!bd){ alert('生年月日を入力してください'); return; }
+
+  const targetAge = (ca && ca > 0) ? ca : LIFE_EXP[sex];
+  const birth = new Date(bd);
+  birthMs = birth.getTime();
+
+  endDate = new Date(birth);
+  endDate.setFullYear(endDate.getFullYear() + targetAge);
+
+  if(endDate <= new Date()){ alert('目標年齢をもう少し大きくしてください。'); return; }
+
+  document.getElementById('target-label').textContent = targetAge + '歳';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+
+  renderActivities((endDate - new Date()) / 1000);
+  renderThought(Math.round((endDate - new Date()) / 86400000));
+  tick();
+  ticker = setInterval(tick, 1000);
+}
+
+function tick(){
+  const now = new Date();
+  const ms  = endDate - now;
+  if(ms <= 0){ clearInterval(ticker); return; }
+
+  const totalSec = Math.floor(ms / 1000);
+  let rem = totalSec;
+
+  const y  = Math.floor(rem / (365.25*86400)); rem -= Math.floor(y*365.25*86400);
+  const mo = Math.floor(rem / (30.44*86400));  rem -= Math.floor(mo*30.44*86400);
+  const d  = Math.floor(rem / 86400);          rem -= d*86400;
+  const h  = Math.floor(rem / 3600);           rem -= h*3600;
+  const m  = Math.floor(rem / 60);             rem -= m*60;
+  const s  = rem;
+
+  document.getElementById('cd-years').textContent = pad(y,4);
+  document.getElementById('cd-mo').textContent    = pad(mo);
+  document.getElementById('cd-days').textContent  = pad(d);
+  document.getElementById('cd-hours').textContent = pad(h);
+  document.getElementById('cd-mins').textContent  = pad(m);
+  document.getElementById('cd-secs').textContent  = pad(s);
+  document.getElementById('cd-total-sec').textContent = totalSec.toLocaleString('ja-JP') + ' 秒';
+
+  const totalDays = totalSec / 86400;
+  document.getElementById('s-days').textContent   = fmt(totalDays);
+  document.getElementById('s-hours').textContent  = fmt(totalSec/3600);
+  document.getElementById('s-weeks').textContent  = fmt(totalDays/7);
+  document.getElementById('s-bd').textContent     = fmt(y);
+  document.getElementById('s-spring').textContent = fmt(totalDays/91.25);
+  document.getElementById('s-months').textContent = fmt(totalDays/30.44);
+
+  const elapsed = now.getTime() - birthMs;
+  const total   = endDate.getTime() - birthMs;
+  const pct     = (elapsed / total * 100).toFixed(2);
+  document.getElementById('life-bar').style.width = pct + '%';
+  document.getElementById('life-pct-label').textContent = parseFloat(pct).toFixed(1) + '% 経過';
+}
+
+function renderActivities(remSec){
+  const d = remSec / 86400;
+  const items = [
+    {icon:'🍽️', name:'食事の回数',            val:d*3,        sub:'1日3食として'},
+    {icon:'😴', name:'睡眠回数',               val:d,          sub:'1日1回として'},
+    {icon:'😴', name:'残りの睡眠時間',          val:d*8,        sub:'1日8時間として（時間）'},
+    {icon:'🏃', name:'運動できる回数',          val:d*0.5,      sub:'週3.5回として'},
+    {icon:'📚', name:'読める本の冊数',          val:d/20,       sub:'1冊20日として'},
+    {icon:'🎬', name:'観られる映画の本数',      val:d/7,        sub:'週1本として'},
+    {icon:'🤝', name:'大切な人と過ごせる日',   val:d*0.28,     sub:'週末・祝日の割合で'},
+    {icon:'✈️', name:'旅行できる回数',          val:d/14,       sub:'2週間に1度として'},
+    {icon:'🌅', name:'朝日を見られる朝',        val:d,          sub:'毎朝として'},
+    {icon:'☕', name:'コーヒーを飲める回数',    val:d*2,        sub:'1日2杯として'},
+  ];
+  const maxVal = items[0].val;
+  document.getElementById('act-list').innerHTML = items.map(it=>`
+    <div class="act-row">
+      <span class="act-icon">${it.icon}</span>
+      <div class="act-info">
+        <div class="act-name">${it.name}</div>
+        <div class="act-track">
+          <div class="act-fill" style="width:${Math.min(it.val/maxVal*100,100).toFixed(1)}%"></div>
+        </div>
+      </div>
+      <div class="act-right">
+        <div class="act-val">${fmt(it.val)}</div>
+        <div class="act-sub">${it.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderThought(remDays){
+  const t = THOUGHTS[Math.floor(Math.random()*THOUGHTS.length)];
+  const el = document.getElementById('thought-card');
+  el.innerHTML = t;
+  const td = document.getElementById('t-days');
+  if(td) td.textContent = fmt(remDays);
+}
+</script>
+</body>
+</html>
