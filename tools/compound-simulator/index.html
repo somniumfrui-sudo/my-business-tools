@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>複利の力・資産形成シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.08);
+  --gain:#059669;
+  --gain-l:rgba(5,150,105,.08);
+  --principal:#94a3b8;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:680px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:22px 20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+
+.inputs-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:14px;margin-bottom:16px;
+}
+@media(max-width:480px){.inputs-grid{grid-template-columns:1fr}}
+
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;
+}
+.field label .val-tag{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--accent);
+}
+
+.input-wrap{position:relative}
+.input-wrap .pre{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:13px;color:var(--muted);pointer-events:none;
+}
+.input-wrap .suf{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:12px;color:var(--muted);pointer-events:none;
+}
+.input-wrap input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;
+  padding:10px 36px 10px 28px;outline:none;
+  -moz-appearance:textfield;letter-spacing:-.01em;
+  transition:border-color .18s,box-shadow .18s;
+}
+.input-wrap input::-webkit-inner-spin-button,
+.input-wrap input::-webkit-outer-spin-button{-webkit-appearance:none}
+.input-wrap input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-l);
+  background:var(--white);
+}
+
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;margin-top:6px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);border:2.5px solid var(--white);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,87,255,.25);transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+
+/* Presets */
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.preset{
+  font-size:11px;padding:3px 10px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .13s;font-weight:500;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+.btn-calc{
+  width:100%;background:var(--text);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .14s,transform .1s;margin-top:4px;
+}
+.btn-calc:hover{opacity:.88}
+.btn-calc:active{transform:scale(.99)}
+
+/* ── Hero result ── */
+.hero-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:24px 20px 20px;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+  display:none;
+  position:relative;overflow:hidden;
+}
+.hero-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),#34d399);
+}
+
+.hero-nums{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:16px;
+}
+.hero-main{}
+.hero-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:4px;letter-spacing:.02em}
+.hero-val{
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(36px,9vw,60px);
+  font-weight:800;letter-spacing:-.03em;
+  color:var(--text);line-height:1;
+  animation:popIn .35s cubic-bezier(.34,1.3,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+
+.hero-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+.hero-aside{
+  display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;
+}
+.aside-block{text-align:right}
+.aside-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:3px}
+.aside-val{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;
+  letter-spacing:-.02em;line-height:1;
+}
+.aside-val.gain{color:var(--gain)}
+.aside-val.principal{color:var(--light)}
+
+/* Big ratio bar */
+.ratio-wrap{margin-bottom:6px}
+.ratio-bar{
+  display:flex;height:12px;border-radius:6px;overflow:hidden;
+  margin-bottom:5px;
+}
+.ratio-principal{background:var(--principal);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ratio-gain{background:linear-gradient(90deg,#059669,#34d399);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ratio-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:500}
+
+/* ── Chart ── */
+.chart-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;
+}
+.chart-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;flex-wrap:wrap;gap:8px;
+}
+.chart-title{font-size:13px;font-weight:600;color:var(--text)}
+.legend{display:flex;gap:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:500}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* Bar chart */
+.bar-chart{
+  display:flex;align-items:flex-end;gap:4px;
+  height:200px;padding-bottom:24px;position:relative;
+}
+
+/* Y axis lines */
+.bar-chart::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;bottom:24px;
+  background-image:repeating-linear-gradient(
+    0deg,transparent,transparent calc(25% - 1px),var(--border) calc(25% - 1px),var(--border) 25%
+  );
+  pointer-events:none;
+}
+
+.bar-group{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:0;position:relative;cursor:pointer;
+}
+
+.bar-stack{
+  width:100%;display:flex;flex-direction:column;
+  justify-content:flex-end;flex:1;
+  position:relative;
+}
+
+.bar-gain{
+  background:linear-gradient(0deg,#059669,#34d399);
+  border-radius:3px 3px 0 0;
+  transition:height .5s cubic-bezier(.4,0,.2,1);
+  width:100%;
+}
+.bar-principal{
+  background:var(--principal);
+  width:100%;
+  transition:height .5s cubic-bezier(.4,0,.2,1);
+}
+.bar-gain + .bar-principal{ /* gain on top */ }
+
+.bar-year{
+  position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;
+  color:var(--light);white-space:nowrap;
+}
+
+/* Tooltip */
+.bar-group:hover .bar-tooltip{opacity:1;transform:translateY(-4px)}
+.bar-tooltip{
+  position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;border-radius:8px;
+  padding:7px 10px;font-size:11px;font-weight:500;
+  white-space:nowrap;opacity:0;transition:opacity .15s,transform .15s;
+  pointer-events:none;z-index:10;line-height:1.5;
+}
+.bar-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:4px solid transparent;border-top-color:var(--text);
+}
+
+/* ── Summary table ── */
+.table-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;
+}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  background:var(--bg);color:var(--muted);font-weight:600;
+  font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  padding:9px 14px;text-align:right;border-bottom:1px solid var(--border);
+}
+th:first-child{text-align:left}
+td{
+  padding:9px 14px;text-align:right;border-bottom:1px solid var(--border);
+  color:var(--muted);font-size:12px;
+}
+td:first-child{text-align:left;font-family:'Outfit',sans-serif;font-weight:600;color:var(--text)}
+tr:last-child td{border-bottom:none;font-weight:600;color:var(--text)}
+tr:last-child td:first-child{color:var(--accent)}
+td.gain-val{color:var(--gain);font-family:'Outfit',sans-serif;font-weight:700}
+td.total-val{font-family:'Outfit',sans-serif;font-weight:700;color:var(--text)}
+
+/* ── Milestones ── */
+.milestone-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;
+}
+.milestone-title{
+  font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+.milestones{display:flex;flex-direction:column;gap:8px}
+.milestone-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;background:var(--bg);border-radius:8px;font-size:13px;
+}
+.milestone-icon{font-size:16px;flex-shrink:0}
+.milestone-text{flex:1;color:var(--muted);font-weight:500}
+.milestone-val{font-family:'Outfit',sans-serif;font-weight:700;color:var(--gain);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📈 複利の力・資産形成シミュレーター</h1>
+    <p>毎月の積立額・利回り・期間を入れるだけで、30年後の資産をグラフで可視化します。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="inputs-grid">
+      <div class="field">
+        <label>毎月の積立額 <span class="val-tag" id="lbl-monthly">3万円</span></label>
+        <div class="input-wrap">
+          <span class="pre">¥</span>
+          <input type="number" id="monthly" value="30000" min="1000" step="1000"
+            oninput="syncLabel('monthly','lbl-monthly','円');liveCalc()">
+        </div>
+        <div class="preset-row">
+          <button class="preset" onclick="setVal('monthly',10000,'lbl-monthly','円')">1万</button>
+          <button class="preset" onclick="setVal('monthly',30000,'lbl-monthly','円')">3万</button>
+          <button class="preset" onclick="setVal('monthly',50000,'lbl-monthly','円')">5万</button>
+          <button class="preset" onclick="setVal('monthly',100000,'lbl-monthly','円')">10万</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>年利（想定利回り） <span class="val-tag" id="lbl-rate">5%</span></label>
+        <input type="range" id="rate" min="0.5" max="15" step="0.5" value="5"
+          oninput="syncRangeLabel('rate','lbl-rate','%');liveCalc()"
+          style="margin-bottom:2px">
+        <div class="input-wrap">
+          <input type="number" id="rate-num" value="5" min="0.1" max="20" step="0.5"
+            oninput="syncNumToRange('rate-num','rate','lbl-rate','%');liveCalc()">
+          <span class="suf">%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>運用期間 <span class="val-tag" id="lbl-years">30年</span></label>
+        <input type="range" id="years" min="1" max="50" step="1" value="30"
+          oninput="syncRangeLabel('years','lbl-years','年');liveCalc()"
+          style="margin-bottom:2px">
+        <div class="input-wrap">
+          <input type="number" id="years-num" value="30" min="1" max="50"
+            oninput="syncNumToRange('years-num','years','lbl-years','年');liveCalc()">
+          <span class="suf">年</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calc()">💹 シミュレーション開始</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero-card" id="hero-card">
+    <div class="hero-nums">
+      <div class="hero-main">
+        <div class="hero-label">最終積立総額</div>
+        <div class="hero-val" id="h-total">—</div>
+        <div class="hero-sub" id="h-sub">—</div>
+      </div>
+      <div class="hero-aside">
+        <div class="aside-block">
+          <div class="aside-label">元本合計</div>
+          <div class="aside-val principal" id="h-principal">—</div>
+        </div>
+        <div class="aside-block">
+          <div class="aside-label">運用収益</div>
+          <div class="aside-val gain" id="h-gain">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="ratio-wrap">
+      <div class="ratio-bar">
+        <div class="ratio-principal" id="ratio-p" style="width:50%"></div>
+        <div class="ratio-gain"      id="ratio-g" style="width:50%"></div>
+      </div>
+      <div class="ratio-labels">
+        <span id="ratio-p-lbl">元本 50%</span>
+        <span id="ratio-g-lbl" style="color:var(--gain)">運用収益 50%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-card" id="chart-card">
+    <div class="chart-head">
+      <span class="chart-title">年次推移グラフ</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--principal)"></div>元本</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gain)"></div>運用収益</div>
+      </div>
+    </div>
+    <div class="bar-chart" id="bar-chart"></div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="milestone-card" id="milestone-card">
+    <div class="milestone-title">達成マイルストーン</div>
+    <div class="milestones" id="milestones"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card" id="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>年数</th>
+          <th>元本合計</th>
+          <th>運用収益</th>
+          <th>総資産</th>
+          <th>倍率</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ── Sync helpers ──
+function syncLabel(id, lblId, unit){
+  const v = parseFloat(document.getElementById(id).value)||0;
+  document.getElementById(lblId).textContent = v>=10000 ? (v/10000)+'万円' : v+unit;
+}
+function syncRangeLabel(rangeId, lblId, unit){
+  const v = document.getElementById(rangeId).value;
+  document.getElementById(lblId).textContent = v+unit;
+  const el = document.getElementById(rangeId);
+  const pct = (parseFloat(v)-parseFloat(el.min))/(parseFloat(el.max)-parseFloat(el.min))*100;
+  el.style.background=`linear-gradient(to right,var(--accent) ${pct}%,var(--border) ${pct}%)`;
+  // sync number input
+  const numId = rangeId+'-num';
+  if(document.getElementById(numId)) document.getElementById(numId).value = v;
+}
+function syncNumToRange(numId, rangeId, lblId, unit){
+  const v = document.getElementById(numId).value;
+  document.getElementById(rangeId).value = v;
+  syncRangeLabel(rangeId, lblId, unit);
+}
+function setVal(id, val, lblId, unit){
+  document.getElementById(id).value = val;
+  syncLabel(id, lblId, unit);
+  liveCalc();
+}
+
+// init sliders
+['rate','years'].forEach(id=>{
+  const el = document.getElementById(id);
+  const pct=(parseFloat(el.value)-parseFloat(el.min))/(parseFloat(el.max)-parseFloat(el.min))*100;
+  el.style.background=`linear-gradient(to right,var(--accent) ${pct}%,var(--border) ${pct}%)`;
+});
+
+// ── Calculation ──
+function liveCalc(){ calc(); }
+
+function compound(monthly, rate, years){
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  if(r === 0) return monthly * n;
+  return monthly * (Math.pow(1+r, n) - 1) / r;
+}
+
+function fmt(n){
+  if(n >= 100000000) return (n/100000000).toFixed(2) + '億円';
+  if(n >= 10000)     return (n/10000).toFixed(1) + '万円';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtShort(n){ return '¥' + Math.round(n).toLocaleString('ja-JP') }
+
+function calc(){
+  const monthly = parseFloat(document.getElementById('monthly').value) || 0;
+  const rate    = parseFloat(document.getElementById('rate').value)    || 0;
+  const years   = parseInt(document.getElementById('years').value)     || 0;
+  if(!monthly || !years) return;
+
+  const total     = compound(monthly, rate, years);
+  const principal = monthly * 12 * years;
+  const gain      = total - principal;
+  const ratio     = total / principal;
+
+  // Hero
+  document.getElementById('h-total').textContent = fmt(total);
+  document.getElementById('h-sub').textContent   =
+    `毎月${fmt(monthly)} × ${years}年（${rate}%複利）`;
+  document.getElementById('h-principal').textContent = fmt(principal);
+  document.getElementById('h-gain').textContent      = '+' + fmt(gain);
+
+  const pPct = principal / total * 100;
+  const gPct = gain      / total * 100;
+  document.getElementById('ratio-p').style.width = pPct.toFixed(1) + '%';
+  document.getElementById('ratio-g').style.width = gPct.toFixed(1) + '%';
+  document.getElementById('ratio-p-lbl').textContent = '元本 ' + pPct.toFixed(0) + '%';
+  document.getElementById('ratio-g-lbl').textContent = '運用収益 ' + gPct.toFixed(0) + '%';
+
+  // Re-trigger animation
+  const hv = document.getElementById('h-total');
+  hv.style.animation='none'; void hv.offsetWidth; hv.style.animation='';
+
+  document.getElementById('hero-card').style.display = 'block';
+
+  // Yearly data
+  const data = [];
+  for(let y=1; y<=years; y++){
+    const t = compound(monthly, rate, y);
+    const p = monthly * 12 * y;
+    data.push({y, total:t, principal:p, gain:t-p});
+  }
+
+  renderChart(data);
+  renderMilestones(data, monthly, rate, years, total);
+  renderTable(data, principal);
+
+  document.getElementById('chart-card').style.display     = 'block';
+  document.getElementById('milestone-card').style.display = 'block';
+  document.getElementById('table-card').style.display     = 'block';
+}
+
+// ── Chart ──
+function renderChart(data){
+  const maxTotal = data[data.length-1].total;
+  const years = data.length;
+
+  // Decide step: show at most ~15 bars
+  const step = years <= 15 ? 1 : years <= 30 ? 2 : years <= 40 ? 4 : 5;
+  const shown = data.filter(d => d.y % step === 0 || d.y === years);
+
+  const chart = document.getElementById('bar-chart');
+  chart.innerHTML = shown.map(d => {
+    const totalH    = d.total / maxTotal * 100;
+    const gainH     = d.gain  / maxTotal * 100;
+    const principalH= d.principal / maxTotal * 100;
+    return `<div class="bar-group">
+      <div class="bar-tooltip">
+        ${d.y}年後<br>
+        総資産 ${fmt(d.total)}<br>
+        元本 ${fmt(d.principal)}<br>
+        収益 +${fmt(d.gain)}
+      </div>
+      <div class="bar-stack" style="height:calc(100% - 24px)">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end">
+          <div class="bar-gain"      style="height:${gainH}%"></div>
+          <div class="bar-principal" style="height:${principalH}%"></div>
+        </div>
+      </div>
+      <span class="bar-year">${d.y}年</span>
+    </div>`;
+  }).join('');
+
+  // Animate bars after render
+  setTimeout(()=>{
+    chart.querySelectorAll('.bar-gain,.bar-principal').forEach(el=>{
+      el.style.transition='height .6s cubic-bezier(.4,0,.2,1)';
+    });
+  },50);
+}
+
+// ── Milestones ──
+function renderMilestones(data, monthly, rate, years, finalTotal){
+  const targets = [
+    {icon:'🎯', label:'元本の2倍'},
+    {icon:'🚀', label:'元本の3倍'},
+    {icon:'💎', label:'元本の5倍'},
+    {icon:'🏆', label:'元本の10倍'},
+  ];
+  const principal0 = monthly * 12 * years;
+
+  const rows = [];
+  targets.forEach(t => {
+    const multi = parseInt(t.label[4]);
+    const target = principal0 * multi;
+    const hit = data.find(d => d.total >= target);
+    if(hit){
+      rows.push(`<div class="milestone-row">
+        <span class="milestone-icon">${t.icon}</span>
+        <span class="milestone-text">${t.label}（${fmt(target)}）達成</span>
+        <span class="milestone-val">${hit.y}年後</span>
+      </div>`);
+    }
+  });
+
+  // 1000万・3000万・1億
+  [10000000, 30000000, 100000000].forEach((target,i) => {
+    const icons=['💴','🏠','🌍'];
+    const labels=['1000万円','3000万円','1億円'];
+    const hit = data.find(d => d.total >= target);
+    if(hit){
+      rows.push(`<div class="milestone-row">
+        <span class="milestone-icon">${icons[i]}</span>
+        <span class="milestone-text">${labels[i]} 到達</span>
+        <span class="milestone-val">${hit.y}年後</span>
+      </div>`);
+    }
+  });
+
+  if(!rows.length){
+    rows.push(`<div class="milestone-row">
+      <span class="milestone-icon">📌</span>
+      <span class="milestone-text">積立額か利回りを増やすとマイルストーンが表示されます</span>
+    </div>`);
+  }
+
+  document.getElementById('milestones').innerHTML = rows.join('');
+}
+
+// ── Table ──
+function renderTable(data, totalPrincipal){
+  const step = data.length <= 15 ? 1 : data.length <= 30 ? 5 : 10;
+  const shown = data.filter(d => d.y % step === 0 || d.y === data.length);
+  const init = data[0].principal / data[0].y; // monthly * 12
+
+  document.getElementById('table-body').innerHTML = shown.map(d=>`
+    <tr>
+      <td>${d.y}年後</td>
+      <td>${fmt(d.principal)}</td>
+      <td class="gain-val">+${fmt(d.gain)}</td>
+      <td class="total-val">${fmt(d.total)}</td>
+      <td style="color:var(--muted);font-family:'Outfit',sans-serif;font-weight:600">${(d.total/d.principal).toFixed(2)}倍</td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>
