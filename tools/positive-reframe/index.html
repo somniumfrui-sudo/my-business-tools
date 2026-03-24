@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>語彙力・言い換え辞典（ポジティブ変換）</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#7c3aed;
+  --accent-l:rgba(124,58,237,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:44px 16px 100px;
+}
+
+.wrap{max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Search card ── */
+.search-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+
+.search-row{display:flex;gap:8px;margin-bottom:12px}
+
+.search-input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:400;
+  padding:11px 14px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.search-input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.search-input::placeholder{color:var(--light)}
+
+.btn-search{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:11px 20px;cursor:pointer;
+  white-space:nowrap;transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-search:hover{opacity:.9}
+.btn-search:active{transform:scale(.98)}
+
+/* Category tabs */
+.cat-row{display:flex;flex-wrap:wrap;gap:5px}
+.cat-btn{
+  font-size:11px;padding:4px 12px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .13s;font-weight:500;
+}
+.cat-btn:hover{border-color:var(--accent);color:var(--accent)}
+.cat-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Result ── */
+.result-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+  display:none;animation:fadeIn .3s ease;
+}
+.result-card.show{display:block}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.result-head{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.result-from{
+  display:flex;align-items:center;gap:8px;
+}
+.from-badge{
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;
+  color:var(--light);background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:4px 12px;text-decoration:line-through;
+}
+.arrow{font-size:18px;color:var(--light)}
+
+.cat-badge{
+  font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+
+/* Main positive word */
+.result-main{
+  padding:24px 20px 20px;text-align:center;
+  background:linear-gradient(160deg,#faf5ff,#f5f0ff);
+}
+.result-positive{
+  font-family:'Outfit',sans-serif;font-size:clamp(28px,8vw,48px);
+  font-weight:800;letter-spacing:-.02em;
+  color:var(--accent);line-height:1;margin-bottom:10px;
+  animation:popIn .35s cubic-bezier(.34,1.4,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+
+.result-desc{
+  font-size:13px;color:var(--muted);line-height:1.75;
+  max-width:440px;margin:0 auto;
+}
+
+/* Alt words */
+.alts{
+  padding:14px 20px;border-top:1px solid var(--border);
+}
+.alts-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;
+}
+.alt-chips{display:flex;flex-wrap:wrap;gap:6px}
+.alt-chip{
+  font-size:13px;font-weight:500;padding:5px 14px;border-radius:100px;
+  border:1.5px solid rgba(124,58,237,.2);background:var(--accent-l);
+  color:var(--accent);cursor:pointer;transition:all .13s;
+}
+.alt-chip:hover{background:var(--accent);color:#fff}
+
+/* Usage */
+.usage{
+  padding:14px 20px;border-top:1px solid var(--border);
+  background:var(--bg);
+}
+.usage-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:8px}
+.usage-examples{display:flex;flex-direction:column;gap:6px}
+.usage-ex{
+  font-size:13px;color:var(--muted);
+  padding:8px 12px;background:var(--white);border-radius:8px;
+  border-left:3px solid var(--accent);line-height:1.6;
+}
+.usage-ex strong{color:var(--accent);font-weight:600}
+
+/* ── Keyword grid ── */
+.grid-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+}
+.grid-head{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.grid-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.grid-count{font-size:11px;color:var(--light)}
+
+.kw-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+}
+@media(max-width:420px){.kw-grid{grid-template-columns:1fr}}
+
+.kw-item{
+  display:flex;align-items:center;gap:0;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .13s;
+}
+.kw-item:nth-child(odd){border-right:1px solid var(--border)}
+.kw-item:hover{background:#faf5ff}
+.kw-item:last-child:nth-child(odd){border-right:none}
+/* remove bottom border from last two */
+
+.kw-neg{
+  flex:1;padding:10px 14px;
+  font-size:12px;color:var(--light);
+  text-decoration:line-through;text-decoration-color:var(--border);
+  border-right:1px solid var(--border);
+  line-height:1.4;
+}
+.kw-pos{
+  flex:1;padding:10px 14px;
+  font-size:13px;color:var(--text);font-weight:500;
+  line-height:1.4;
+}
+.kw-arrow{font-size:10px;color:var(--border);flex-shrink:0;padding:0 2px}
+
+/* ── Copy bar ── */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  box-shadow:var(--shadow);margin-top:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.copy-bar-txt{font-size:12px;color:var(--muted)}
+.btn-copy{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .13s;flex-shrink:0;
+}
+.btn-copy:hover{opacity:.9}
+.btn-copy.done{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>💎 ポジティブ変換辞典</h1>
+    <p>ネガティブな言葉を「強み」として言い換えるリフレーミングツール。<br>短所は長所。見方を変えるだけで、まるで別の言葉になります。</p>
+  </div>
+
+  <!-- Search -->
+  <div class="search-card">
+    <div class="search-row">
+      <input type="text" class="search-input" id="search-input"
+        placeholder="短所・ネガティブな言葉を入力（例：飽きっぽい）"
+        oninput="liveSearch()" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn-search" onclick="doSearch()">🔄 変換</button>
+    </div>
+    <div class="cat-row" id="cat-row">
+      <button class="cat-btn active" onclick="setCat('all',this)">すべて</button>
+      <button class="cat-btn" onclick="setCat('性格',this)">🧠 性格</button>
+      <button class="cat-btn" onclick="setCat('仕事',this)">💼 仕事</button>
+      <button class="cat-btn" onclick="setCat('人間関係',this)">🤝 人間関係</button>
+      <button class="cat-btn" onclick="setCat('感情',this)">💭 感情</button>
+      <button class="cat-btn" onclick="setCat('行動',this)">🏃 行動</button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+    <div class="result-head">
+      <div class="result-from">
+        <span class="from-badge" id="r-from">—</span>
+        <span class="arrow">→</span>
+      </div>
+      <span class="cat-badge" id="r-cat-badge">—</span>
+    </div>
+    <div class="result-main">
+      <div class="result-positive" id="r-positive">—</div>
+      <div class="result-desc" id="r-desc">—</div>
+    </div>
+    <div class="alts">
+      <div class="alts-label">他の言い換え</div>
+      <div class="alt-chips" id="r-alts"></div>
+    </div>
+    <div class="usage">
+      <div class="usage-label">使い方の例</div>
+      <div class="usage-examples" id="r-usage"></div>
+    </div>
+  </div>
+
+  <!-- Copy bar -->
+  <div class="copy-bar" id="copy-bar" style="display:none">
+    <span class="copy-bar-txt" id="copy-txt">—</span>
+    <button class="btn-copy" id="btn-copy" onclick="copyResult()">📋 コピー</button>
+  </div>
+
+  <!-- Keyword grid -->
+  <div class="grid-card" id="kw-grid-card">
+    <div class="grid-head">
+      <span class="grid-title">言い換えリスト一覧</span>
+      <span class="grid-count" id="grid-count"></span>
+    </div>
+    <div class="kw-grid" id="kw-grid"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ── Dictionary ──
+// ══════════════════════════════════════════════
+const DICT = [
+  // 性格
+  {neg:'飽きっぽい',   pos:'好奇心旺盛',     cat:'性格', color:'#7c3aed',
+   desc:'一つのことに縛られず、新しいことに次々と興味を持てる人。変化を楽しめる柔軟な性格。',
+   alts:['探求心が強い','新しもの好き','切り替えが早い'],
+   usage:['私は<strong>好奇心旺盛</strong>なので、新技術のキャッチアップが得意です。','<strong>探求心が強く</strong>、幅広い分野に対応できます。']},
+
+  {neg:'頑固',         pos:'信念がある',      cat:'性格', color:'#0057ff',
+   desc:'一度決めたことをブレずに貫ける。周りの圧力に流されない芯の強さを持つ。',
+   alts:['意志が強い','ブレない','自分軸がある','粘り強い'],
+   usage:['<strong>信念を持って</strong>行動できるため、困難な局面でも諦めません。','<strong>ブレない姿勢</strong>でプロジェクトをやり遂げます。']},
+
+  {neg:'心配性',       pos:'リスク管理が得意', cat:'性格', color:'#059669',
+   desc:'起きうるリスクを事前に察知し、対策を立てられる慎重さ。問題を未然に防ぐ力。',
+   alts:['慎重','先を見通す力がある','準備が万全'],
+   usage:['<strong>リスク管理が得意</strong>なため、プロジェクトの想定外を最小化できます。']},
+
+  {neg:'優柔不断',     pos:'慎重で思慮深い',   cat:'性格', color:'#d97706',
+   desc:'即断せず多角的に検討できる。決定の質を高め、後悔の少ない選択ができる人。',
+   alts:['熟慮できる','多角的に考える','バランス感覚がある'],
+   usage:['<strong>慎重で思慮深い</strong>判断により、チームの意思決定の質を高めます。']},
+
+  {neg:'完璧主義',     pos:'品質へのこだわり',  cat:'性格', color:'#7c3aed',
+   desc:'高い基準を持ち、妥協しない姿勢。成果物のクオリティを徹底的に追求できる。',
+   alts:['品質意識が高い','細部まで気を配れる','妥協しない'],
+   usage:['<strong>品質へのこだわり</strong>が強く、高水準のアウトプットを継続します。']},
+
+  {neg:'気にしすぎ',   pos:'繊細で感受性豊か',  cat:'感情', color:'#ec4899',
+   desc:'微妙なニュアンスや変化を感じ取れる高い感受性。相手の感情を理解する共感力。',
+   alts:['気配りができる','共感力が高い','細かいことに気づける'],
+   usage:['<strong>感受性豊か</strong>なため、顧客の潜在ニーズを察知するのが得意です。']},
+
+  {neg:'内向的',       pos:'集中力が高い',      cat:'性格', color:'#0891b2',
+   desc:'一人の時間を活かして深く思考し、高い集中力でタスクをこなせる。内省から生まれる洞察力がある。',
+   alts:['思慮深い','自己分析が得意','一人で成果を出せる'],
+   usage:['<strong>集中力が高く</strong>、複雑なタスクを一人でやり遂げる力があります。']},
+
+  {neg:'目立ちたがり',  pos:'自己表現力が豊か',  cat:'性格', color:'#f59e0b',
+   desc:'自分の考えや存在を積極的に発信できる力。人の注目を集め、場の雰囲気を盛り上げる才能。',
+   alts:['表現力がある','プレゼンが得意','発信力が高い'],
+   usage:['<strong>自己表現力が豊か</strong>で、プレゼンや発信で場をリードします。']},
+
+  // 仕事
+  {neg:'仕事が遅い',   pos:'丁寧で確実',       cat:'仕事', color:'#059669',
+   desc:'スピードより質を重視し、ミスなく正確に仕上げる。後工程に手戻りを発生させない価値がある。',
+   alts:['確実性が高い','ミスが少ない','品質重視'],
+   usage:['<strong>丁寧で確実な</strong>仕事ぶりで、重要案件の品質を担保します。']},
+
+  {neg:'おしゃべり',   pos:'コミュニケーション力が高い', cat:'仕事', color:'#f97316',
+   desc:'積極的に情報を発信・共有し、チームの風通しを良くする。関係構築が自然にできる人。',
+   alts:['場を和ませる','人脈が広い','情報共有が得意'],
+   usage:['<strong>コミュニケーション力が高く</strong>、チームの連携を強化します。']},
+
+  {neg:'マイペース',   pos:'自分のペースで着実', cat:'仕事', color:'#7c3aed',
+   desc:'外部のプレッシャーに左右されず、自分のリズムで着実に成果を積み上げる安定感がある。',
+   alts:['ペースが安定している','動じない','継続力がある'],
+   usage:['<strong>自分のペースで着実に</strong>成果を出し続けることができます。']},
+
+  {neg:'緊張しやすい', pos:'責任感が強い',       cat:'仕事', color:'#0057ff',
+   desc:'重要な場面を真剣に受け止め、高いパフォーマンスを発揮しようとする責任感の表れ。',
+   alts:['真剣に取り組む','手を抜かない','誠実'],
+   usage:['<strong>責任感が強く</strong>、重要な局面でもしっかり結果を出します。']},
+
+  {neg:'几帳面すぎる', pos:'管理能力が高い',      cat:'仕事', color:'#0891b2',
+   desc:'物事を整理整頓し、体系的に管理できる能力。情報やタスクを漏れなく把握できる強み。',
+   alts:['整理整頓が得意','段取り上手','漏れがない'],
+   usage:['<strong>管理能力が高く</strong>、複数のプロジェクトを並行して運営できます。']},
+
+  {neg:'欲張り',       pos:'向上心が高い',       cat:'仕事', color:'#f59e0b',
+   desc:'常により良い状態を目指し、成長を止めない姿勢。高い目標を設定し追い求める原動力。',
+   alts:['目標意識が高い','貪欲に学ぶ','成長志向'],
+   usage:['<strong>向上心が高く</strong>、常に高い目標に向かって自己成長を続けます。']},
+
+  // 人間関係
+  {neg:'人見知り',     pos:'信頼関係を大切にする', cat:'人間関係', color:'#ec4899',
+   desc:'表面的な付き合いより深い信頼関係を重視する人。一度築いた関係を大切に維持する誠実さがある。',
+   alts:['深い関係を築ける','誠実','信頼できる'],
+   usage:['<strong>信頼関係を大切にする</strong>ため、長期的なパートナーシップが得意です。']},
+
+  {neg:'依存しやすい', pos:'協調性がある',        cat:'人間関係', color:'#059669',
+   desc:'チームで動くことを好み、他者と連携して成果を出す力がある。協力して問題を解決できる。',
+   alts:['チームワーク重視','頼るのが上手い','連携力がある'],
+   usage:['<strong>協調性が高く</strong>、チームの力を最大化する役割を担えます。']},
+
+  {neg:'お節介',       pos:'面倒見が良い',        cat:'人間関係', color:'#f97316',
+   desc:'他者の状況を気にかけ、助けの手を差し伸べられる思いやりの深さ。チームを支える力。',
+   alts:['思いやりがある','気が利く','サポートが得意'],
+   usage:['<strong>面倒見が良く</strong>、チームメンバーのサポートを自然に行えます。']},
+
+  {neg:'馴れ馴れしい', pos:'オープンで親しみやすい', cat:'人間関係', color:'#0057ff',
+   desc:'初対面でも壁を作らず、人との距離を縮める才能。チームや顧客との関係構築を加速させる。',
+   alts:['打ち解けるのが早い','親近感がある','人を引き付ける'],
+   usage:['<strong>親しみやすい人柄</strong>で、初対面でもすぐに信頼関係を築けます。']},
+
+  // 感情
+  {neg:'感情的になりやすい', pos:'情熱的',       cat:'感情', color:'#ec4899',
+   desc:'物事に深く入り込み、熱量を持って取り組める。感情を原動力に変えてパフォーマンスを高める。',
+   alts:['熱意がある','エネルギッシュ','本気で向き合う'],
+   usage:['<strong>情熱的に</strong>仕事に取り組み、チームにエネルギーを与えます。']},
+
+  {neg:'傷つきやすい', pos:'共感力が高い',        cat:'感情', color:'#7c3aed',
+   desc:'他者の気持ちを深く理解できる繊細さ。人の痛みがわかるからこそ、誰よりも寄り添える。',
+   alts:['人の気持ちがわかる','思いやりが深い','感情知性が高い'],
+   usage:['<strong>共感力が高い</strong>ため、顧客や仲間の悩みに的確に応えられます。']},
+
+  {neg:'悲観的',       pos:'リスクに敏感',        cat:'感情', color:'#059669',
+   desc:'最悪の事態を想定し、事前に備えられる。楽観バイアスを防ぎ、組織を守る慎重な判断力。',
+   alts:['慎重に行動できる','先読みが得意','現実的'],
+   usage:['<strong>リスクに敏感</strong>なため、問題が大きくなる前に対処できます。']},
+
+  // 行動
+  {neg:'せっかち',     pos:'行動力がある',        cat:'行動', color:'#f97316',
+   desc:'考えるより先に動ける推進力。機会を逃さず素早く行動し、成果を生み出すスピード感。',
+   alts:['スピード感がある','決断が早い','機動力がある'],
+   usage:['<strong>行動力があり</strong>、チャンスをすぐに掴んで成果につなげます。']},
+
+  {neg:'おっちょこちょい', pos:'フットワークが軽い', cat:'行動', color:'#0891b2',
+   desc:'細かいことを気にせず次々と動ける軽快さ。失敗を恐れず新しいことに挑戦できるメンタル。',
+   alts:['挑戦的','失敗を恐れない','どんどん動ける'],
+   usage:['<strong>フットワークが軽く</strong>、新しい施策をすぐに試して改善できます。']},
+
+  {neg:'考えすぎる',   pos:'分析力が高い',        cat:'行動', color:'#7c3aed',
+   desc:'物事を多角的に掘り下げ、本質を見抜く力。表面に見えない問題の根因を発見できる。',
+   alts:['深く考えられる','論理的思考','問題解決力が高い'],
+   usage:['<strong>分析力が高く</strong>、複雑な問題の本質を見抜いて解決策を提案します。']},
+
+  {neg:'飽きずに同じことを繰り返す', pos:'継続力・忍耐力がある', cat:'行動', color:'#059669',
+   desc:'コツコツと積み上げる力。短期的な成果より長期的な価値を生み出す根気強さ。',
+   alts:['粘り強い','やり抜く力がある','継続できる'],
+   usage:['<strong>継続力があり</strong>、長期のプロジェクトでもモチベーションを維持します。']},
+
+  {neg:'衝動的',       pos:'直感力がある',         cat:'行動', color:'#f59e0b',
+   desc:'論理より先に本質を感じ取れる直感。経験と感性から素早く正しい判断を下す力。',
+   alts:['判断が速い','感性が鋭い','直感が働く'],
+   usage:['<strong>直感力が高く</strong>、流れを読んで素早い判断ができます。']},
+];
+
+// ══════════════════════════════════════════════
+let currentCat = 'all';
+let currentResult = null;
+
+function setCat(cat, btn){
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+  liveSearch();
+}
+
+// ── Search ──
+function liveSearch(){
+  const q = document.getElementById('search-input').value.trim();
+  if(q.length < 1){ hideResult(); return; }
+  doSearch();
+}
+
+function doSearch(){
+  const q = document.getElementById('search-input').value.trim();
+  if(!q){ hideResult(); return; }
+
+  // Find best match
+  const filtered = currentCat === 'all' ? DICT : DICT.filter(d=>d.cat===currentCat);
+  let match = filtered.find(d => d.neg === q);
+  if(!match) match = filtered.find(d => d.neg.includes(q) || q.includes(d.neg.slice(0,3)));
+  if(!match) match = filtered.find(d =>
+    d.pos.includes(q) || d.alts.some(a=>a.includes(q))
+  );
+
+  if(match) showResult(match);
+  else showNoResult(q);
+}
+
+function showResult(item){
+  currentResult = item;
+  document.getElementById('r-from').textContent    = item.neg;
+  document.getElementById('r-positive').textContent= item.pos;
+  document.getElementById('r-desc').textContent    = item.desc;
+
+  const badge = document.getElementById('r-cat-badge');
+  badge.textContent = item.cat;
+  badge.style.background = item.color + '15';
+  badge.style.color       = item.color;
+  badge.style.border      = '1px solid ' + item.color + '40';
+
+  document.getElementById('r-positive').style.color = item.color;
+
+  document.getElementById('r-alts').innerHTML = item.alts.map(a=>
+    `<span class="alt-chip" style="color:${item.color};border-color:${item.color}40;background:${item.color}0e"
+      onclick="document.getElementById('search-input').value='${escAttr(a)}';doSearch()">${a}</span>`
+  ).join('');
+
+  document.getElementById('r-usage').innerHTML = item.usage.map(u=>
+    `<div class="usage-ex">${u}</div>`
+  ).join('');
+
+  const card = document.getElementById('result-card');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+
+  // Retrigger pop animation
+  const pos = document.getElementById('r-positive');
+  pos.style.animation='none'; void pos.offsetWidth; pos.style.animation='';
+
+  // Copy bar
+  document.getElementById('copy-txt').textContent = `「${item.neg}」→「${item.pos}」`;
+  document.getElementById('copy-bar').style.display='flex';
+}
+
+function showNoResult(q){
+  // Show generic reframe
+  const generic = {
+    neg: q,
+    pos: `${q}という個性`,
+    color: '#7c3aed',
+    cat: '性格',
+    desc: `「${q}」と感じていることも、見方を変えれば個性の一つです。その特性が活きる場面や使い方を探してみましょう。`,
+    alts: ['個性的','ユニーク','自分らしい'],
+    usage: [
+      `<strong>「${q}」という特性</strong>は、適切な場面で活かせば大きな強みになります。`,
+      `その個性が<strong>一番輝く場所</strong>を見つけることが大切です。`,
+    ]
+  };
+  showResult(generic);
+}
+
+function hideResult(){
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('copy-bar').style.display='none';
+}
+
+// ── Grid ──
+function renderGrid(){
+  const items = currentCat === 'all' ? DICT : DICT.filter(d=>d.cat===currentCat);
+  document.getElementById('grid-count').textContent = items.length + '件';
+  document.getElementById('kw-grid').innerHTML = items.map(item=>`
+    <div class="kw-item" onclick="selectWord('${escAttr(item.neg)}')">
+      <div class="kw-neg">${escHtml(item.neg)}</div>
+      <div class="kw-arrow">→</div>
+      <div class="kw-pos" style="color:${item.color}">${escHtml(item.pos)}</div>
+    </div>`).join('');
+}
+
+function selectWord(neg){
+  document.getElementById('search-input').value = neg;
+  doSearch();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Copy ──
+function copyResult(){
+  if(!currentResult) return;
+  const text = `【ポジティブ変換】\n「${currentResult.neg}」→「${currentResult.pos}」\n${currentResult.desc}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent='✓ コピー済み';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('done');},1600);
+  });
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return s.replace(/'/g,"\\'").replace(/"/g,'&quot;') }
+
+// Init
+renderGrid();
+</script>
+</body>
+</html>
