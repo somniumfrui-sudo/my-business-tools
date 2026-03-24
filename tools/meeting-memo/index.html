@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI会議メモ・構造化エディタ</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.08);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:32px 16px 80px;
+}
+
+.wrap{max-width:820px;margin:0 auto}
+
+/* ── Header ── */
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.header-left h1{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:3px;
+}
+.header-left p{font-size:12px;color:var(--muted);line-height:1.6}
+.header-right{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start}
+
+/* ── Meeting meta bar ── */
+.meta-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:13px;padding:12px 16px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+}
+.meta-field{display:flex;align-items:center;gap:6px;flex:1;min-width:160px}
+.meta-label{font-size:11px;font-weight:600;color:var(--light);white-space:nowrap;letter-spacing:.04em}
+.meta-input{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:400;
+  padding:6px 10px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.meta-input:focus{border-color:var(--accent);background:var(--white)}
+.meta-input::placeholder{color:var(--light)}
+
+/* ── Tag bar ── */
+.tag-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:13px;padding:10px 14px;
+  box-shadow:var(--shadow);margin-bottom:10px;
+  display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+}
+.tag-bar-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-right:4px}
+
+.tag-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:500;padding:5px 12px;border-radius:7px;
+  border:1.5px solid;cursor:pointer;
+  transition:background .13s,transform .1s;white-space:nowrap;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.tag-btn:hover{opacity:.85}
+.tag-btn:active{transform:scale(.96)}
+
+/* Tag colors */
+.tag-decision {color:#1d4ed8;border-color:rgba(29,78,216,.25);background:rgba(29,78,216,.07)}
+.tag-action    {color:#059669;border-color:rgba(5,150,105,.25);background:rgba(5,150,105,.07)}
+.tag-issue     {color:#dc2626;border-color:rgba(220,38,38,.22);background:rgba(220,38,38,.06)}
+.tag-info      {color:#7c3aed;border-color:rgba(124,58,237,.22);background:rgba(124,58,237,.06)}
+.tag-opinion   {color:#d97706;border-color:rgba(217,119,6,.25);background:rgba(217,119,6,.07)}
+.tag-pending   {color:#6b7280;border-color:rgba(107,114,128,.22);background:rgba(107,114,128,.06)}
+.tag-next      {color:#0891b2;border-color:rgba(8,145,178,.22);background:rgba(8,145,178,.07)}
+.tag-deadline  {color:#be185d;border-color:rgba(190,24,93,.22);background:rgba(190,24,93,.07)}
+
+/* ── Editor area ── */
+.editor-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+}
+
+.editor-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-wrap:wrap;gap:6px;
+}
+.editor-head-left{display:flex;align-items:center;gap:10px}
+.editor-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+
+.ts-toggle{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;color:var(--muted);
+  cursor:pointer;user-select:none;
+}
+.ts-toggle input{accent-color:var(--accent);cursor:pointer;width:13px;height:13px}
+
+.editor-head-right{display:flex;gap:6px}
+.e-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;
+  transition:color .13s,background .13s;
+}
+.e-btn:hover{color:var(--text);background:var(--border)}
+
+#memo-textarea{
+  width:100%;min-height:420px;background:var(--white);
+  border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:400;
+  color:var(--text);padding:16px;resize:vertical;line-height:1.85;
+  tab-size:2;
+}
+#memo-textarea::placeholder{
+  color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:13px;
+}
+
+.editor-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;border-top:1px solid var(--border);
+  background:var(--bg);font-size:11px;color:var(--light);font-weight:500;
+  flex-wrap:wrap;gap:6px;
+}
+.save-indicator{
+  display:flex;align-items:center;gap:5px;font-size:11px;
+  color:var(--green);font-weight:500;opacity:0;transition:opacity .3s;
+}
+.save-indicator.show{opacity:1}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+/* ── Action buttons ── */
+.action-row{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+
+.btn-primary{
+  flex:1;min-width:160px;background:#111318;color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:12px 16px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-primary:hover{opacity:.88}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary.done{background:var(--green)}
+
+.btn-secondary{
+  flex:1;min-width:120px;background:var(--white);color:var(--muted);
+  border:1.5px solid var(--border);border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:12px 16px;cursor:pointer;
+  transition:all .13s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-secondary:hover{border-color:var(--text);color:var(--text)}
+.btn-secondary.done{border-color:var(--green);color:var(--green)}
+
+/* ── Prompt preview modal ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.45);z-index:100;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex}
+
+.modal{
+  background:var(--white);border-radius:16px;
+  width:100%;max-width:640px;max-height:80vh;
+  overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+  animation:modalIn .2s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+}
+.modal-title{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--light);padding:2px 6px;border-radius:5px;transition:color .13s}
+.modal-close:hover{color:var(--text)}
+
+.modal-body{padding:16px 18px;overflow-y:auto;flex:1}
+
+.prompt-preview{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:1.75;color:var(--muted);white-space:pre-wrap;word-break:break-all;
+  max-height:300px;overflow-y:auto;margin-bottom:14px;
+}
+
+.modal-foot{
+  padding:12px 18px;border-top:1px solid var(--border);
+  display:flex;gap:8px;
+}
+.btn-copy-prompt{
+  flex:1;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:12px;cursor:pointer;
+  transition:opacity .13s;
+}
+.btn-copy-prompt:hover{opacity:.9}
+.btn-copy-prompt.done{background:var(--green)}
+
+.btn-modal-cancel{
+  background:transparent;color:var(--muted);border:1.5px solid var(--border);
+  border-radius:10px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:12px 20px;cursor:pointer;transition:all .13s;
+}
+.btn-modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>📑 AI会議メモ</h1>
+      <p>タグ挿入・タイムスタンプ付与・localStorage自動保存。最後にAI清書プロンプトをワンクリックコピー。</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-secondary" onclick="clearMemo()" style="min-width:auto;flex:none;padding:8px 14px;font-size:12px">🗑 クリア</button>
+      <button class="btn-secondary" onclick="exportTxt()" style="min-width:auto;flex:none;padding:8px 14px;font-size:12px">⬇ .txt出力</button>
+    </div>
+  </div>
+
+  <!-- Meeting meta -->
+  <div class="meta-bar">
+    <div class="meta-field">
+      <span class="meta-label">📅 日時</span>
+      <input type="text" class="meta-input" id="meta-date" placeholder="2025年6月10日 14:00〜" oninput="saveMeta()">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">📌 件名</span>
+      <input type="text" class="meta-input" id="meta-title" placeholder="○○プロジェクト定例" oninput="saveMeta()">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">👥 参加者</span>
+      <input type="text" class="meta-input" id="meta-members" placeholder="田中、鈴木、山本" oninput="saveMeta()">
+    </div>
+  </div>
+
+  <!-- Tag bar -->
+  <div class="tag-bar">
+    <span class="tag-bar-label">タグ挿入：</span>
+    <button class="tag-btn tag-decision" onclick="insertTag('【決定事項】')">✅ 決定事項</button>
+    <button class="tag-btn tag-action"   onclick="insertTag('【ネクストアクション】')">🚀 ネクストアクション</button>
+    <button class="tag-btn tag-issue"    onclick="insertTag('【課題】')">⚠ 課題</button>
+    <button class="tag-btn tag-info"     onclick="insertTag('【情報共有】')">📢 情報共有</button>
+    <button class="tag-btn tag-opinion"  onclick="insertTag('【意見】')">💬 意見</button>
+    <button class="tag-btn tag-pending"  onclick="insertTag('【保留】')">⏸ 保留</button>
+    <button class="tag-btn tag-next"     onclick="insertTag('【次回議題】')">📆 次回議題</button>
+    <button class="tag-btn tag-deadline" onclick="insertTag('【期限】')">🗓 期限</button>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-card">
+    <div class="editor-head">
+      <div class="editor-head-left">
+        <span class="editor-label">メモ本文</span>
+        <label class="ts-toggle">
+          <input type="checkbox" id="ts-auto" checked>
+          改行時に自動タイムスタンプ
+        </label>
+      </div>
+      <div class="editor-head-right">
+        <button class="e-btn" onclick="insertTimestamp()">⏱ 時刻挿入</button>
+        <button class="e-btn" onclick="insertHr()">── 区切り線</button>
+        <button class="e-btn" onclick="undoLast()">↩ 元に戻す</button>
+      </div>
+    </div>
+
+    <textarea id="memo-textarea"
+      placeholder="会議メモをここに入力してください。&#10;&#10;タグボタンやタイムスタンプを使って構造化しながら記録できます。&#10;&#10;例：&#10;[14:02] 【決定事項】Q3のローンチ日を9月15日に確定。&#10;[14:05] 【ネクストアクション】田中さん → 資料を来週水曜までに共有。&#10;[14:08] 【課題】予算超過のリスクあり、要検討。"
+      onkeydown="handleKeydown(event)"
+      oninput="handleInput(event)"></textarea>
+
+    <div class="editor-foot">
+      <div style="display:flex;gap:12px">
+        <span id="meta-chars">0文字</span>
+        <span id="meta-lines">0行</span>
+        <span id="meta-tags">タグ0個</span>
+      </div>
+      <div class="save-indicator" id="save-indicator">
+        <div class="save-dot"></div>自動保存しました
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-row">
+    <button class="btn-primary" onclick="openPromptModal()">
+      🤖 AIに清書してもらうプロンプトをコピー
+    </button>
+    <button class="btn-secondary" onclick="copyRaw()">
+      📋 メモをそのままコピー
+    </button>
+  </div>
+
+</div>
+
+<!-- Prompt modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title">🤖 AI清書プロンプト</span>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        以下のプロンプトをコピーして、ChatGPT・Claude・Gemini等に貼り付けてください。
+      </p>
+      <div class="prompt-preview" id="prompt-preview"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-copy-prompt" id="btn-copy-prompt" onclick="copyPrompt()">📋 プロンプトをコピー</button>
+      <button class="btn-modal-cancel" onclick="closeModalDirect()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_MEMO   = 'ai-meeting-memo-v1';
+const KEY_META   = 'ai-meeting-meta-v1';
+
+let saveTimer = null;
+let lastContent = '';
+
+// ── Init ──
+function init(){
+  // Restore meta
+  try{
+    const meta = JSON.parse(localStorage.getItem(KEY_META)||'{}');
+    if(meta.date)    document.getElementById('meta-date').value    = meta.date;
+    if(meta.title)   document.getElementById('meta-title').value   = meta.title;
+    if(meta.members) document.getElementById('meta-members').value = meta.members;
+  }catch(e){}
+
+  // Restore memo
+  const saved = localStorage.getItem(KEY_MEMO) || '';
+  document.getElementById('memo-textarea').value = saved;
+  lastContent = saved;
+  updateStats();
+}
+
+// ── Timestamp ──
+function getTs(){
+  const now = new Date();
+  return '[' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + '] ';
+}
+
+function insertTimestamp(){
+  const ta  = document.getElementById('memo-textarea');
+  const s   = ta.selectionStart;
+  const ts  = getTs();
+  ta.value  = ta.value.slice(0,s) + ts + ta.value.slice(s);
+  ta.selectionStart = ta.selectionEnd = s + ts.length;
+  ta.focus();
+  scheduleSave();
+  updateStats();
+}
+
+function insertHr(){
+  const ta = document.getElementById('memo-textarea');
+  const s  = ta.selectionStart;
+  const hr = '\n────────────────────\n';
+  ta.value = ta.value.slice(0,s) + hr + ta.value.slice(s);
+  ta.selectionStart = ta.selectionEnd = s + hr.length;
+  ta.focus();
+  scheduleSave();
+  updateStats();
+}
+
+// ── Tag insert ──
+function insertTag(tag){
+  const ta  = document.getElementById('memo-textarea');
+  const s   = ta.selectionStart;
+  const e   = ta.selectionEnd;
+
+  // If there's selected text, wrap it; otherwise insert at cursor
+  let ins;
+  if(s !== e){
+    ins = tag + ta.value.slice(s,e);
+    ta.value = ta.value.slice(0,s) + ins + ta.value.slice(e);
+    ta.selectionStart = s;
+    ta.selectionEnd   = s + ins.length;
+  } else {
+    ins = tag + ' ';
+    ta.value = ta.value.slice(0,s) + ins + ta.value.slice(s);
+    ta.selectionStart = ta.selectionEnd = s + ins.length;
+  }
+  ta.focus();
+  scheduleSave();
+  updateStats();
+}
+
+// ── Auto timestamp on Enter ──
+function handleKeydown(e){
+  if(e.key === 'Enter'){
+    const ta  = document.getElementById('memo-textarea');
+    const auto = document.getElementById('ts-auto').checked;
+    if(!auto) return;
+
+    e.preventDefault();
+    const s  = ta.selectionStart;
+    const ts = '\n' + getTs();
+    ta.value = ta.value.slice(0,s) + ts + ta.value.slice(s);
+    ta.selectionStart = ta.selectionEnd = s + ts.length;
+    updateStats();
+    scheduleSave();
+  }
+}
+
+function handleInput(){
+  updateStats();
+  scheduleSave();
+}
+
+function undoLast(){
+  document.getElementById('memo-textarea').focus();
+  document.execCommand('undo');
+  updateStats();
+}
+
+// ── Stats ──
+function updateStats(){
+  const t = document.getElementById('memo-textarea').value;
+  const lines = t ? t.split('\n').length : 0;
+  const tags  = (t.match(/【[^】]+】/g)||[]).length;
+  document.getElementById('meta-chars').textContent = t.length.toLocaleString() + '文字';
+  document.getElementById('meta-lines').textContent = lines + '行';
+  document.getElementById('meta-tags').textContent  = 'タグ' + tags + '個';
+}
+
+// ── Save ──
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 800);
+}
+
+function saveNow(){
+  const text = document.getElementById('memo-textarea').value;
+  localStorage.setItem(KEY_MEMO, text);
+  lastContent = text;
+  const ind = document.getElementById('save-indicator');
+  ind.classList.add('show');
+  setTimeout(()=>ind.classList.remove('show'), 2000);
+}
+
+function saveMeta(){
+  localStorage.setItem(KEY_META, JSON.stringify({
+    date:    document.getElementById('meta-date').value,
+    title:   document.getElementById('meta-title').value,
+    members: document.getElementById('meta-members').value,
+  }));
+}
+
+// ── Clear ──
+function clearMemo(){
+  if(!confirm('メモをすべて削除しますか？（この操作は元に戻せません）')) return;
+  document.getElementById('memo-textarea').value = '';
+  localStorage.removeItem(KEY_MEMO);
+  updateStats();
+}
+
+// ── Copy raw ──
+function copyRaw(){
+  const text = document.getElementById('memo-textarea').value;
+  if(!text.trim()){ alert('メモが空です'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('.btn-secondary:nth-child(2)');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ コピーしました';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.innerHTML=orig; btn.classList.remove('done'); }, 1600);
+  });
+}
+
+// ── Export txt ──
+function exportTxt(){
+  const meta  = buildMetaHeader();
+  const text  = document.getElementById('memo-textarea').value;
+  const full  = meta + text;
+  const blob  = new Blob([full], {type:'text/plain;charset=utf-8'});
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement('a');
+  const date  = new Date().toISOString().slice(0,10);
+  const title = document.getElementById('meta-title').value || '会議メモ';
+  a.href = url; a.download = `${date}_${title}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── Prompt modal ──
+function buildMetaHeader(){
+  const date    = document.getElementById('meta-date').value;
+  const title   = document.getElementById('meta-title').value;
+  const members = document.getElementById('meta-members').value;
+  let h = '';
+  if(date||title||members){
+    h += '=== 会議情報 ===\n';
+    if(date)    h += `日時：${date}\n`;
+    if(title)   h += `件名：${title}\n`;
+    if(members) h += `参加者：${members}\n`;
+    h += '================\n\n';
+  }
+  return h;
+}
+
+function buildPrompt(){
+  const meta = buildMetaHeader();
+  const memo = document.getElementById('memo-textarea').value.trim();
+  if(!memo) return '';
+
+  return `以下の会議メモを整理・清書してください。
+
+## 出力フォーマット
+以下のセクションに分けて、箇条書きで簡潔にまとめてください。
+
+1. **会議概要**（日時・参加者・目的を1〜2文で）
+2. **決定事項**（【決定事項】タグの内容を中心に）
+3. **ネクストアクション**（誰が・何を・いつまでに）
+4. **課題・懸念事項**（【課題】【保留】タグの内容を中心に）
+5. **次回議題・その他**
+
+## 注意事項
+- 話し言葉を書き言葉に整えてください
+- 重複する内容はまとめてください
+- 担当者名・期日がある場合は明記してください
+
+## 元のメモ
+---
+${meta}${memo}
+---`;
+}
+
+function openPromptModal(){
+  const prompt = buildPrompt();
+  if(!prompt){ alert('メモを入力してください'); return; }
+  document.getElementById('prompt-preview').textContent = prompt;
+  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('btn-copy-prompt').textContent = '📋 プロンプトをコピー';
+  document.getElementById('btn-copy-prompt').classList.remove('done');
+}
+
+function closeModal(e){
+  if(e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect(){
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function copyPrompt(){
+  const prompt = buildPrompt();
+  navigator.clipboard.writeText(prompt).then(()=>{
+    const btn = document.getElementById('btn-copy-prompt');
+    btn.textContent = '✓ コピーしました！';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 プロンプトをコピー'; btn.classList.remove('done'); closeModalDirect(); }, 1800);
+  });
+}
+
+// Keyboard: Esc to close modal
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeModalDirect();
+});
+
+init();
+</script>
+</body>
+</html>
