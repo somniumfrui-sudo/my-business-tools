@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>100年後の歴史教科書・生成器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600;700&family=Outfit:wght@400;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --paper:#f9f4e8;
+  --paper2:#f2ead6;
+  --ink:#1c1408;
+  --ink2:#3d2f1a;
+  --faded:#8a7558;
+  --rule:#c8b890;
+  --accent:#8b1a1a;
+  --gold:#9a7020;
+  --shadow-paper:0 4px 20px rgba(0,0,0,.15),0 1px 4px rgba(0,0,0,.1);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:#2a1f12;color:var(--ink);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+/* wood shelf bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,transparent 80px,
+      rgba(0,0,0,.04) 80px,rgba(0,0,0,.04) 82px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,transparent 40px,
+      rgba(255,255,255,.02) 40px,rgba(255,255,255,.02) 41px
+    );
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header-shelf{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,255,255,.35);margin-bottom:14px;
+}
+.header h1{
+  font-family:'Noto Serif JP',serif;font-size:clamp(20px,4vw,28px);
+  font-weight:700;color:var(--paper);letter-spacing:.06em;line-height:1.3;
+  margin-bottom:6px;
+  text-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.header p{font-size:13px;color:rgba(255,255,255,.45);line-height:1.75}
+
+/* ── Input card (modern contrast) ── */
+.input-card{
+  background:#fff;border-radius:16px;padding:22px 20px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);margin-bottom:20px;
+}
+.input-label{
+  font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:#6b7280;margin-bottom:10px;display:block;
+}
+.event-textarea{
+  width:100%;background:#f5f7fa;border:1.5px solid #e4e8ef;
+  border-radius:10px;color:#111318;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  padding:12px 14px;outline:none;resize:none;line-height:1.75;min-height:80px;
+  transition:border-color .18s,box-shadow .18s;
+}
+.event-textarea:focus{
+  border-color:#8b1a1a;background:#fff;
+  box-shadow:0 0 0 3px rgba(139,26,26,.08);
+}
+.event-textarea::placeholder{color:#b0b7c3}
+
+/* Preset chips */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 14px}
+.preset{
+  font-size:11px;padding:4px 11px;border-radius:100px;
+  border:1px solid #e4e8ef;background:#fff;
+  color:#6b7280;cursor:pointer;transition:all .13s;
+}
+.preset:hover{border-color:#8b1a1a;color:#8b1a1a}
+
+/* Era/scale */
+.options-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.opt-group{flex:1;min-width:120px}
+.opt-group label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:5px;letter-spacing:.04em}
+.opt-group select{
+  width:100%;background:#f5f7fa;border:1.5px solid #e4e8ef;
+  border-radius:8px;color:#111318;
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:7px 10px;outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:26px;
+  transition:border-color .15s;
+}
+.opt-group select:focus{border-color:#8b1a1a}
+.opt-group select option{background:#fff}
+
+.btn-generate{
+  width:100%;
+  background:linear-gradient(135deg,#8b1a1a,#c0392b);
+  color:#fff;border:none;border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;
+  padding:14px;cursor:pointer;letter-spacing:.04em;
+  box-shadow:0 4px 16px rgba(139,26,26,.3);
+  transition:opacity .13s,transform .1s,box-shadow .15s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-generate:hover{opacity:.92;box-shadow:0 6px 24px rgba(139,26,26,.4)}
+.btn-generate:active{transform:scale(.99)}
+.btn-generate:disabled{opacity:.45;cursor:default}
+
+/* ── Textbook page ── */
+.page-outer{
+  perspective:1200px;
+  margin-bottom:20px;
+}
+
+.page{
+  background:var(--paper);
+  border-radius:3px 8px 8px 3px;
+  box-shadow:var(--shadow-paper);
+  position:relative;overflow:hidden;
+  animation:pageReveal .6s cubic-bezier(.4,0,.2,1) both;
+  transform-origin:left center;
+  display:none;
+}
+.page.show{display:block}
+@keyframes pageReveal{
+  from{opacity:0;transform:rotateY(-8deg) translateX(-10px)}
+  to  {opacity:1;transform:rotateY(0) translateX(0)}
+}
+
+/* aged lines */
+.page::before{
+  content:'';position:absolute;inset:0;
+  background-image:repeating-linear-gradient(
+    transparent,transparent 31px,var(--rule) 31px,var(--rule) 32px
+  );
+  background-position:0 48px;
+  pointer-events:none;opacity:.35;
+}
+/* spine shadow */
+.page::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:28px;
+  background:linear-gradient(90deg,rgba(0,0,0,.12),transparent);
+  pointer-events:none;
+}
+
+/* stain marks */
+.stain{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(ellipse at 40% 40%,rgba(160,120,60,.12),transparent 70%);
+  pointer-events:none;
+}
+
+.page-inner{padding:36px 36px 36px 52px}
+
+/* Page number & chapter */
+.page-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+  border-bottom:2px solid var(--ink2);padding-bottom:8px;
+}
+.page-chapter{
+  font-family:'Noto Serif JP',serif;font-size:11px;font-weight:600;
+  color:var(--faded);letter-spacing:.12em;text-transform:uppercase;
+}
+.page-num{
+  font-family:'Noto Serif JP',serif;font-size:12px;color:var(--faded);
+}
+
+/* Event title (the "乱" heading) */
+.event-heading{
+  font-family:'Noto Serif JP',serif;font-size:clamp(20px,5vw,28px);
+  font-weight:700;color:var(--ink);
+  letter-spacing:.06em;line-height:1.3;
+  margin-bottom:6px;
+  animation:fadeIn .4s .2s ease both;
+}
+.event-sub{
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  color:var(--faded);letter-spacing:.08em;margin-bottom:18px;
+  animation:fadeIn .4s .25s ease both;
+}
+
+/* Section rule */
+.section-rule{
+  display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.section-rule::before,.section-rule::after{
+  content:'';flex:1;height:1px;background:var(--rule);
+}
+.section-rule-text{
+  font-family:'Noto Serif JP',serif;font-size:10px;
+  color:var(--faded);letter-spacing:.14em;text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* Body text */
+.body-text{
+  font-family:'Noto Serif JP',serif;font-size:15px;
+  color:var(--ink2);line-height:2.2;letter-spacing:.04em;
+  margin-bottom:20px;text-align:justify;
+  animation:fadeIn .4s .3s ease both;
+}
+.body-text .important{
+  font-weight:700;color:var(--ink);
+  border-bottom:1px solid var(--ink2);
+}
+.body-text .era{
+  color:var(--accent);font-weight:600;
+}
+
+/* Pull quote */
+.pull-quote{
+  border-left:3px solid var(--ink2);padding:10px 16px;
+  margin:16px 0;background:rgba(0,0,0,.03);border-radius:0 6px 6px 0;
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  color:var(--faded);font-style:italic;line-height:1.8;letter-spacing:.04em;
+  animation:fadeIn .4s .35s ease both;
+}
+
+/* Sidebar note */
+.sidebar-note{
+  float:right;width:38%;margin:0 0 12px 16px;
+  background:var(--paper2);border:1px solid var(--rule);
+  border-radius:4px;padding:10px 12px;
+  font-family:'Noto Serif JP',serif;font-size:11px;
+  color:var(--faded);line-height:1.7;letter-spacing:.03em;
+  animation:fadeIn .4s .4s ease both;
+}
+.sidebar-note-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:5px;
+  display:block;
+}
+
+/* Timeline */
+.timeline{
+  clear:both;margin:16px 0;
+  border-top:1px solid var(--rule);padding-top:12px;
+  animation:fadeIn .4s .45s ease both;
+}
+.timeline-title{
+  font-family:'Noto Serif JP',serif;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;font-weight:600;
+}
+.timeline-item{
+  display:flex;gap:10px;margin-bottom:7px;font-size:12px;
+}
+.tl-year{
+  font-family:'Noto Serif JP',serif;font-weight:700;
+  color:var(--accent);min-width:60px;flex-shrink:0;letter-spacing:.04em;
+}
+.tl-event{font-family:'Noto Serif JP',serif;color:var(--ink2);line-height:1.6}
+
+/* Page footer */
+.page-footer{
+  margin-top:20px;padding-top:10px;
+  border-top:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:'Noto Serif JP',serif;font-size:10px;color:var(--faded);
+  letter-spacing:.06em;
+  animation:fadeIn .4s .5s ease both;
+}
+
+/* Stamp */
+.page-stamp{
+  position:absolute;top:30px;right:32px;
+  width:64px;height:64px;border-radius:50%;
+  border:2.5px dashed var(--accent);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-size:8px;font-weight:700;
+  color:var(--accent);letter-spacing:.06em;text-align:center;
+  transform:rotate(12deg);opacity:.4;line-height:1.3;
+}
+
+/* ── Action bar ── */
+.action-bar{
+  display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;
+}
+.act-btn{
+  flex:1;min-width:100px;background:#fff;color:#374151;
+  border:1.5px solid #e4e8ef;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  padding:10px 12px;cursor:pointer;transition:all .13s;text-align:center;
+}
+.act-btn:hover{border-color:#111318;color:#111318}
+.act-btn.done{border-color:#059669;color:#059669}
+
+/* Loading */
+.loading-card{
+  background:var(--paper);border-radius:8px;
+  padding:44px 24px;text-align:center;
+  box-shadow:var(--shadow-paper);margin-bottom:20px;
+  display:none;
+}
+.loading-card.show{display:block}
+.loading-quill{font-size:36px;animation:quill 1.2s ease-in-out infinite;display:block;margin-bottom:12px}
+@keyframes quill{0%,100%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(10deg) translateY(-4px)}}
+.loading-text{
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  color:var(--faded);line-height:1.8;
+}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-shelf">📜 Archive · 2125 · World History Repository</div>
+    <h1>100年後の歴史教科書<br>生成器</h1>
+    <p>今の出来事を入力すると、100年後の教科書に<br>「21世紀の重大事象」としてシュールに記されます。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <span class="input-label">今の出来事・悩みを入力</span>
+    <textarea class="event-textarea" id="event-input"
+      placeholder="例：朝のコンビニでコーヒーを頼んだらホットとコールドを間違えられた&#10;例：上司に出したレポートが突き返された&#10;例：飼い猫がご飯を食べなくなった"></textarea>
+
+    <div class="presets">
+      <button class="preset" onclick="p('朝のコンビニでコーヒーを頼み間違えられた')">☕ コーヒー事件</button>
+      <button class="preset" onclick="p('締め切りに間に合わなかった')">📄 締め切り危機</button>
+      <button class="preset" onclick="p('飼い猫がご飯を食べない')">🐱 猫の反乱</button>
+      <button class="preset" onclick="p('スマホの充電が切れた大事な場面で')">📱 電池切れ悲劇</button>
+      <button class="preset" onclick="p('Amazonの荷物が届かない')">📦 配達遅延問題</button>
+      <button class="preset" onclick="p('推しのライブチケットが取れなかった')">🎤 推し活難民</button>
+    </div>
+
+    <div class="options-row">
+      <div class="opt-group">
+        <label>大げさレベル</label>
+        <select id="opt-scale">
+          <option value="mild">控えめ（少し大げさ）</option>
+          <option value="medium" selected>適度（かなり大げさ）</option>
+          <option value="epic">史詩的（超大げさ）</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>教科書のスタイル</label>
+        <select id="opt-style">
+          <option value="japanese" selected>日本史風</option>
+          <option value="world">世界史風</option>
+          <option value="academic">論文・学術論文風</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-gen" onclick="generate()">
+      📜 歴史に刻む
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <span class="loading-quill">🪶</span>
+    <div class="loading-text">2125年の歴史家が<br>記録を編纂中...</div>
+  </div>
+
+  <!-- Textbook page -->
+  <div class="page-outer">
+    <div class="page" id="page">
+      <div class="stain" style="width:120px;height:80px;top:20%;left:60%"></div>
+      <div class="stain" style="width:80px;height:60px;top:70%;left:5%"></div>
+      <div class="page-stamp" id="page-stamp">重要<br>事象<br>第一級</div>
+      <div class="page-inner" id="page-inner"></div>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="action-bar" id="action-bar" style="display:none">
+    <button class="act-btn" onclick="generate()">🔄 別バージョン</button>
+    <button class="act-btn" id="btn-copy" onclick="copyText()">📋 テキストコピー</button>
+    <button class="act-btn" id="btn-share" onclick="shareText()">🔗 シェア</button>
+  </div>
+
+</div>
+
+<script>
+function p(text){ document.getElementById('event-input').value = text; }
+
+let resultText = '';
+let pageNum = Math.floor(Math.random()*200+100);
+
+async function generate(){
+  const event = document.getElementById('event-input').value.trim();
+  if(!event){ alert('出来事を入力してください'); return; }
+
+  const scale = document.getElementById('opt-scale').value;
+  const style = document.getElementById('opt-style').value;
+  const btn   = document.getElementById('btn-gen');
+  btn.disabled = true;
+
+  document.getElementById('page').classList.remove('show');
+  document.getElementById('loading-card').classList.add('show');
+  document.getElementById('action-bar').style.display = 'none';
+
+  try{
+    const data = await callClaude(event, scale, style);
+    renderPage(data);
+  }catch(e){
+    alert('エラー：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-card').classList.remove('show');
+  }
+}
+
+async function callClaude(event, scale, style){
+  const scaleMap = {
+    mild:'やや誇張して（1.5倍程度）',
+    medium:'かなり大げさに（5倍程度）、まるで文明の転換点のように',
+    epic:'極めて壮大に（100倍程度）、宇宙の歴史を揺るがした事象として'
+  };
+  const styleMap = {
+    japanese:'日本の高校歴史教科書（例：「〇〇の乱」「〇〇事変」「〇〇の変」のような命名）',
+    world:'世界史の教科書（西暦表記、国際的視点）',
+    academic:'大学の学術論文・史料集（脚注や注釈を含む形式）'
+  };
+
+  const prompt = `あなたは2125年の歴史家です。以下の2025年の出来事を、${styleMap[style]}のスタイルで、${scaleMap[scale]}記述してください。
+
+出来事：「${event}」
+
+以下のJSON形式で返してください：
+{
+  "event_name": "〇〇の乱・〇〇事変・〇〇事件など（10文字以内）",
+  "subtitle": "副題（20文字以内）",
+  "chapter": "第〇章 〇〇時代の終焉",
+  "main_text": "本文（200〜280文字）。歴史教科書の文体で。「〜であった。」「〜したのである。」調。固有名詞は[個人名A]などと置き換え可。",
+  "pull_quote": "教科書のコラム引用文（50〜70文字）。当時の関係者が残したとされる言葉（フィクション）",
+  "sidebar_title": "補足コラムのタイトル（15文字以内）",
+  "sidebar_text": "補足コラムの内容（60〜80文字）",
+  "timeline": [
+    {"year": "2025年〇月", "event": "出来事のポイント（30文字以内）"},
+    {"year": "2026年", "event": "その後の影響（30文字以内）"},
+    {"year": "2031年", "event": "10年後の変化（30文字以内）"}
+  ],
+  "footer_note": "注釈・出典（例：『21世紀大事典』第3版 p.○○より）"
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1200,
+      system:'あなたは2125年の権威ある歴史家です。ユーモアと知性を兼ね備え、どんな些細な出来事でも歴史的重大事象として格調高く記録します。',
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const text = d.content?.[0]?.text || '';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+function renderPage(data){
+  pageNum = Math.floor(Math.random()*200+100);
+
+  document.getElementById('page-stamp').innerHTML =
+    data.event_name.length > 4
+      ? `重要<br>事象` : `${data.event_name}<br>勃発`;
+
+  const inner = document.getElementById('page-inner');
+  inner.innerHTML = `
+    <div class="page-meta">
+      <span class="page-chapter">${escHtml(data.chapter)}</span>
+      <span class="page-num">${pageNum}</span>
+    </div>
+
+    <h2 class="event-heading">${escHtml(data.event_name)}</h2>
+    <div class="event-sub">${escHtml(data.subtitle)}</div>
+
+    <div class="section-rule"><span class="section-rule-text">概要</span></div>
+
+    <div class="sidebar-note">
+      <span class="sidebar-note-title">${escHtml(data.sidebar_title)}</span>
+      ${escHtml(data.sidebar_text)}
+    </div>
+
+    <div class="body-text">${formatBody(data.main_text)}</div>
+
+    <div class="pull-quote">「${escHtml(data.pull_quote)}」</div>
+
+    <div class="timeline">
+      <div class="timeline-title">年表</div>
+      ${(data.timeline||[]).map(t=>`
+        <div class="timeline-item">
+          <span class="tl-year">${escHtml(t.year)}</span>
+          <span class="tl-event">${escHtml(t.event)}</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="page-footer">
+      <span>${escHtml(data.footer_note||'')}</span>
+      <span>© 2125 Global History Archive</span>
+    </div>`;
+
+  // Save for copy
+  resultText = [
+    data.event_name,
+    data.subtitle,
+    '',
+    data.chapter,
+    '',
+    data.main_text,
+    '',
+    `「${data.pull_quote}」`,
+    '',
+    '【年表】',
+    ...(data.timeline||[]).map(t=>`${t.year}：${t.event}`),
+    '',
+    data.footer_note,
+  ].join('\n');
+
+  const page = document.getElementById('page');
+  page.classList.remove('show');
+  void page.offsetWidth;
+  page.classList.add('show');
+  document.getElementById('action-bar').style.display = 'flex';
+  page.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function formatBody(text){
+  // Highlight patterns like 「〇〇」 and years
+  return escHtml(text)
+    .replace(/(2\d{3}年)/g,'<span class="era">$1</span>')
+    .replace(/「([^」]+)」/g,'「<span class="important">$1</span>」')
+    .replace(/\n/g,'<br>');
+}
+
+function copyText(){
+  if(!resultText){ alert('先に生成してください'); return; }
+  navigator.clipboard.writeText(resultText).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✓ コピー済み';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 テキストコピー'; btn.classList.remove('done'); }, 1600);
+  });
+}
+
+function shareText(){
+  if(!resultText) return;
+  if(navigator.share){
+    navigator.share({text:resultText,title:'100年後の歴史教科書'}).catch(()=>{});
+  } else {
+    copyText();
+  }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
