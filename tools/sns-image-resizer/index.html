@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNS画像サイズ一括変換</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+  /* platform colors */
+  --x:#000;
+  --ig:#e1306c;
+  --yt:#ff0000;
+  --fb:#1877f2;
+  --li:#0a66c2;
+  --tk:#010101;
+  --line:#06c755;
+  --note:#41c9b4;
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:960px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Drop zone ── */
+.dropzone{
+  background:var(--white);border:2px dashed var(--border);
+  border-radius:16px;padding:40px 20px;text-align:center;
+  cursor:pointer;transition:all .2s;
+  box-shadow:var(--shadow);margin-bottom:14px;
+  position:relative;
+}
+.dropzone:hover,.dropzone.over{border-color:var(--accent,#0057ff);background:rgba(0,87,255,.03)}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:44px;margin-bottom:10px;display:block}
+.drop-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ── Main layout ── */
+.main{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}
+@media(max-width:700px){.main{grid-template-columns:1fr}}
+
+/* ── Source preview ── */
+.source-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+  position:sticky;top:20px;
+}
+.source-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg);
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.source-preview-wrap{
+  background:#111;min-height:200px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#source-img{max-width:100%;max-height:260px;display:block;object-fit:contain}
+
+/* Overlay canvas for crop preview */
+#overlay-canvas{
+  position:absolute;inset:0;pointer-events:none;
+}
+
+.source-meta{padding:10px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border)}
+.source-meta span{font-family:'Outfit',sans-serif;font-weight:600;color:var(--text)}
+
+/* ── DL All bar ── */
+.dl-all-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.dl-all-label{font-size:13px;color:var(--muted);font-weight:500}
+.dl-all-label strong{color:var(--text)}
+.btn-dl-all{
+  background:#111318;color:#fff;border:none;
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:10px 20px;cursor:pointer;
+  transition:opacity .13s,transform .1s;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+}
+.btn-dl-all:hover{opacity:.88}
+.btn-dl-all:active{transform:scale(.98)}
+.btn-dl-all.done{background:var(--green)}
+.btn-dl-all:disabled{opacity:.4;cursor:default}
+
+/* ── Platform sections ── */
+.platform-section{margin-bottom:14px}
+.platform-header{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:10px;
+  margin-bottom:8px;font-size:13px;font-weight:600;
+  color:var(--text);
+}
+.platform-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.platform-select-all{
+  margin-left:auto;font-size:11px;font-weight:500;color:var(--light);
+  background:none;border:1px solid var(--border);border-radius:100px;
+  padding:2px 10px;cursor:pointer;transition:all .12s;
+}
+.platform-select-all:hover{color:var(--text);border-color:var(--muted)}
+
+.size-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:8px;
+}
+
+/* Size card */
+.size-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:11px;overflow:hidden;box-shadow:var(--shadow);
+  transition:border-color .15s,box-shadow .15s;cursor:pointer;
+}
+.size-card:hover{border-color:var(--c,#aaa);box-shadow:0 4px 14px rgba(0,0,0,.09)}
+.size-card.selected{border-color:var(--c,#0057ff);box-shadow:0 0 0 2px var(--c,#0057ff)}
+
+/* Aspect preview */
+.aspect-preview{
+  width:100%;background:var(--c-light,#f0f2f5);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.aspect-canvas{display:block;max-width:100%;max-height:100px}
+.aspect-placeholder{
+  width:100%;height:60px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--light);
+}
+
+.size-info{padding:8px 11px 10px}
+.size-name{
+  font-size:12px;font-weight:600;color:var(--text);
+  margin-bottom:2px;display:flex;align-items:center;gap:5px;
+}
+.size-dims{
+  font-family:'Outfit',sans-serif;font-size:11px;color:var(--light);
+  margin-bottom:6px;
+}
+.size-actions{display:flex;gap:5px}
+.btn-preview{
+  flex:1;font-size:10px;font-weight:600;padding:4px;border-radius:6px;
+  border:1px solid var(--border);background:var(--bg);color:var(--muted);
+  cursor:pointer;transition:all .12s;text-align:center;
+}
+.btn-preview:hover{border-color:var(--c,#aaa);color:var(--c,#333)}
+.btn-dl-single{
+  flex:1;font-size:10px;font-weight:600;padding:4px;border-radius:6px;
+  border:none;background:var(--c,#111);color:#fff;
+  cursor:pointer;transition:opacity .12s;text-align:center;
+}
+.btn-dl-single:hover{opacity:.85}
+.btn-dl-single:disabled{opacity:.35;cursor:default}
+.btn-dl-single.done{background:var(--green)!important}
+
+/* Hidden canvas pool */
+#canvas-pool{display:none}
+
+/* Progress */
+.progress-wrap{display:none;margin-bottom:10px}
+.progress-wrap.show{display:block}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#0057ff,#34d399);border-radius:2px;transition:width .3s}
+.progress-label{font-size:11px;color:var(--muted);margin-top:4px;text-align:center}
+
+/* Skeleton */
+.skeleton{animation:shimmer 1.2s infinite linear;background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%);background-size:200% 100%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📐 SNS画像サイズ一括変換</h1>
+    <p>1枚の画像をアップロードするだけ。X・Instagram・YouTube など主要SNSの全サイズを自動生成・一括ダウンロード。</p>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone"
+    ondragover="ev.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="onDrop(event)">
+    <input type="file" id="file-input" accept="image/*" onchange="onFile(this.files[0])">
+    <span class="drop-icon">📸</span>
+    <div class="drop-title">画像をドラッグ＆ドロップ、またはタップして選択</div>
+    <div class="drop-sub">JPG・PNG・WebP 対応 ／ 1枚の画像から全SNSサイズを一括生成します</div>
+  </div>
+
+  <div id="work-area" style="display:none">
+
+    <!-- DL all bar -->
+    <div class="dl-all-bar">
+      <span class="dl-all-label">選択中：<strong id="sel-count">0</strong>件</span>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-dl-all" style="background:var(--white);color:var(--muted);border:1.5px solid var(--border)" onclick="selectAll()">全選択</button>
+        <button class="btn-dl-all" id="btn-dl-sel" onclick="downloadSelected()" disabled>⬇ 選択をDL</button>
+        <button class="btn-dl-all" id="btn-dl-all" onclick="downloadAll()">📦 全件DL</button>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">処理中...</div>
+    </div>
+
+    <div class="main">
+
+      <!-- Source -->
+      <div class="source-card">
+        <div class="source-head">
+          <span>元画像</span>
+          <span id="source-name" style="font-family:'Outfit',sans-serif;font-weight:600;font-size:11px;color:var(--text)">—</span>
+        </div>
+        <div class="source-preview-wrap" id="source-wrap">
+          <img id="source-img" src="" alt="">
+          <canvas id="overlay-canvas"></canvas>
+        </div>
+        <div class="source-meta">
+          サイズ：<span id="src-dims">—</span>
+          &nbsp;|&nbsp; 比率：<span id="src-ratio">—</span>
+        </div>
+      </div>
+
+      <!-- Size list -->
+      <div id="size-list"></div>
+
+    </div>
+  </div>
+
+  <!-- Hidden canvas pool -->
+  <div id="canvas-pool"></div>
+
+</div>
+
+<script>
+// ── Platform / size definitions ──
+const PLATFORMS = [
+  {
+    id:'x', name:'𝕏 Twitter / X', color:'#000000', light:'#f0f0f0',
+    sizes:[
+      {id:'x-icon',    name:'プロフィールアイコン', w:400,  h:400,  crop:'square'},
+      {id:'x-header',  name:'ヘッダー画像',         w:1500, h:500,  crop:'wide'},
+      {id:'x-post-sq', name:'投稿 正方形',           w:1200, h:1200, crop:'square'},
+      {id:'x-post-ld', name:'投稿 横長',             w:1200, h:675,  crop:'wide'},
+    ]
+  },
+  {
+    id:'ig', name:'Instagram', color:'#e1306c', light:'#fdf0f4',
+    sizes:[
+      {id:'ig-icon',    name:'プロフィールアイコン', w:320,  h:320,  crop:'square'},
+      {id:'ig-post-sq', name:'フィード 正方形',       w:1080, h:1080, crop:'square'},
+      {id:'ig-post-ld', name:'フィード 横長(4:5)',    w:1080, h:1350, crop:'portrait'},
+      {id:'ig-story',   name:'ストーリー/リール',     w:1080, h:1920, crop:'portrait'},
+    ]
+  },
+  {
+    id:'yt', name:'YouTube', color:'#ff0000', light:'#fff5f5',
+    sizes:[
+      {id:'yt-icon',    name:'チャンネルアイコン',   w:800,  h:800,  crop:'square'},
+      {id:'yt-banner',  name:'チャンネルアート',     w:2560, h:1440, crop:'wide'},
+      {id:'yt-thumb',   name:'サムネイル',           w:1280, h:720,  crop:'wide'},
+    ]
+  },
+  {
+    id:'fb', name:'Facebook', color:'#1877f2', light:'#f0f5ff',
+    sizes:[
+      {id:'fb-icon',    name:'プロフィールアイコン', w:180,  h:180,  crop:'square'},
+      {id:'fb-cover',   name:'カバー写真',           w:820,  h:312,  crop:'wide'},
+      {id:'fb-post',    name:'投稿画像',             w:1200, h:630,  crop:'wide'},
+    ]
+  },
+  {
+    id:'li', name:'LinkedIn', color:'#0a66c2', light:'#f0f6ff',
+    sizes:[
+      {id:'li-icon',    name:'プロフィール写真',     w:400,  h:400,  crop:'square'},
+      {id:'li-cover',   name:'背景画像',             w:1584, h:396,  crop:'wide'},
+      {id:'li-post',    name:'投稿画像',             w:1200, h:627,  crop:'wide'},
+    ]
+  },
+  {
+    id:'tk', name:'TikTok', color:'#010101', light:'#f5f5f5',
+    sizes:[
+      {id:'tk-icon',    name:'プロフィールアイコン', w:200,  h:200,  crop:'square'},
+      {id:'tk-video',   name:'動画サムネイル',       w:1080, h:1920, crop:'portrait'},
+    ]
+  },
+  {
+    id:'line', name:'LINE', color:'#06c755', light:'#f0fdf4',
+    sizes:[
+      {id:'line-icon',  name:'プロフィールアイコン', w:640,  h:640,  crop:'square'},
+      {id:'line-cover', name:'背景画像',             w:1080, h:878,  crop:'wide'},
+    ]
+  },
+  {
+    id:'note', name:'note', color:'#41c9b4', light:'#f0fdfb',
+    sizes:[
+      {id:'note-header',name:'記事ヘッダー',         w:1280, h:670,  crop:'wide'},
+      {id:'note-icon',  name:'アイコン',             w:400,  h:400,  crop:'square'},
+    ]
+  },
+];
+
+let sourceImg   = null;
+let selected    = new Set();
+let canvasCache = {}; // id → canvas
+
+// ── File handling ──
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('over');
+  const f = e.dataTransfer.files?.[0];
+  if(f) onFile(f);
+}
+
+function onFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      sourceImg = img;
+      document.getElementById('source-img').src = ev.target.result;
+      document.getElementById('source-name').textContent = file.name.slice(0,20)+(file.name.length>20?'…':'');
+      const gcd=(a,b)=>b?gcd(b,a%b):a; const g=gcd(img.width,img.height);
+      document.getElementById('src-dims').textContent  = `${img.width}×${img.height}px`;
+      document.getElementById('src-ratio').textContent = `${img.width/g}:${img.height/g}`;
+      document.getElementById('work-area').style.display = 'block';
+      canvasCache = {};
+      selected.clear();
+      buildSizeList();
+      document.getElementById('dropzone').style.display = 'none';
+      updateSelCount();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Build size list ──
+function buildSizeList(){
+  const list = document.getElementById('size-list');
+  list.innerHTML = '';
+  PLATFORMS.forEach(p=>{
+    const sec = document.createElement('div');
+    sec.className = 'platform-section';
+    sec.innerHTML = `
+      <div class="platform-header">
+        <div class="platform-dot" style="background:${p.color}"></div>
+        <span>${p.name}</span>
+        <button class="platform-select-all" onclick="selectPlatform('${p.id}')">全選択</button>
+      </div>
+      <div class="size-grid" id="grid-${p.id}"></div>`;
+    list.appendChild(sec);
+
+    const grid = sec.querySelector(`#grid-${p.id}`);
+    p.sizes.forEach(s=>{
+      grid.appendChild(buildSizeCard(s, p));
+    });
+  });
+
+  // Pre-render all thumbnails async
+  requestAnimationFrame(()=>renderAllThumbs());
+}
+
+function buildSizeCard(size, plat){
+  const card = document.createElement('div');
+  card.className = 'size-card';
+  card.id = `card-${size.id}`;
+  card.style.setProperty('--c', plat.color);
+  card.style.setProperty('--c-light', plat.light);
+  card.onclick = e => {
+    if(e.target.closest('.btn-preview')||e.target.closest('.btn-dl-single')) return;
+    toggleSelect(size.id, card);
+  };
+
+  const ar = size.h/size.w;
+  const pw = 190, ph = Math.round(Math.min(pw*ar, 80));
+
+  card.innerHTML = `
+    <div class="aspect-preview" style="height:${ph}px">
+      <canvas class="aspect-canvas" id="thumb-${size.id}" width="${pw}" height="${ph}"
+        style="width:100%;height:${ph}px"></canvas>
+    </div>
+    <div class="size-info">
+      <div class="size-name">
+        <span>${size.name}</span>
+      </div>
+      <div class="size-dims">${size.w} × ${size.h} px</div>
+      <div class="size-actions">
+        <button class="btn-preview" onclick="previewOverlay('${size.id}')" style="--c:${plat.color}">👁 確認</button>
+        <button class="btn-dl-single" id="dl-${size.id}" onclick="downloadSingle('${size.id}','${plat.color}')"
+          style="background:${plat.color}" ${!sourceImg?'disabled':''}>⬇ DL</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+// ── Render thumbnails ──
+async function renderAllThumbs(){
+  if(!sourceImg) return;
+  for(const p of PLATFORMS){
+    for(const s of p.sizes){
+      await new Promise(r=>setTimeout(r,0));
+      renderThumb(s);
+    }
+  }
+}
+
+function renderThumb(size){
+  const tc = document.getElementById(`thumb-${size.id}`);
+  if(!tc || !sourceImg) return;
+  const ctx = tc.getContext('2d');
+  const tw = tc.width, th = tc.height;
+  ctx.fillStyle='#f0f2f5'; ctx.fillRect(0,0,tw,th);
+  const {sx,sy,sw,sh} = getCropRect(sourceImg.width, sourceImg.height, size.w, size.h, size.crop, 'center');
+  ctx.drawImage(sourceImg, sx, sy, sw, sh, 0, 0, tw, th);
+}
+
+// ── Crop math ──
+function getCropRect(iw, ih, tw, th, cropType, align){
+  const targetRatio = tw/th;
+  const srcRatio    = iw/ih;
+  let sx=0, sy=0, sw=iw, sh=ih;
+
+  if(Math.abs(targetRatio - srcRatio) < 0.01){
+    // Same ratio, no crop needed
+    return {sx:0,sy:0,sw:iw,sh:ih};
+  }
+
+  if(targetRatio > srcRatio){
+    // Target wider — crop top/bottom
+    sh = Math.round(iw / targetRatio);
+    sy = Math.round((ih - sh) / 2);
+  } else {
+    // Target taller — crop left/right
+    sw = Math.round(ih * targetRatio);
+    sx = Math.round((iw - sw) / 2);
+  }
+  return {sx, sy, sw, sh};
+}
+
+function renderToCanvas(size){
+  if(canvasCache[size.id]) return canvasCache[size.id];
+  const c = document.createElement('canvas');
+  c.width = size.w; c.height = size.h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,size.w,size.h);
+  const {sx,sy,sw,sh} = getCropRect(sourceImg.width,sourceImg.height,size.w,size.h,size.crop,'center');
+  ctx.drawImage(sourceImg, sx, sy, sw, sh, 0, 0, size.w, size.h);
+  canvasCache[size.id] = c;
+  return c;
+}
+
+// ── Overlay preview ──
+function previewOverlay(sizeId){
+  const size = findSize(sizeId);
+  if(!size || !sourceImg) return;
+
+  const wrap  = document.getElementById('source-wrap');
+  const img   = document.getElementById('source-img');
+  const oc    = document.getElementById('overlay-canvas');
+
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const dw = img.offsetWidth,  dh = img.offsetHeight;
+  oc.width  = dw; oc.height = dh;
+  oc.style.width  = dw+'px'; oc.style.height = dh+'px';
+
+  const {sx,sy,sw,sh} = getCropRect(iw,ih,size.w,size.h,size.crop,'center');
+  const scaleX = dw/iw, scaleY = dh/ih;
+  const rx = sx*scaleX, ry = sy*scaleY, rw = sw*scaleX, rh = sh*scaleY;
+
+  const ctx = oc.getContext('2d');
+  ctx.clearRect(0,0,dw,dh);
+  // Dark overlay outside crop
+  ctx.fillStyle = 'rgba(0,0,0,.55)';
+  ctx.fillRect(0,0,dw,dh);
+  // Clear inside crop
+  ctx.clearRect(rx,ry,rw,rh);
+  // Crop border
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth   = 2;
+  ctx.strokeRect(rx,ry,rw,rh);
+  // Label
+  ctx.fillStyle = 'rgba(0,0,0,.7)';
+  ctx.fillRect(rx, ry, rw, 22);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Outfit,sans-serif';
+  ctx.fillText(`${size.name}  ${size.w}×${size.h}`, rx+6, ry+15);
+
+  // Auto-hide after 2.5s
+  clearTimeout(oc._timer);
+  oc._timer = setTimeout(()=>ctx.clearRect(0,0,dw,dh), 2500);
+}
+
+// ── Select ──
+function toggleSelect(id, card){
+  if(selected.has(id)){ selected.delete(id); card.classList.remove('selected'); }
+  else                 { selected.add(id);   card.classList.add('selected'); }
+  updateSelCount();
+}
+function selectAll(){
+  PLATFORMS.forEach(p=>p.sizes.forEach(s=>{
+    selected.add(s.id);
+    document.getElementById(`card-${s.id}`)?.classList.add('selected');
+  }));
+  updateSelCount();
+}
+function selectPlatform(pid){
+  const p = PLATFORMS.find(p=>p.id===pid);
+  if(!p) return;
+  p.sizes.forEach(s=>{
+    selected.add(s.id);
+    document.getElementById(`card-${s.id}`)?.classList.add('selected');
+  });
+  updateSelCount();
+}
+function updateSelCount(){
+  const n = selected.size;
+  document.getElementById('sel-count').textContent = n;
+  document.getElementById('btn-dl-sel').disabled = n === 0;
+}
+
+// ── Download ──
+function downloadSingle(sizeId, color){
+  const size = findSize(sizeId);
+  if(!size || !sourceImg) return;
+  const c = renderToCanvas(size);
+  triggerDl(c, size);
+
+  const btn = document.getElementById(`dl-${sizeId}`);
+  const origBg = btn.style.background;
+  btn.textContent = '✓';
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='⬇ DL'; btn.classList.remove('done'); btn.style.background=origBg; }, 1500);
+}
+
+async function downloadSelected(){
+  const ids = [...selected];
+  if(!ids.length) return;
+  await bulkDownload(ids.map(id=>findSize(id)).filter(Boolean));
+}
+
+async function downloadAll(){
+  const all = PLATFORMS.flatMap(p=>p.sizes);
+  await bulkDownload(all);
+}
+
+async function bulkDownload(sizes){
+  if(!sourceImg){ alert('画像を選択してください'); return; }
+  const prog  = document.getElementById('progress-wrap');
+  const fill  = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+  prog.classList.add('show');
+
+  for(let i=0; i<sizes.length; i++){
+    const s = sizes[i];
+    fill.style.width = ((i+1)/sizes.length*100) + '%';
+    label.textContent = `処理中... ${i+1}/${sizes.length} (${s.name})`;
+    await new Promise(r=>setTimeout(r,10));
+    const c = renderToCanvas(s);
+    triggerDl(c, s);
+    await new Promise(r=>setTimeout(r,120)); // spacing for browser DL dialog
+  }
+
+  label.textContent = `✅ ${sizes.length}件のダウンロードを開始しました`;
+  setTimeout(()=>prog.classList.remove('show'), 2500);
+
+  const btn = document.getElementById('btn-dl-all');
+  btn.textContent = `✓ ${sizes.length}件DL中`;
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='📦 全件DL'; btn.classList.remove('done'); }, 3000);
+}
+
+function triggerDl(canvas, size){
+  const a    = document.createElement('a');
+  a.download = `${size.id}_${size.w}x${size.h}.png`;
+  a.href     = canvas.toDataURL('image/png');
+  a.click();
+}
+
+// ── Helpers ──
+function findSize(id){
+  for(const p of PLATFORMS) for(const s of p.sizes) if(s.id===id) return s;
+  return null;
+}
+</script>
+</body>
+</html>
