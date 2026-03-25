@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プライバシー保護・個人情報マスクツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --orange:#d97706;
+  --orange-l:rgba(217,119,6,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:820px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+.privacy-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;color:var(--green);
+  background:var(--green-l);border:1px solid rgba(5,150,105,.2);
+  border-radius:100px;padding:4px 12px;margin-bottom:10px;
+}
+
+/* ── Editor layout ── */
+.editor{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-bottom:12px;
+}
+@media(max-width:560px){.editor{grid-template-columns:1fr}}
+
+.pane{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+.pane-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
+}
+.pane-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.pane-acts{display:flex;gap:5px}
+.pane-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 8px;border-radius:5px;
+  transition:color .12s,background .12s;
+}
+.pane-btn:hover{color:var(--accent);background:var(--accent-l)}
+.pane-btn.done{color:var(--green)}
+
+textarea{
+  flex:1;width:100%;background:var(--white);border:none;outline:none;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  color:var(--text);padding:14px;resize:none;line-height:1.8;
+  min-height:240px;
+}
+textarea::placeholder{color:var(--light)}
+textarea[readonly]{background:#fafbfc;cursor:default}
+
+/* Highlighted output */
+#output-display{
+  flex:1;padding:14px;font-size:14px;line-height:1.8;
+  overflow-y:auto;min-height:240px;
+  white-space:pre-wrap;word-break:break-all;
+  display:none;
+}
+#output-display.show{display:block}
+
+/* Mask highlight styles */
+.mask-name   {background:#fee2e2;color:#991b1b;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-email  {background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-phone  {background:#e0f2fe;color:#0369a1;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-addr   {background:#f3e8ff;color:#6b21a8;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-date   {background:#dcfce7;color:#166534;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-card   {background:#fce7f3;color:#9d174d;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-url    {background:#e0f2fe;color:#0c4a6e;border-radius:3px;padding:0 2px;font-weight:600}
+.mask-custom {background:#fff7ed;color:#c2410c;border-radius:3px;padding:0 2px;font-weight:600}
+
+.pane-foot{
+  padding:6px 14px 8px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--light);font-weight:500;
+  display:flex;gap:10px;background:var(--bg);flex-shrink:0;
+}
+
+/* ── Options card ── */
+.options-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+}
+.options-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:12px;
+}
+
+.mask-rules{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+
+.rule-chip{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:500;color:var(--muted);
+  padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  cursor:pointer;transition:all .13s;user-select:none;
+}
+.rule-chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rule-chip:hover{border-color:var(--muted);color:var(--text)}
+.rule-chip.on{border-color:var(--active-c,#aaa);background:var(--active-bg,#f5f5f5);color:var(--active-c,#555)}
+.rule-chip input{display:none}
+
+/* Custom rules */
+.custom-section{
+  border-top:1px solid var(--border);padding-top:12px;
+}
+.custom-row{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+.custom-input{
+  flex:1;min-width:140px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  padding:7px 11px;outline:none;
+  transition:border-color .15s;
+}
+.custom-input:focus{border-color:var(--accent)}
+.custom-input::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+.custom-label-input{
+  width:140px;flex-shrink:0;
+}
+.btn-add-rule{
+  background:var(--text);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 16px;cursor:pointer;
+  white-space:nowrap;transition:opacity .13s;flex-shrink:0;
+}
+.btn-add-rule:hover{opacity:.88}
+
+.custom-list{display:flex;flex-wrap:wrap;gap:5px}
+.custom-tag{
+  display:flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:500;
+  background:var(--orange-l);border:1px solid rgba(217,119,6,.2);
+  color:var(--orange);border-radius:100px;padding:3px 10px;
+}
+.custom-tag-del{
+  background:none;border:none;cursor:pointer;color:var(--orange);
+  font-size:13px;padding:0 1px;line-height:1;transition:opacity .12s;
+}
+.custom-tag-del:hover{opacity:.6}
+
+/* ── Action bar ── */
+.action-bar{
+  display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;
+}
+.btn-run{
+  flex:2;min-width:140px;background:#111318;color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-run:hover{opacity:.88}
+.btn-run:active{transform:scale(.99)}
+.btn-sub{
+  flex:1;min-width:100px;background:var(--white);color:var(--muted);
+  border:1.5px solid var(--border);border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:13px;cursor:pointer;transition:all .13s;text-align:center;
+}
+.btn-sub:hover{border-color:var(--text);color:var(--text)}
+.btn-sub.done{border-color:var(--green);color:var(--green)}
+
+/* ── Stats card ── */
+.stats-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;animation:fadeIn .25s ease;
+}
+.stats-card.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.stats-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.stat{
+  flex:1;min-width:80px;text-align:center;
+  background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 8px;
+}
+.stat-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  color:var(--text);line-height:1;margin-bottom:2px;
+}
+.stat-val.red{color:var(--red)}
+.stat-val.green{color:var(--green)}
+.stat-label{font-size:10px;color:var(--light);font-weight:500}
+
+/* Found items */
+.found-list{display:flex;flex-direction:column;gap:5px}
+.found-item{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 10px;border-radius:7px;font-size:12px;
+}
+.found-orig{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--red);text-decoration:line-through;
+}
+.found-arrow{color:var(--light);flex-shrink:0}
+.found-repl{font-size:11px;font-weight:600;flex-shrink:0}
+.found-type{
+  font-size:9px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:2px 7px;border-radius:4px;
+  flex-shrink:0;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="privacy-badge">🔒 完全ブラウザ内処理・サーバー送信なし</div>
+    <h1>🛡️ プライバシー保護・個人情報マスクツール</h1>
+    <p>AIに渡す前にテキストから個人情報を自動検出して「[マスク]」に置換。<br>処理はすべてブラウザ内で完結し、外部に一切送信されません。</p>
+  </div>
+
+  <!-- Options -->
+  <div class="options-card">
+    <div class="options-label">マスク対象を選択</div>
+    <div class="mask-rules" id="mask-rules">
+      <label class="rule-chip on" id="chip-name"
+        style="--active-c:#991b1b;--active-bg:#fee2e2"
+        onclick="toggleRule(this,'name')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#ef4444"></span>
+        👤 氏名（日本語）
+      </label>
+      <label class="rule-chip on" id="chip-email"
+        style="--active-c:#92400e;--active-bg:#fef3c7"
+        onclick="toggleRule(this,'email')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#f59e0b"></span>
+        ✉ メールアドレス
+      </label>
+      <label class="rule-chip on" id="chip-phone"
+        style="--active-c:#0369a1;--active-bg:#e0f2fe"
+        onclick="toggleRule(this,'phone')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#38bdf8"></span>
+        📞 電話番号
+      </label>
+      <label class="rule-chip on" id="chip-addr"
+        style="--active-c:#6b21a8;--active-bg:#f3e8ff"
+        onclick="toggleRule(this,'addr')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#a855f7"></span>
+        📍 住所
+      </label>
+      <label class="rule-chip on" id="chip-date"
+        style="--active-c:#166534;--active-bg:#dcfce7"
+        onclick="toggleRule(this,'date')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#22c55e"></span>
+        📅 生年月日
+      </label>
+      <label class="rule-chip on" id="chip-card"
+        style="--active-c:#9d174d;--active-bg:#fce7f3"
+        onclick="toggleRule(this,'card')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#ec4899"></span>
+        💳 クレジットカード番号
+      </label>
+      <label class="rule-chip on" id="chip-url"
+        style="--active-c:#0c4a6e;--active-bg:#e0f2fe"
+        onclick="toggleRule(this,'url')">
+        <input type="checkbox" checked>
+        <span class="dot" style="background:#0ea5e9"></span>
+        🔗 URL・ドメイン
+      </label>
+    </div>
+
+    <div class="custom-section">
+      <div class="options-label" style="margin-bottom:8px">カスタムキーワード（会社名・プロジェクト名など）</div>
+      <div class="custom-row">
+        <input type="text" class="custom-input" id="custom-word"
+          placeholder="例：株式会社○○・プロジェクトX"
+          onkeydown="if(event.key==='Enter')addCustom()">
+        <input type="text" class="custom-input custom-label-input" id="custom-label-inp"
+          placeholder="置換ラベル（例：[会社名]）">
+        <button class="btn-add-rule" onclick="addCustom()">＋ 追加</button>
+      </div>
+      <div class="custom-list" id="custom-list"></div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor">
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">入力テキスト</span>
+        <div class="pane-acts">
+          <button class="pane-btn" onclick="pasteIn()">貼り付け</button>
+          <button class="pane-btn" onclick="clearAll()">クリア</button>
+        </div>
+      </div>
+      <textarea id="input"
+        placeholder="AIに渡したいテキストをここに貼り付けてください。&#10;&#10;例：&#10;田中太郎（090-1234-5678）よりご連絡いたします。&#10;メール：tanaka@example.com&#10;住所：東京都渋谷区○○1-2-3&#10;生年月日：1990年4月15日&#10;カード番号：4111-1111-1111-1111"
+        oninput="syncStats()"></textarea>
+      <div class="pane-foot">
+        <span id="in-chars">0文字</span>
+        <span id="in-lines">0行</span>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-label">マスク済みテキスト</span>
+        <div class="pane-acts">
+          <button class="pane-btn" id="btn-copy-out" onclick="copyOut()">コピー</button>
+          <button class="pane-btn" onclick="toggleHighlight()">🎨 ハイライト</button>
+        </div>
+      </div>
+      <textarea id="output" readonly placeholder="処理後のテキストがここに表示されます"></textarea>
+      <div id="output-display"></div>
+      <div class="pane-foot">
+        <span id="out-chars">0文字</span>
+        <span id="out-masks">マスク 0件</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="action-bar">
+    <button class="btn-run" onclick="run()">🛡️ 個人情報をマスクする</button>
+    <button class="btn-sub" id="btn-copy-all" onclick="copyOut()">📋 コピー</button>
+    <button class="btn-sub" onclick="clearAll()">クリア</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-card" id="stats-card">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val red"   id="st-total">0</div><div class="stat-label">検出件数</div></div>
+      <div class="stat"><div class="stat-val"        id="st-name">0</div><div class="stat-label">氏名</div></div>
+      <div class="stat"><div class="stat-val"        id="st-email">0</div><div class="stat-label">メール</div></div>
+      <div class="stat"><div class="stat-val"        id="st-phone">0</div><div class="stat-label">電話番号</div></div>
+      <div class="stat"><div class="stat-val"        id="st-addr">0</div><div class="stat-label">住所</div></div>
+      <div class="stat"><div class="stat-val"        id="st-date">0</div><div class="stat-label">生年月日</div></div>
+      <div class="stat"><div class="stat-val"        id="st-card">0</div><div class="stat-label">カード番号</div></div>
+      <div class="stat"><div class="stat-val green"  id="st-safe">—</div><div class="stat-label">安全度</div></div>
+    </div>
+    <div class="found-list" id="found-list"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Rules state ──
+const rules = {name:true,email:true,phone:true,addr:true,date:true,card:true,url:true};
+const customRules = []; // {word, label}
+let showHighlight  = true;
+let lastMatches    = [];
+
+function toggleRule(el, key){
+  rules[key] = !rules[key];
+  el.classList.toggle('on', rules[key]);
+  el.querySelector('input').checked = rules[key];
+}
+
+// ── Custom rules ──
+function addCustom(){
+  const word  = document.getElementById('custom-word').value.trim();
+  const label = document.getElementById('custom-label-inp').value.trim() || `[${word}]`;
+  if(!word) return;
+  customRules.push({word, label});
+  document.getElementById('custom-word').value  = '';
+  document.getElementById('custom-label-inp').value = '';
+  renderCustomList();
+}
+
+function removeCustom(idx){
+  customRules.splice(idx,1);
+  renderCustomList();
+}
+
+function renderCustomList(){
+  document.getElementById('custom-list').innerHTML = customRules.map((r,i)=>`
+    <div class="custom-tag">
+      「${escHtml(r.word)}」→ ${escHtml(r.label)}
+      <button class="custom-tag-del" onclick="removeCustom(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// ── Masking engine ──
+// ══════════════════════════════════════════════
+function mask(text){
+  lastMatches = [];
+  const replacements = []; // {start, end, label, type, orig}
+
+  // Helper: register all regex matches
+  function findAll(regex, type, labelFn, cssClass){
+    let m;
+    const re = new RegExp(regex.source, regex.flags);
+    while((m = re.exec(text)) !== null){
+      const orig  = m[0];
+      const label = labelFn(m);
+      // Check overlap
+      if(!replacements.some(r => m.index < r.end && m.index + orig.length > r.start)){
+        replacements.push({start:m.index, end:m.index+orig.length, label, type, orig, cssClass});
+      }
+    }
+  }
+
+  // ── 1. Email (before URLs to avoid partial matches) ──
+  if(rules.email)
+    findAll(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
+      'email', ()=>'[メールアドレス]', 'mask-email');
+
+  // ── 2. URL ──
+  if(rules.url)
+    findAll(/https?:\/\/[^\s\u3000"'<>）。、）」』】\]]+|(?:www\.)[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}[^\s]*/g,
+      'url', ()=>'[URL]', 'mask-url');
+
+  // ── 3. Credit card ──
+  if(rules.card)
+    findAll(/(?:\d[\s\-]?){13,16}/g,
+      'card', ()=>'[カード番号]', 'mask-card');
+
+  // ── 4. Phone (JP) ──
+  if(rules.phone)
+    findAll(/(?:0\d{1,4}[\s\-－]?\d{1,4}[\s\-－]?\d{3,4}|0[789]0[\s\-－]?\d{4}[\s\-－]?\d{4}|\+81[\s\-]?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{3,4})/g,
+      'phone', ()=>'[電話番号]', 'mask-phone');
+
+  // ── 5. Birthday / date ──
+  if(rules.date)
+    findAll(/(?:19|20)\d{2}[\s年\/\-\.]\s*(?:0?[1-9]|1[0-2])[\s月\/\-\.]\s*(?:0?[1-9]|[12]\d|3[01])(?:日)?|(?:昭和|平成|令和)\s*\d{1,2}年\s*(?:0?[1-9]|1[0-2])月\s*(?:0?[1-9]|[12]\d|3[01])日/g,
+      'date', ()=>'[生年月日]', 'mask-date');
+
+  // ── 6. JP Address ──
+  if(rules.addr)
+    findAll(/[^\s]*?(?:都|道|府|県)[^\s]*?(?:市|郡|区)[^\s]*?(?:町|村|丁目|番地|号)[^\s]*/g,
+      'addr', ()=>'[住所]', 'mask-addr');
+
+  // ── 7. JP Name ──
+  // Common surname list (top 50 + patterns) → 姓＋名パターン
+  if(rules.name){
+    const surnames = '佐藤|鈴木|高橋|田中|渡辺|伊藤|山本|中村|小林|加藤|吉田|山田|佐々木|山口|松本|井上|木村|林|斎藤|清水|山崎|森|阿部|池田|橋本|石川|山下|前田|岡本|後藤|長谷川|石井|近藤|藤田|坂本|遠藤|青木|藤井|内田|西村|平野|上田|村上|岡田|松田|北条|中野|中山|和田|原|小山|原田|西田|福田|太田|安藤|島田|武田|小川|中川|金子|五十嵐|三浦|中島|増田|菊地|菊池|新井|大野|松井|樋口|河野|土屋|千葉|田島|工藤|荒木|野口|萩原|尾崎|水野|高田|大塚|平田|大西|望月|宮崎|市川|堀|今井|永井|曽根';
+    const nameRe = new RegExp(`(?:${surnames})\\s*[一-龯ぁ-んァ-ン]{1,4}(?:さん|様|氏|くん|ちゃん)?`, 'g');
+    findAll(nameRe, 'name', m=>'[氏名]', 'mask-name');
+  }
+
+  // ── 8. Custom keywords ──
+  customRules.forEach(r=>{
+    const esc = r.word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    findAll(new RegExp(esc,'g'), 'custom', ()=>r.label, 'mask-custom');
+  });
+
+  // ── Apply replacements (right-to-left to preserve indices) ──
+  const sorted = replacements.sort((a,b)=>a.start-b.start);
+  lastMatches  = sorted;
+
+  // Build plain text output
+  let out = '';
+  let pos = 0;
+  sorted.forEach(r=>{
+    out += text.slice(pos, r.start) + r.label;
+    pos  = r.end;
+  });
+  out += text.slice(pos);
+
+  return {out, matches:sorted};
+}
+
+// ── Run ──
+function run(){
+  const input = document.getElementById('input').value;
+  if(!input.trim()){ alert('テキストを入力してください'); return; }
+
+  const {out, matches} = mask(input);
+
+  document.getElementById('output').value = out;
+
+  // Stats
+  const cnt = {name:0,email:0,phone:0,addr:0,date:0,card:0,url:0,custom:0};
+  matches.forEach(m=>{ if(cnt[m.type]!==undefined) cnt[m.type]++; });
+
+  document.getElementById('st-total').textContent = matches.length;
+  document.getElementById('st-name').textContent  = cnt.name;
+  document.getElementById('st-email').textContent = cnt.email;
+  document.getElementById('st-phone').textContent = cnt.phone;
+  document.getElementById('st-addr').textContent  = cnt.addr;
+  document.getElementById('st-date').textContent  = cnt.date;
+  document.getElementById('st-card').textContent  = cnt.card;
+  const safety = matches.length===0?'✅ 安全':matches.length<=3?'⚠ 要確認':'🚨 要マスク';
+  document.getElementById('st-safe').textContent  = safety;
+
+  document.getElementById('out-chars').textContent = out.length + '文字';
+  document.getElementById('out-masks').textContent = 'マスク ' + matches.length + '件';
+
+  // Found list
+  document.getElementById('found-list').innerHTML = matches.slice(0,30).map(m=>`
+    <div class="found-item">
+      <span class="found-orig">${escHtml(m.orig)}</span>
+      <span class="found-arrow">→</span>
+      <span class="found-repl"><span class="${m.cssClass}">${escHtml(m.label)}</span></span>
+      <span class="found-type" style="background:var(--bg);color:var(--muted)">${typeLabel(m.type)}</span>
+    </div>`).join('') +
+    (matches.length > 30 ? `<div style="font-size:11px;color:var(--light);padding:6px 10px">他 ${matches.length-30} 件</div>` : '');
+
+  document.getElementById('stats-card').classList.add('show');
+
+  // Highlighted display
+  buildHighlight(input, matches);
+  if(showHighlight) showHighlightView();
+
+  syncStats();
+}
+
+// ── Highlight view ──
+function buildHighlight(text, matches){
+  let html = '';
+  let pos  = 0;
+  matches.forEach(m=>{
+    html += escHtml(text.slice(pos, m.start));
+    html += `<span class="${m.cssClass}" title="${escHtml(m.type)}: ${escHtml(m.orig)}">${escHtml(m.label)}</span>`;
+    pos   = m.end;
+  });
+  html += escHtml(text.slice(pos));
+  document.getElementById('output-display').innerHTML = html;
+}
+
+function showHighlightView(){
+  document.getElementById('output').style.display         = 'none';
+  document.getElementById('output-display').style.display = 'block';
+  document.getElementById('output-display').classList.add('show');
+}
+function showPlainView(){
+  document.getElementById('output').style.display         = '';
+  document.getElementById('output-display').style.display = 'none';
+  document.getElementById('output-display').classList.remove('show');
+}
+
+function toggleHighlight(){
+  showHighlight = !showHighlight;
+  if(document.getElementById('output').value){
+    showHighlight ? showHighlightView() : showPlainView();
+  }
+}
+
+// ── Clipboard ──
+async function pasteIn(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('input').value = t;
+    syncStats();
+  }catch(e){ document.getElementById('input').focus(); }
+}
+
+function copyOut(){
+  const out = document.getElementById('output').value;
+  if(!out) return;
+  navigator.clipboard.writeText(out).then(()=>{
+    ['btn-copy-out','btn-copy-all'].forEach(id=>{
+      const btn = document.getElementById(id);
+      if(!btn) return;
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); }, 1500);
+    });
+  });
+}
+
+function clearAll(){
+  document.getElementById('input').value  = '';
+  document.getElementById('output').value = '';
+  showPlainView();
+  document.getElementById('stats-card').classList.remove('show');
+  syncStats();
+}
+
+// ── Stats ──
+function syncStats(){
+  const inp = document.getElementById('input').value;
+  document.getElementById('in-chars').textContent = inp.length + '文字';
+  document.getElementById('in-lines').textContent = (inp ? inp.split('\n').length : 0) + '行';
+}
+
+function typeLabel(t){
+  return {name:'氏名',email:'メール',phone:'電話',addr:'住所',date:'日付',card:'カード',url:'URL',custom:'カスタム'}[t]||t;
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
