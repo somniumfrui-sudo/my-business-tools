@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIエージェント用・構造化指示ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface2:#1c2333;
+  --border:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --light:#484f58;
+  --accent:#58a6ff;
+  --accent-l:rgba(88,166,255,.10);
+  --green:#3fb950;
+  --green-l:rgba(63,185,80,.10);
+  --purple:#bc8cff;
+  --purple-l:rgba(188,140,255,.08);
+  --orange:#ffa657;
+  --red:#ff7b72;
+  --yellow:#e3b341;
+  --shadow:0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:0 4px 20px rgba(0,0,0,.4);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+
+/* subtle grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(88,166,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(88,166,255,.03) 1px,transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;color:var(--green);
+  background:var(--green-l);border:1px solid rgba(63,185,80,.25);
+  border-radius:100px;padding:4px 12px;margin-bottom:10px;
+  font-family:'Outfit',sans-serif;letter-spacing:.04em;
+}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;color:var(--text);
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+
+/* ── Card base ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+}
+.card-acts{display:flex;gap:5px}
+.c-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 9px;border-radius:6px;
+  transition:color .12s,background .12s;
+}
+.c-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
+.c-btn.done{color:var(--green)}
+
+/* ── Input pane ── */
+.input-pane{padding:16px}
+
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;
+}
+.field label .hint{font-size:10px;color:var(--light);font-weight:400}
+
+.field input,.field textarea,.field select{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:400;
+  padding:9px 12px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--accent);background:rgba(88,166,255,.05);
+  box-shadow:0 0 0 3px rgba(88,166,255,.12);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--light)}
+.field textarea{resize:vertical;line-height:1.75}
+.field select{
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  padding-right:30px;
+}
+.field select option{background:var(--surface)}
+.field select optgroup{font-weight:700}
+
+/* Tag input */
+.tag-input-row{display:flex;gap:6px}
+.tag-input-row input{flex:1}
+.tag-add-btn{
+  background:var(--accent);color:#000;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 14px;cursor:pointer;
+  transition:opacity .12s;flex-shrink:0;
+}
+.tag-add-btn:hover{opacity:.85}
+.tags-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{
+  display:flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;letter-spacing:.03em;
+  padding:3px 9px;border-radius:5px;
+  font-family:'JetBrains Mono',monospace;
+}
+.tag.constraint{background:rgba(255,123,114,.12);color:var(--red);border:1px solid rgba(255,123,114,.2)}
+.tag.tool{background:rgba(88,166,255,.12);color:var(--accent);border:1px solid rgba(88,166,255,.2)}
+.tag.step{background:rgba(63,185,80,.10);color:var(--green);border:1px solid rgba(63,185,80,.2)}
+.tag-del{background:none;border:none;cursor:pointer;opacity:.6;font-size:12px;line-height:1;transition:opacity .12s}
+.tag-del:hover{opacity:1}
+
+/* Template chips */
+.templates{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tmpl{
+  font-size:11px;font-weight:500;padding:4px 11px;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.tmpl:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Generate button ── */
+.btn-generate{
+  width:100%;background:var(--accent);color:#000;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:800;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  letter-spacing:.02em;
+}
+.btn-generate:hover{opacity:.9}
+.btn-generate:active{transform:scale(.99)}
+
+/* ── JSON output pane ── */
+.json-output{
+  padding:0;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:1.75;
+  min-height:400px;
+  overflow-y:auto;
+  max-height:600px;
+  position:relative;
+}
+
+.json-output pre{
+  padding:16px 18px;
+  white-space:pre-wrap;word-break:break-all;
+  margin:0;color:var(--muted);
+}
+
+/* JSON syntax highlight */
+.jk{color:var(--accent)}       /* key */
+.js{color:var(--orange)}        /* string value */
+.jn{color:var(--purple)}        /* number */
+.jb{color:var(--red)}           /* boolean/null */
+.jc{color:var(--light);font-style:italic} /* comment */
+.jp{color:var(--yellow)}        /* punctuation */
+
+/* Empty state */
+.json-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:400px;color:var(--light);font-family:'Outfit',sans-serif;font-size:13px;gap:8px;
+}
+.json-empty-icon{font-size:36px;opacity:.35}
+
+/* Output footer */
+.output-footer{
+  padding:10px 16px;border-top:1px solid var(--border);
+  display:flex;gap:7px;background:var(--surface2);
+}
+.btn-out{
+  flex:1;border:1px solid var(--border);background:transparent;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;padding:9px;cursor:pointer;
+  color:var(--muted);transition:all .12s;
+}
+.btn-out:hover{border-color:var(--text);color:var(--text)}
+.btn-out.primary{background:var(--accent);border-color:var(--accent);color:#000}
+.btn-out.primary:hover{opacity:.9}
+.btn-out.done{border-color:var(--green);color:var(--green)}
+
+/* ── Tabs ── */
+.output-tabs{display:flex;gap:4px}
+.o-tab{
+  font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.o-tab.active{background:rgba(255,255,255,.08);border-color:var(--muted);color:var(--text)}
+
+/* ── Schema info card ── */
+.schema-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-top:14px;
+  grid-column:1/-1;
+}
+.schema-title{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:12px;
+}
+.schema-fields{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+@media(max-width:560px){.schema-fields{grid-template-columns:1fr}}
+.schema-field{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;padding:10px 12px;
+}
+.sf-key{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;
+  color:var(--accent);margin-bottom:3px;
+}
+.sf-type{
+  font-size:10px;color:var(--purple);margin-bottom:4px;
+  font-family:'JetBrains Mono',monospace;
+}
+.sf-desc{font-size:11px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-tag">⚡ 2026 AI Agent Standard</div>
+    <h1>⚙️ AIエージェント用・構造化指示ジェネレーター</h1>
+    <p>自然文で「やりたいこと」を書くだけで、AIエージェントが確実に読み取れるJSON指示書を自動生成します。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Input -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">🖊 指示を入力</span>
+      </div>
+      <div class="input-pane">
+
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">テンプレートから始める</div>
+          <div class="templates">
+            <button class="tmpl" onclick="loadTemplate('research')">🔍 情報収集</button>
+            <button class="tmpl" onclick="loadTemplate('content')">✍️ コンテンツ作成</button>
+            <button class="tmpl" onclick="loadTemplate('analysis')">📊 データ分析</button>
+            <button class="tmpl" onclick="loadTemplate('automation')">⚙️ 自動化タスク</button>
+            <button class="tmpl" onclick="loadTemplate('customer')">🎧 顧客対応</button>
+            <button class="tmpl" onclick="loadTemplate('code')">💻 コード生成</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>ゴール（Goal） <span class="hint">最終的に達成したいこと</span></label>
+          <textarea id="f-goal" rows="3" placeholder="例：競合他社5社のSNS戦略を調査し、自社への応用案をレポートにまとめる"></textarea>
+        </div>
+
+        <div class="field">
+          <label>エージェント名 <span class="hint">ボットのID</span></label>
+          <input type="text" id="f-agent-name" placeholder="例：marketing-researcher-v1">
+        </div>
+
+        <div class="field">
+          <label>ロール（Role）</label>
+          <select id="f-role">
+            <optgroup label="── 専門家 ──">
+              <option value="market-researcher">マーケットリサーチャー</option>
+              <option value="content-writer">コンテンツライター</option>
+              <option value="data-analyst">データアナリスト</option>
+              <option value="software-engineer">ソフトウェアエンジニア</option>
+              <option value="customer-support">カスタマーサポート</option>
+              <option value="financial-advisor">ファイナンシャルアドバイザー</option>
+              <option value="seo-specialist">SEOスペシャリスト</option>
+            </optgroup>
+            <optgroup label="── 汎用 ──">
+              <option value="general-assistant">汎用アシスタント</option>
+              <option value="task-executor">タスク実行エージェント</option>
+              <option value="orchestrator">オーケストレーター（複数エージェント管理）</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>モデル / バックエンド</label>
+          <select id="f-model">
+            <option value="claude-sonnet-4-5">Claude Sonnet 4.5（推奨）</option>
+            <option value="claude-opus-4-5">Claude Opus 4.5</option>
+            <option value="claude-haiku-4-5">Claude Haiku 4.5（軽量）</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4o-mini">GPT-4o mini</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>出力形式</label>
+          <select id="f-output-fmt">
+            <option value="markdown">Markdown レポート</option>
+            <option value="json">JSON</option>
+            <option value="bullet-list">箇条書きリスト</option>
+            <option value="structured-report">構造化レポート（見出し付き）</option>
+            <option value="code">コード（指定言語）</option>
+            <option value="table">テーブル形式</option>
+            <option value="free">自由形式</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>使用可能ツール <span class="hint">エージェントに与えるツール</span></label>
+          <div class="tag-input-row">
+            <input type="text" id="tool-input" placeholder="web_search / file_write / slack_send ...">
+            <button class="tag-add-btn" onclick="addTag('tool')">＋</button>
+          </div>
+          <div class="tags-list" id="tool-tags"></div>
+        </div>
+
+        <div class="field">
+          <label>制約・禁止事項 <span class="hint">やってはいけないこと</span></label>
+          <div class="tag-input-row">
+            <input type="text" id="constraint-input" placeholder="例：個人情報を外部送信しない">
+            <button class="tag-add-btn" onclick="addTag('constraint')" style="background:var(--red)">＋</button>
+          </div>
+          <div class="tags-list" id="constraint-tags"></div>
+        </div>
+
+        <div class="field">
+          <label>成功条件 <span class="hint">タスク完了の定義</span></label>
+          <input type="text" id="f-success" placeholder="例：3000文字以上のレポートが生成された">
+        </div>
+
+        <div class="field">
+          <label>最大ループ数 <span class="hint">エージェントの最大試行回数</span></label>
+          <input type="number" id="f-max-iter" value="10" min="1" max="100">
+        </div>
+
+        <div class="field">
+          <label>温度（Temperature） <span class="hint">0＝確定的 / 1＝創造的</span></label>
+          <input type="range" id="f-temp" min="0" max="1" step="0.1" value="0.3"
+            oninput="document.getElementById('temp-val').textContent=this.value"
+            style="width:100%;margin-top:4px">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">
+            <span id="temp-val">0.3</span>
+          </div>
+        </div>
+
+        <button class="btn-generate" onclick="generate()">
+          ⚡ JSON指示書を生成する
+        </button>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-label">📄 生成されたJSON指示書</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="output-tabs">
+              <button class="o-tab active" id="tab-json" onclick="switchOut('json',this)">JSON</button>
+              <button class="o-tab" id="tab-prompt" onclick="switchOut('prompt',this)">プロンプト</button>
+              <button class="o-tab" id="tab-yaml" onclick="switchOut('yaml',this)">YAML</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="json-output" id="json-output">
+          <div class="json-empty">
+            <span class="json-empty-icon">{ }</span>
+            左のフォームを入力して「生成」を押してください
+          </div>
+        </div>
+
+        <div class="output-footer">
+          <button class="btn-out primary" id="btn-copy-json" onclick="copyOutput()">📋 コピー</button>
+          <button class="btn-out" onclick="downloadOutput()">⬇ ファイル保存</button>
+          <button class="btn-out" onclick="validateJson()">✓ 検証</button>
+        </div>
+      </div>
+
+      <!-- How to use card -->
+      <div class="card" style="overflow:visible">
+        <div class="card-head">
+          <span class="card-label">🚀 使い方ガイド</span>
+        </div>
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--muted);line-height:1.7">
+            生成されたJSONは以下のフレームワークで直接使用できます：
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);background:var(--accent-l);border:1px solid rgba(88,166,255,.2);border-radius:5px;padding:3px 9px">LangChain</span>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--purple);background:var(--purple-l);border:1px solid rgba(188,140,255,.2);border-radius:5px;padding:3px 9px">AutoGen</span>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green);background:var(--green-l);border:1px solid rgba(63,185,80,.2);border-radius:5px;padding:3px 9px">CrewAI</span>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--orange);background:rgba(255,166,87,.08);border:1px solid rgba(255,166,87,.2);border-radius:5px;padding:3px 9px">Claude MCP</span>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--yellow);background:rgba(227,179,65,.08);border:1px solid rgba(227,179,65,.2);border-radius:5px;padding:3px 9px">Dify</span>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:5px;padding:3px 9px">n8n</span>
+          </div>
+          <div style="font-size:11px;color:var(--light);line-height:1.7;border-top:1px solid var(--border);padding-top:10px">
+            💡 「プロンプト」タブに切り替えると、そのままChatGPT・Claudeに貼り付けて使えるテキスト形式で出力されます。
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Schema reference -->
+  <div class="schema-card">
+    <div class="schema-title">フィールド定義 — AgentInstruction v1.0 スキーマ</div>
+    <div class="schema-fields">
+      <div class="schema-field"><div class="sf-key">agent_id</div><div class="sf-type">string</div><div class="sf-desc">エージェントの一意識別子</div></div>
+      <div class="schema-field"><div class="sf-key">version</div><div class="sf-type">string</div><div class="sf-desc">指示書のバージョン管理</div></div>
+      <div class="schema-field"><div class="sf-key">role</div><div class="sf-type">string</div><div class="sf-desc">エージェントの役割・専門性</div></div>
+      <div class="schema-field"><div class="sf-key">goal</div><div class="sf-type">string</div><div class="sf-desc">達成すべき最終目標</div></div>
+      <div class="schema-field"><div class="sf-key">context</div><div class="sf-type">object</div><div class="sf-desc">実行環境・背景情報</div></div>
+      <div class="schema-field"><div class="sf-key">tools</div><div class="sf-type">array</div><div class="sf-desc">使用可能なツール一覧</div></div>
+      <div class="schema-field"><div class="sf-key">constraints</div><div class="sf-type">array</div><div class="sf-desc">禁止事項・制約ルール</div></div>
+      <div class="schema-field"><div class="sf-key">output_spec</div><div class="sf-type">object</div><div class="sf-desc">出力形式の詳細仕様</div></div>
+      <div class="schema-field"><div class="sf-key">execution</div><div class="sf-type">object</div><div class="sf-desc">実行パラメータ（ループ数・温度等）</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Templates ──
+const TEMPLATES = {
+  research:{
+    goal:'競合他社5社のSNS戦略を調査し、投稿頻度・エンゲージメント率・コンテンツ種別を分析した上で自社への応用案をレポートにまとめる',
+    name:'competitive-research-agent-v1',
+    role:'market-researcher',
+    tools:['web_search','url_scraper','data_summarizer'],
+    constraints:['有料コンテンツへのアクセス禁止','個人情報の収集禁止'],
+    success:'5社分のデータが揃い、比較表と提案が含まれるレポートが生成された',
+    output:'structured-report',maxIter:15,temp:0.3
+  },
+  content:{
+    goal:'指定されたキーワードでSEO最適化されたブログ記事（3000文字以上）を作成する。見出し構造・内部リンク候補・メタディスクリプションも含める',
+    name:'content-creation-agent-v1',
+    role:'content-writer',
+    tools:['web_search','keyword_analyzer','text_generator'],
+    constraints:['コピーコンテンツ禁止','事実確認なしの断言禁止'],
+    success:'3000文字以上・H2見出し3つ以上・メタ説明文が含まれた記事が生成された',
+    output:'markdown',maxIter:8,temp:0.7
+  },
+  analysis:{
+    goal:'アップロードされたCSVデータを分析し、異常値・トレンド・相関関係を特定してビジュアル付きのサマリーレポートを作成する',
+    name:'data-analysis-agent-v1',
+    role:'data-analyst',
+    tools:['file_reader','python_executor','chart_generator','statistics_calculator'],
+    constraints:['元データを改変しない','統計的に有意でない相関を断言しない'],
+    success:'異常値リスト・トレンドグラフ・相関行列が含まれたレポートが生成された',
+    output:'structured-report',maxIter:12,temp:0.1
+  },
+  automation:{
+    goal:'毎朝9時にニュースRSSを取得し、AIで要約して指定Slackチャンネルに自動投稿する処理フローを構築する',
+    name:'news-automation-agent-v1',
+    role:'task-executor',
+    tools:['rss_reader','web_search','text_summarizer','slack_send','scheduler'],
+    constraints:['個人・企業への誹謗中傷を含む内容は投稿しない','1投稿あたり300文字以内'],
+    success:'RSS取得→要約→Slack投稿が自動で完了し、ログに記録された',
+    output:'json',maxIter:5,temp:0.2
+  },
+  customer:{
+    goal:'顧客からの問い合わせメールを分類（クレーム/質問/要望）し、優先度を判定した上で適切なテンプレート返答を生成する',
+    name:'customer-support-agent-v1',
+    role:'customer-support',
+    tools:['email_reader','intent_classifier','template_engine','escalation_trigger'],
+    constraints:['個人情報をログに残さない','法的問題を含む内容は人間にエスカレーション','返答は敬語のみ使用'],
+    success:'全メールが分類・優先度付けされ、返答案が生成された',
+    output:'json',maxIter:3,temp:0.2
+  },
+  code:{
+    goal:'GitHubのIssueを読み取り、自動でコードを修正・テストを実行・PRを作成する',
+    name:'code-agent-v1',
+    role:'software-engineer',
+    tools:['github_api','code_editor','test_runner','pr_creator','linter'],
+    constraints:['mainブランチへの直接pushは禁止','テストが通らない場合はPR作成しない','セキュリティ上問題のある変更は人間にエスカレーション'],
+    success:'修正コードがテストをパスし、PRが作成された',
+    output:'code',maxIter:20,temp:0.1
+  }
+};
+
+const toolTags       = [];
+const constraintTags = [];
+let currentOut  = 'json';
+let generatedData = null;
+
+function loadTemplate(key){
+  const t = TEMPLATES[key];
+  document.getElementById('f-goal').value         = t.goal;
+  document.getElementById('f-agent-name').value   = t.name;
+  document.getElementById('f-role').value         = t.role;
+  document.getElementById('f-output-fmt').value   = t.output;
+  document.getElementById('f-max-iter').value     = t.maxIter;
+  document.getElementById('f-temp').value         = t.temp;
+  document.getElementById('temp-val').textContent = t.temp;
+  document.getElementById('f-success').value      = t.success;
+
+  toolTags.length = 0;
+  constraintTags.length = 0;
+  t.tools.forEach(v=>toolTags.push(v));
+  t.constraints.forEach(v=>constraintTags.push(v));
+  renderTags();
+}
+
+// ── Tags ──
+function addTag(type){
+  const inputId = type === 'tool' ? 'tool-input' : 'constraint-input';
+  const arr     = type === 'tool' ? toolTags : constraintTags;
+  const val     = document.getElementById(inputId).value.trim();
+  if(!val) return;
+  arr.push(val);
+  document.getElementById(inputId).value = '';
+  renderTags();
+}
+document.getElementById('tool-input').addEventListener('keydown',e=>{ if(e.key==='Enter') addTag('tool'); });
+document.getElementById('constraint-input').addEventListener('keydown',e=>{ if(e.key==='Enter') addTag('constraint'); });
+
+function removeTag(type, idx){
+  (type==='tool'?toolTags:constraintTags).splice(idx,1);
+  renderTags();
+}
+
+function renderTags(){
+  document.getElementById('tool-tags').innerHTML = toolTags.map((t,i)=>`
+    <span class="tag tool">${escHtml(t)}<button class="tag-del" onclick="removeTag('tool',${i})">✕</button></span>`).join('');
+  document.getElementById('constraint-tags').innerHTML = constraintTags.map((t,i)=>`
+    <span class="tag constraint">${escHtml(t)}<button class="tag-del" onclick="removeTag('constraint',${i})">✕</button></span>`).join('');
+}
+
+// ── Generate ──
+function generate(){
+  const goal    = document.getElementById('f-goal').value.trim();
+  if(!goal){ alert('ゴールを入力してください'); return; }
+
+  const agentId = document.getElementById('f-agent-name').value.trim() ||
+    'agent-' + Date.now().toString(36);
+  const role    = document.getElementById('f-role').value;
+  const model   = document.getElementById('f-model').value;
+  const outFmt  = document.getElementById('f-output-fmt').value;
+  const maxIter = parseInt(document.getElementById('f-max-iter').value) || 10;
+  const temp    = parseFloat(document.getElementById('f-temp').value);
+  const success = document.getElementById('f-success').value.trim();
+
+  // Infer language from goal
+  const hasJP = /[\u3040-\u9fff]/.test(goal);
+
+  generatedData = {
+    schema_version: "agent-instruction/1.0",
+    generated_at:   new Date().toISOString(),
+    agent_id:       agentId,
+    version:        "1.0.0",
+    role:           role,
+    goal:           goal,
+    context: {
+      language:         hasJP ? "ja" : "en",
+      response_language: hasJP ? "ja" : "en",
+      created_by:       "AgentBuilder",
+      environment:      "production"
+    },
+    model: {
+      id:          model,
+      provider:    getProvider(model),
+      temperature: temp,
+      max_tokens:  4096,
+      top_p:       0.95
+    },
+    tools: toolTags.length > 0 ? toolTags.map(t=>({
+      name:    t,
+      enabled: true,
+      config:  {}
+    })) : [{name:"text_only",enabled:true,config:{}}],
+    constraints: constraintTags.length > 0
+      ? constraintTags
+      : ["Do not hallucinate facts","Always cite sources when referencing data"],
+    output_spec: {
+      format:     outFmt,
+      language:   hasJP ? "ja" : "en",
+      max_length: outFmt === 'code' ? null : 4000,
+      structure:  getStructure(outFmt)
+    },
+    success_criteria: success || "Task completed without errors and output meets the goal",
+    execution: {
+      max_iterations:     maxIter,
+      retry_on_failure:   true,
+      max_retries:        3,
+      timeout_seconds:    300,
+      human_in_the_loop:  false,
+      escalation_trigger: "error_count > 3 OR confidence < 0.5",
+      memory: {
+        enabled: true,
+        type:    "in-context",
+        max_messages: 20
+      }
+    },
+    metadata: {
+      tags:        [role, outFmt],
+      priority:    "normal",
+      created_at:  new Date().toISOString(),
+      updated_at:  new Date().toISOString()
+    }
+  };
+
+  renderOutput();
+}
+
+function getProvider(model){
+  if(model.startsWith('claude')) return 'anthropic';
+  if(model.startsWith('gpt') || model.startsWith('o')) return 'openai';
+  if(model.startsWith('gemini')) return 'google';
+  return 'unknown';
+}
+
+function getStructure(fmt){
+  const m = {
+    markdown:['## Summary','## Details','## Recommendations'],
+    json:{type:'object',required:['result','metadata']},
+    'bullet-list':['Main findings','Key points','Action items'],
+    'structured-report':['Executive Summary','Analysis','Conclusion','Next Steps'],
+    code:{language:'python',include_tests:true,include_docs:true},
+    table:{columns:['Item','Value','Note'],sortable:true},
+    free:null
+  };
+  return m[fmt] ?? null;
+}
+
+// ── Render output ──
+function renderOutput(){
+  if(!generatedData) return;
+  const panel = document.getElementById('json-output');
+
+  if(currentOut === 'json'){
+    const jsonStr = JSON.stringify(generatedData, null, 2);
+    panel.innerHTML = `<pre>${syntaxHighlight(jsonStr)}</pre>`;
+  } else if(currentOut === 'yaml'){
+    panel.innerHTML = `<pre style="color:var(--muted)">${toYAML(generatedData, 0)}</pre>`;
+  } else {
+    panel.innerHTML = `<pre style="color:var(--muted);white-space:pre-wrap">${buildPrompt(generatedData)}</pre>`;
+  }
+}
+
+// ── Syntax highlight ──
+function syntaxHighlight(json){
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m=>{
+      if(/^"/.test(m)){
+        if(/:$/.test(m)) return `<span class="jk">${m}</span>`;
+        return `<span class="js">${m}</span>`;
+      }
+      if(/true|false/.test(m)) return `<span class="jb">${m}</span>`;
+      if(/null/.test(m))       return `<span class="jb">${m}</span>`;
+      return `<span class="jn">${m}</span>`;
+    });
+}
+
+// ── Simple YAML serializer ──
+function toYAML(obj, depth){
+  const indent = '  '.repeat(depth);
+  if(obj === null)        return 'null';
+  if(typeof obj === 'boolean') return obj.toString();
+  if(typeof obj === 'number')  return obj.toString();
+  if(typeof obj === 'string'){
+    if(/[\n:#{}\[\],&*?|<>=!%@`]/.test(obj) || obj.trim() !== obj)
+      return `"${obj.replace(/"/g,'\\"')}"`;
+    return obj;
+  }
+  if(Array.isArray(obj)){
+    if(obj.length === 0) return '[]';
+    return '\n' + obj.map(v=>`${indent}- ${toYAML(v, depth+1)}`).join('\n');
+  }
+  if(typeof obj === 'object'){
+    const entries = Object.entries(obj);
+    if(entries.length === 0) return '{}';
+    return '\n' + entries.map(([k,v])=>{
+      const val = toYAML(v, depth+1);
+      if(typeof v === 'object' && v !== null && !Array.isArray(v))
+        return `${indent}${k}:${val}`;
+      if(Array.isArray(v))
+        return `${indent}${k}:${val}`;
+      return `${indent}${k}: ${val}`;
+    }).join('\n');
+  }
+  return String(obj);
+}
+
+// ── Plain text prompt ──
+function buildPrompt(d){
+  const tools = d.tools.map(t=>t.name).join(', ');
+  const constraints = Array.isArray(d.constraints) ? d.constraints.join('\n  - ') : '';
+  return `# AI エージェント指示書
+Agent ID: ${d.agent_id}
+Version : ${d.version}
+生成日時 : ${d.generated_at}
+
+## ロール
+あなたは「${d.role}」として動作します。
+
+## ゴール
+${d.goal}
+
+## 使用可能ツール
+${tools}
+
+## 制約・禁止事項
+  - ${constraints}
+
+## 出力仕様
+- 形式: ${d.output_spec.format}
+- 言語: ${d.output_spec.language}
+${d.output_spec.max_length ? `- 最大文字数: ${d.output_spec.max_length}` : ''}
+
+## 成功条件
+${d.success_criteria}
+
+## 実行パラメータ
+- 最大試行回数: ${d.execution.max_iterations}
+- タイムアウト: ${d.execution.timeout_seconds}秒
+- Temperature: ${d.model.temperature}
+
+上記の指示に従い、ゴールを達成してください。不明点がある場合はユーザーに確認してください。`;
+}
+
+// ── Switch output tab ──
+function switchOut(tab, btn){
+  currentOut = tab;
+  document.querySelectorAll('.o-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(generatedData) renderOutput();
+}
+
+// ── Copy / Download ──
+function copyOutput(){
+  if(!generatedData){ alert('先にJSONを生成してください'); return; }
+  let text;
+  if(currentOut === 'json')       text = JSON.stringify(generatedData, null, 2);
+  else if(currentOut === 'yaml')  text = toYAML(generatedData, 0).trim();
+  else                            text = buildPrompt(generatedData);
+
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('btn-copy-json');
+    btn.textContent = '✓ コピー済み';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('done'); }, 1600);
+  });
+}
+
+function downloadOutput(){
+  if(!generatedData){ alert('先にJSONを生成してください'); return; }
+  let text, ext;
+  if(currentOut === 'json')      { text = JSON.stringify(generatedData, null, 2); ext = 'json'; }
+  else if(currentOut === 'yaml') { text = toYAML(generatedData, 0).trim();        ext = 'yaml'; }
+  else                           { text = buildPrompt(generatedData);              ext = 'txt';  }
+
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `${generatedData.agent_id}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function validateJson(){
+  if(!generatedData){ alert('先にJSONを生成してください'); return; }
+  try{
+    JSON.parse(JSON.stringify(generatedData));
+    alert('✅ 有効なJSON形式です。\n\nagent_id: ' + generatedData.agent_id + '\nフィールド数: ' + Object.keys(generatedData).length);
+  }catch(e){
+    alert('❌ JSON検証エラー: ' + e.message);
+  }
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+// Init
+loadTemplate('research');
+</script>
+</body>
+</html>
