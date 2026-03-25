@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コード軽量化チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface2:#1c2333;
+  --border:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --light:#484f58;
+  --green:#3fb950;
+  --green-l:rgba(63,185,80,.10);
+  --yellow:#e3b341;
+  --yellow-l:rgba(227,179,65,.08);
+  --red:#ff7b72;
+  --red-l:rgba(255,123,114,.08);
+  --blue:#58a6ff;
+  --blue-l:rgba(88,166,255,.08);
+  --purple:#bc8cff;
+  --shadow-md:0 4px 20px rgba(0,0,0,.4);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(63,185,80,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(63,185,80,.02) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;color:var(--text);
+}
+.header h1 span{color:var(--green)}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+
+/* ── Card ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);
+}
+.card-acts{display:flex;gap:5px}
+.c-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 9px;border-radius:6px;
+  transition:color .12s,background .12s;
+}
+.c-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
+.c-btn.done{color:var(--green)}
+
+/* ── Code input ── */
+.code-editor{
+  width:100%;min-height:320px;background:var(--surface);border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:400;
+  color:var(--text);padding:14px;resize:vertical;line-height:1.8;
+  tab-size:2;
+}
+.code-editor::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+
+/* ── Settings row ── */
+.settings-row{
+  display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);
+  background:var(--surface2);flex-wrap:wrap;align-items:center;
+}
+.lang-select{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:7px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:5px 10px;outline:none;cursor:pointer;
+  transition:border-color .14s;
+}
+.lang-select:focus{border-color:var(--blue)}
+.lang-select option{background:var(--surface)}
+
+.check-opts{display:flex;gap:6px;flex-wrap:wrap}
+.chk{
+  display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;
+  color:var(--muted);cursor:pointer;padding:4px 10px;border-radius:6px;
+  border:1px solid var(--border);background:rgba(255,255,255,.03);
+  transition:all .13s;user-select:none;
+}
+.chk:hover{border-color:var(--green);color:var(--green)}
+.chk.on{background:var(--green-l);border-color:rgba(63,185,80,.3);color:var(--green)}
+.chk input{display:none}
+
+/* ── Stats bar ── */
+.stats-bar{
+  display:flex;gap:10px;padding:10px 14px;border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);flex-wrap:wrap;
+}
+.stat-item{display:flex;align-items:center;gap:4px}
+.stat-val{
+  font-family:'JetBrains Mono',monospace;font-weight:600;
+  color:var(--text);font-size:12px;
+}
+.stat-val.warn{color:var(--yellow)}
+.stat-val.bad {color:var(--red)}
+.stat-val.good{color:var(--green)}
+
+/* ── Analyze button ── */
+.btn-analyze{
+  width:100%;background:linear-gradient(135deg,#238636,#2ea043);
+  color:#fff;border:none;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;
+  padding:13px;cursor:pointer;letter-spacing:.02em;
+  box-shadow:0 0 20px rgba(63,185,80,.2);
+  transition:opacity .13s,transform .1s,box-shadow .2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin-top:12px;
+}
+.btn-analyze:hover{opacity:.9;box-shadow:0 0 28px rgba(63,185,80,.35)}
+.btn-analyze:active{transform:scale(.99)}
+.btn-analyze:disabled{opacity:.4;cursor:default;transform:none}
+
+/* ── Results pane ── */
+.results-pane{
+  display:flex;flex-direction:column;
+  min-height:400px;
+}
+
+/* Score ring */
+.score-section{
+  padding:18px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+}
+.score-ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
+.score-svg{width:72px;height:72px;transform:rotate(-90deg)}
+.s-bg  {fill:none;stroke:rgba(255,255,255,.06);stroke-width:7}
+.s-fill{fill:none;stroke-width:7;stroke-linecap:round;stroke-dasharray:192;stroke-dashoffset:192;transition:stroke-dashoffset .7s ease,stroke .4s}
+.score-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.score-num{
+  font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;
+  color:var(--text);line-height:1;
+}
+.score-max{font-size:9px;color:var(--muted)}
+
+.score-info{}
+.score-label{
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text);margin-bottom:3px;
+}
+.score-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* Issue list */
+.issues-list{
+  flex:1;overflow-y:auto;max-height:440px;
+  padding:12px;display:flex;flex-direction:column;gap:8px;
+}
+
+.issue-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;
+  animation:fadeIn .3s ease both;
+  border-left:3px solid transparent;
+}
+.issue-card.critical{border-left-color:var(--red)}
+.issue-card.warning {border-left-color:var(--yellow)}
+.issue-card.info    {border-left-color:var(--blue)}
+.issue-card.good    {border-left-color:var(--green)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.issue-head{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.issue-sev{
+  font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:4px;flex-shrink:0;
+}
+.sev-critical{background:var(--red-l);   color:var(--red)}
+.sev-warning {background:var(--yellow-l);color:var(--yellow)}
+.sev-info    {background:var(--blue-l);  color:var(--blue)}
+.sev-good    {background:var(--green-l); color:var(--green)}
+
+.issue-title{font-size:13px;font-weight:600;color:var(--text)}
+.issue-category{
+  margin-left:auto;font-size:10px;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+}
+
+.issue-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:6px}
+
+/* Code snippet */
+.issue-code{
+  background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--yellow);line-height:1.5;margin-bottom:6px;
+  white-space:pre-wrap;word-break:break-all;
+  display:none;
+}
+.issue-code.show{display:block}
+
+.issue-fix{
+  font-size:11px;color:var(--green);
+  display:flex;align-items:flex-start;gap:5px;line-height:1.55;
+}
+.issue-fix-icon{flex-shrink:0}
+
+/* Impact badge */
+.impact-row{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.impact-badge{
+  font-size:9px;font-weight:600;letter-spacing:.05em;
+  padding:2px 7px;border-radius:4px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--muted);
+}
+
+/* Loading */
+.loading-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;padding:40px;gap:12px;color:var(--muted);font-size:13px;
+}
+.loading-ring{
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--green);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empty state */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;padding:40px;gap:8px;color:var(--light);font-size:13px;text-align:center;
+}
+.empty-icon{font-size:36px;opacity:.3}
+
+/* ── Copy bar ── */
+.copy-bar{
+  padding:10px 14px;border-top:1px solid var(--border);
+  display:flex;gap:6px;background:var(--surface2);
+}
+.btn-out{
+  flex:1;border:1px solid var(--border);background:transparent;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;padding:9px;cursor:pointer;
+  color:var(--muted);transition:all .12s;
+}
+.btn-out:hover{border-color:var(--text);color:var(--text)}
+.btn-out.primary{background:var(--green);border-color:var(--green);color:#000}
+.btn-out.primary:hover{opacity:.9}
+.btn-out.done{border-color:var(--green);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📶 コード<span>軽量化</span>チェッカー</h1>
+    <p>コードを貼り付けてAIに解析させると、無駄な処理・重い記述・省エネ改善ポイントを一覧で指摘します。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Input -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">コードを貼り付け</span>
+        <div class="card-acts">
+          <button class="c-btn" onclick="pasteCode()">貼り付け</button>
+          <button class="c-btn" onclick="clearCode()">クリア</button>
+          <button class="c-btn" onclick="loadSample()">サンプル</button>
+        </div>
+      </div>
+
+      <textarea class="code-editor" id="code-input"
+        placeholder="// ここにコードを貼り付けてください&#10;// JavaScript, Python, TypeScript, CSS などに対応&#10;&#10;function example() {&#10;  // ..."
+        oninput="updateStats()" onkeydown="handleTab(event)" spellcheck="false"></textarea>
+
+      <div class="settings-row">
+        <select class="lang-select" id="lang-select">
+          <option value="auto">言語：自動検出</option>
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="css">CSS</option>
+          <option value="html">HTML</option>
+          <option value="java">Java</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+          <option value="sql">SQL</option>
+        </select>
+        <div class="check-opts">
+          <label class="chk on" id="chk-perf" onclick="toggleChk(this)"><input type="checkbox" checked>📶 パフォーマンス</label>
+          <label class="chk on" id="chk-energy" onclick="toggleChk(this)"><input type="checkbox" checked>🌿 省エネ</label>
+          <label class="chk on" id="chk-readability" onclick="toggleChk(this)"><input type="checkbox" checked>📖 可読性</label>
+          <label class="chk" id="chk-security" onclick="toggleChk(this)"><input type="checkbox">🔒 セキュリティ</label>
+        </div>
+      </div>
+
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-item">行数：<span class="stat-val" id="st-lines">0</span></div>
+        <div class="stat-item">文字数：<span class="stat-val" id="st-chars">0</span></div>
+        <div class="stat-item">サイズ：<span class="stat-val" id="st-size">0 B</span></div>
+        <div class="stat-item">複雑度：<span class="stat-val" id="st-complexity">—</span></div>
+      </div>
+
+      <button class="btn-analyze" id="btn-analyze" onclick="analyze()">
+        🔍 AIで軽量化ポイントを解析する
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-head">
+        <span class="card-label">解析結果</span>
+        <div class="card-acts">
+          <button class="c-btn" id="btn-copy-result" onclick="copyResult()">コピー</button>
+        </div>
+      </div>
+
+      <div class="results-pane" id="results-pane">
+        <div class="empty-state">
+          <span class="empty-icon">📶</span>
+          コードを貼り付けて<br>「解析する」を押してください
+        </div>
+      </div>
+
+      <div class="copy-bar">
+        <button class="btn-out primary" onclick="analyze()">🔄 再解析</button>
+        <button class="btn-out" id="btn-copy-all" onclick="copyResult()">📋 結果コピー</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const checks = {perf:true, energy:true, readability:true, security:false};
+let resultText = '';
+
+function toggleChk(el){
+  const key = el.id.replace('chk-','');
+  checks[key] = !checks[key];
+  el.classList.toggle('on', checks[key]);
+  el.querySelector('input').checked = checks[key];
+}
+
+function handleTab(e){
+  if(e.key !== 'Tab') return;
+  e.preventDefault();
+  const ta = e.target;
+  const s  = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.slice(0,s)+'  '+ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = s+2;
+}
+
+function updateStats(){
+  const code  = document.getElementById('code-input').value;
+  const lines = code ? code.split('\n').length : 0;
+  const bytes = new TextEncoder().encode(code).length;
+  const size  = bytes < 1024 ? bytes+' B' : (bytes/1024).toFixed(1)+' KB';
+
+  document.getElementById('st-lines').textContent = lines.toLocaleString();
+  document.getElementById('st-chars').textContent = code.length.toLocaleString();
+  document.getElementById('st-size').textContent  = size;
+
+  // Simple cyclomatic complexity estimate
+  const ifs    = (code.match(/\b(if|else if|elif|switch|case|catch|while|for|foreach)\b/g)||[]).length;
+  const ternary= (code.match(/\?/g)||[]).length;
+  const complexity = ifs + Math.floor(ternary/2) + 1;
+  const cxEl = document.getElementById('st-complexity');
+  cxEl.textContent = complexity;
+  cxEl.className   = 'stat-val' + (complexity > 20 ? ' bad' : complexity > 10 ? ' warn' : ' good');
+}
+
+// ── Load sample ──
+function loadSample(){
+  document.getElementById('code-input').value = `// ❌ 改善できる例
+function getUsers(list) {
+  var result = [];
+  for (var i = 0; i < list.length; i++) {
+    var user = list[i];
+    if (user.active == true) {
+      result.push({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        age: user.age
+      });
+    }
+  }
+  return result;
+}
+
+function fetchData() {
+  for (var i = 0; i < 100; i++) {
+    fetch('/api/item/' + i)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('list').innerHTML +=
+          '<li>' + data.name + '</li>';
+      });
+  }
+}
+
+function search(arr, q) {
+  var found = [];
+  for (var i = 0; i < arr.length; i++) {
+    for (var j = 0; j < arr.length; j++) {
+      if (arr[i].name.toLowerCase() == q.toLowerCase()) {
+        found.push(arr[i]);
+      }
+    }
+  }
+  return found;
+}`;
+  updateStats();
+}
+
+function pasteCode(){
+  navigator.clipboard.readText().then(t=>{
+    document.getElementById('code-input').value = t;
+    updateStats();
+  }).catch(()=>document.getElementById('code-input').focus());
+}
+function clearCode(){
+  document.getElementById('code-input').value = '';
+  updateStats();
+  document.getElementById('results-pane').innerHTML = `
+    <div class="empty-state"><span class="empty-icon">📶</span>コードを貼り付けて<br>「解析する」を押してください</div>`;
+}
+
+// ── Analyze ──
+async function analyze(){
+  const code = document.getElementById('code-input').value.trim();
+  if(!code){ alert('コードを入力してください'); return; }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+
+  document.getElementById('results-pane').innerHTML = `
+    <div class="loading-state">
+      <div class="loading-ring"></div>
+      AIが軽量化ポイントを解析中...
+    </div>`;
+
+  const lang     = document.getElementById('lang-select').value;
+  const focus    = Object.entries(checks).filter(([,v])=>v).map(([k])=>({
+    perf:'パフォーマンス', energy:'省エネ・低消費電力', readability:'可読性', security:'セキュリティ'
+  }[k])).join('、');
+
+  try{
+    const result = await callClaude(code, lang, focus);
+    renderResult(result);
+    resultText = buildResultText(result);
+  }catch(e){
+    document.getElementById('results-pane').innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">⚠️</span>
+        <span style="color:var(--red)">解析に失敗しました<br>${escHtml(e.message)}</span>
+      </div>`;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function callClaude(code, lang, focus){
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:2000,
+      system:`あなたはシニアエンジニアで、コードのパフォーマンス・省エネ・可読性の専門家です。コードを見て具体的な改善点を日本語で提示してください。`,
+      messages:[{role:'user', content:`以下のコードを解析して、軽量化・最適化のポイントを指摘してください。
+
+言語: ${lang === 'auto' ? '自動検出してください' : lang}
+重点チェック項目: ${focus}
+
+コード:
+\`\`\`
+${code}
+\`\`\`
+
+以下のJSON形式のみで返答してください（前置き・解説不要）:
+{
+  "score": 0-100の整数（100が最高品質）,
+  "summary": "全体評価を2文で",
+  "issues": [
+    {
+      "severity": "critical|warning|info|good",
+      "category": "performance|energy|readability|security|structure",
+      "title": "問題のタイトル（20文字以内）",
+      "description": "何が問題か（日本語・2文程度）",
+      "snippet": "問題のコード断片（あれば。なければ空文字）",
+      "fix": "改善策（日本語・具体的に）",
+      "impact": ["実行速度", "メモリ", "可読性", "電力消費"] の中から該当するもの
+    }
+  ]
+}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const data = await res.json();
+  const text = data.content?.[0]?.text || '';
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+// ── Render ──
+const SEV_COLOR = {critical:'var(--red)',warning:'var(--yellow)',info:'var(--blue)',good:'var(--green)'};
+const CAT_LABEL = {performance:'📶 パフォーマンス',energy:'🌿 省エネ',readability:'📖 可読性',security:'🔒 セキュリティ',structure:'🏗 構造'};
+const CIRC = 2*Math.PI*29; // r=29
+
+function renderResult(data){
+  const pane   = document.getElementById('results-pane');
+  const score  = Math.max(0,Math.min(100, data.score || 0));
+  const issues = data.issues || [];
+  const offset = CIRC*(1-score/100);
+  const scoreColor = score>=80?'var(--green)':score>=60?'var(--yellow)':'var(--red)';
+  const scoreLabel = score>=80?'✅ 良好':score>=60?'⚠️ 要改善':'🚨 要リファクタ';
+
+  pane.innerHTML = `
+    <div class="score-section">
+      <div class="score-ring-wrap">
+        <svg class="score-svg" viewBox="0 0 72 72">
+          <circle class="s-bg"   cx="36" cy="36" r="29"/>
+          <circle class="s-fill" cx="36" cy="36" r="29"
+            style="stroke:${scoreColor};stroke-dashoffset:${offset}"/>
+        </svg>
+        <div class="score-center">
+          <span class="score-num">${score}</span>
+          <span class="score-max">/100</span>
+        </div>
+      </div>
+      <div class="score-info">
+        <div class="score-label">${scoreLabel}</div>
+        <div class="score-desc">${escHtml(data.summary||'')}</div>
+      </div>
+    </div>
+    <div class="issues-list" id="issues-list"></div>`;
+
+  const list = document.getElementById('issues-list');
+  if(!issues.length){
+    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">🎉 指摘事項はありませんでした</div>`;
+    return;
+  }
+
+  issues.forEach(issue=>{
+    const card = document.createElement('div');
+    const sev  = issue.severity || 'info';
+    card.className = `issue-card ${sev}`;
+    const impactBadges = (issue.impact||[]).map(i=>`<span class="impact-badge">${escHtml(i)}</span>`).join('');
+    card.innerHTML = `
+      <div class="issue-head">
+        <span class="issue-sev sev-${sev}">${{critical:'危険',warning:'警告',info:'提案',good:'良い点'}[sev]||sev}</span>
+        <span class="issue-title">${escHtml(issue.title||'')}</span>
+        <span class="issue-category">${CAT_LABEL[issue.category]||issue.category||''}</span>
+      </div>
+      <div class="issue-desc">${escHtml(issue.description||'')}</div>
+      ${issue.snippet ? `<div class="issue-code show">${escHtml(issue.snippet)}</div>` : ''}
+      <div class="issue-fix"><span class="issue-fix-icon">💡</span>${escHtml(issue.fix||'')}</div>
+      ${impactBadges ? `<div class="impact-row">${impactBadges}</div>` : ''}`;
+    list.appendChild(card);
+  });
+}
+
+function buildResultText(data){
+  const issues = data.issues || [];
+  let t = `コード軽量化チェック結果\nスコア: ${data.score}/100\n${data.summary}\n\n`;
+  issues.forEach((is,i)=>{
+    t += `${i+1}. [${is.severity?.toUpperCase()}] ${is.title}\n`;
+    t += `   ${is.description}\n`;
+    if(is.snippet) t += `   問題箇所: ${is.snippet}\n`;
+    t += `   改善策: ${is.fix}\n\n`;
+  });
+  return t;
+}
+
+function copyResult(){
+  if(!resultText){ alert('先に解析してください'); return; }
+  navigator.clipboard.writeText(resultText).then(()=>{
+    ['btn-copy-result','btn-copy-all'].forEach(id=>{
+      const btn = document.getElementById(id);
+      if(!btn) return;
+      const orig = btn.textContent;
+      btn.textContent = '✓ コピー済み';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); }, 1500);
+    });
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+updateStats();
+</script>
+</body>
+</html>
