@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フリマ画像一括整形ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#e8410a;
+  --accent-l:rgba(232,65,10,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+
+.wrap{max-width:880px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Settings card ── */
+.settings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:14px;display:block;
+}
+
+.settings-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  margin-bottom:16px;
+}
+@media(max-width:560px){.settings-grid{grid-template-columns:1fr}}
+
+.set-group label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;
+}
+.set-group label .val{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--accent);
+}
+input[type=range]{
+  width:100%;height:4px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);border:2.5px solid #fff;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.set-group select{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:8px 11px;outline:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+  transition:border-color .15s;
+}
+.set-group select:focus{border-color:var(--accent)}
+
+/* Toggle options */
+.toggle-row{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px;border-top:1px solid var(--border)}
+.tog{
+  display:flex;align-items:center;gap:6px;font-size:12px;
+  color:var(--muted);cursor:pointer;padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  transition:all .13s;user-select:none;font-weight:500;
+}
+.tog:hover{border-color:var(--accent);color:var(--accent)}
+.tog.on{background:var(--accent-l);border-color:rgba(232,65,10,.3);color:var(--accent)}
+.tog input{accent-color:var(--accent);pointer-events:none;width:13px;height:13px}
+
+/* ── Drop zone ── */
+.dropzone{
+  border:2px dashed var(--border);border-radius:14px;
+  padding:36px 20px;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;
+  background:var(--white);margin-bottom:14px;
+  position:relative;
+}
+.dropzone:hover,.dropzone.drag-over{
+  border-color:var(--accent);background:var(--accent-l);
+}
+.dropzone input[type=file]{
+  position:absolute;inset:0;width:100%;height:100%;
+  opacity:0;cursor:pointer;
+}
+.drop-icon{font-size:40px;margin-bottom:10px;display:block}
+.drop-title{
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  color:var(--text);margin-bottom:4px;
+}
+.drop-sub{font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ── Progress ── */
+.progress-bar{
+  height:4px;background:var(--border);border-radius:2px;
+  overflow:hidden;margin-bottom:14px;display:none;
+}
+.progress-bar.show{display:block}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent),#f97316);
+  border-radius:2px;transition:width .3s ease;
+}
+
+/* ── Image grid ── */
+.grid-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;flex-wrap:wrap;gap:8px;
+}
+.grid-count{font-size:13px;color:var(--muted);font-weight:500}
+.grid-actions{display:flex;gap:7px;flex-wrap:wrap}
+
+.btn-primary{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:9px 18px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;gap:5px;
+}
+.btn-primary:hover{opacity:.9}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.4;cursor:default}
+
+.btn-secondary{
+  background:var(--white);color:var(--muted);
+  border:1.5px solid var(--border);border-radius:9px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:9px 16px;cursor:pointer;transition:all .13s;
+}
+.btn-secondary:hover{border-color:var(--text);color:var(--text)}
+
+.img-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:12px;
+}
+
+/* Image card */
+.img-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;box-shadow:var(--shadow);
+  position:relative;
+  animation:cardIn .25s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+.img-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.img-card.done .img-status{background:var(--green)}
+.img-card.error .img-status{background:var(--red,#dc2626)}
+
+/* Preview area */
+.img-preview{
+  width:100%;aspect-ratio:1/1;object-fit:cover;
+  display:block;background:var(--bg);cursor:pointer;
+}
+.img-preview-wrap{position:relative}
+
+.img-before-after{
+  position:absolute;bottom:6px;left:6px;
+  display:flex;gap:3px;
+}
+.ba-btn{
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;
+  border:none;cursor:pointer;transition:opacity .13s;
+  font-family:'Outfit',sans-serif;letter-spacing:.04em;
+}
+.ba-btn.active{background:var(--white);color:var(--text)}
+.ba-btn.inactive{background:rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+
+.img-status{
+  position:absolute;top:6px;right:6px;
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(255,255,255,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+}
+.img-check{
+  position:absolute;top:6px;left:6px;
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.6);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:#fff;transition:background .13s;
+}
+.img-card.selected .img-check{background:var(--accent);border-color:var(--accent)}
+
+.img-info{padding:10px 12px}
+.img-name{
+  font-size:11px;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;
+}
+.img-size{font-size:10px;color:var(--light);font-family:'Outfit',sans-serif}
+
+.img-actions{
+  display:flex;gap:5px;padding:0 10px 10px;
+}
+.img-btn{
+  flex:1;font-size:11px;font-weight:600;padding:5px;border-radius:6px;
+  border:1px solid var(--border);background:var(--bg);color:var(--muted);
+  cursor:pointer;transition:all .12s;font-family:'Outfit',sans-serif;
+  text-align:center;
+}
+.img-btn:hover{border-color:var(--accent);color:var(--accent)}
+.img-btn.dl{background:var(--accent);border-color:var(--accent);color:#fff}
+.img-btn.dl:hover{opacity:.9}
+.img-btn.remove{border-color:rgba(220,38,38,.2);color:#dc2626}
+.img-btn.remove:hover{background:rgba(220,38,38,.08)}
+
+/* Processing overlay */
+.processing-overlay{
+  position:absolute;inset:0;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(2px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;font-size:12px;color:var(--muted);font-weight:500;
+  display:none;
+}
+.processing-overlay.show{display:flex}
+.mini-spinner{
+  width:24px;height:24px;border:2.5px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Download all bar ── */
+.dl-bar{
+  position:sticky;bottom:16px;z-index:50;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:14px 18px;
+  box-shadow:0 8px 32px rgba(0,0,0,.12);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-top:16px;
+  display:none;
+}
+.dl-bar.show{display:flex}
+.dl-bar-txt{font-size:13px;color:var(--muted);font-weight:500}
+.dl-bar-txt strong{color:var(--text)}
+.btn-dl-all{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:12px 24px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+}
+.btn-dl-all:hover{opacity:.9}
+.btn-dl-all:active{transform:scale(.98)}
+.btn-dl-all.done{background:var(--green)}
+
+/* ── Empty state ── */
+.empty-state{display:none;text-align:center;padding:40px;color:var(--light);font-size:13px}
+.empty-state.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📦 フリマ画像一括整形ツール</h1>
+    <p>メルカリ・ヤフオク向けに、複数の商品写真を正方形クロップ・明るさ補正・シャープ化を一括処理してダウンロードします。</p>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings-card">
+    <span class="card-label">整形オプション</span>
+    <div class="settings-grid">
+
+      <div class="set-group">
+        <label>出力サイズ <span class="val" id="lbl-size">1000px</span></label>
+        <select id="opt-size">
+          <option value="600">600px（軽量）</option>
+          <option value="800">800px</option>
+          <option value="1000" selected>1000px（推奨）</option>
+          <option value="1200">1200px（高画質）</option>
+          <option value="1500">1500px（原寸付近）</option>
+        </select>
+      </div>
+
+      <div class="set-group">
+        <label>明るさ <span class="val" id="lbl-brightness">+20</span></label>
+        <input type="range" id="opt-brightness" min="-80" max="120" value="20"
+          oninput="document.getElementById('lbl-brightness').textContent=(this.value>0?'+':'')+this.value">
+      </div>
+
+      <div class="set-group">
+        <label>コントラスト <span class="val" id="lbl-contrast">+10</span></label>
+        <input type="range" id="opt-contrast" min="-80" max="100" value="10"
+          oninput="document.getElementById('lbl-contrast').textContent=(this.value>0?'+':'')+this.value">
+      </div>
+
+      <div class="set-group">
+        <label>彩度 <span class="val" id="lbl-saturation">+10</span></label>
+        <input type="range" id="opt-saturation" min="-100" max="100" value="10"
+          oninput="document.getElementById('lbl-saturation').textContent=(this.value>0?'+':'')+this.value">
+      </div>
+
+      <div class="set-group">
+        <label>シャープ <span class="val" id="lbl-sharpen">中</span></label>
+        <select id="opt-sharpen">
+          <option value="0">なし</option>
+          <option value="1">弱</option>
+          <option value="2" selected>中</option>
+          <option value="3">強</option>
+        </select>
+      </div>
+
+      <div class="set-group">
+        <label>クロップ位置 <span class="val" id="lbl-crop">中央</span></label>
+        <select id="opt-crop">
+          <option value="center" selected>中央</option>
+          <option value="top">上部</option>
+          <option value="bottom">下部</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="toggle-row">
+      <label class="tog on" id="tog-square" onclick="toggleOpt(this,'square')">
+        <input type="checkbox" checked>正方形にクロップ
+      </label>
+      <label class="tog on" id="tog-white" onclick="toggleOpt(this,'white')">
+        <input type="checkbox" checked>白背景でパディング
+      </label>
+      <label class="tog" id="tog-watermark" onclick="toggleOpt(this,'watermark')">
+        <input type="checkbox">ウォーターマーク除去（フチ5%カット）
+      </label>
+      <label class="tog on" id="tog-auto" onclick="toggleOpt(this,'auto')">
+        <input type="checkbox" checked>自動明るさ補正
+      </label>
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone"
+    ondragover="event.preventDefault();this.classList.add('drag-over')"
+    ondragleave="this.classList.remove('drag-over')"
+    ondrop="onDrop(event)">
+    <input type="file" id="file-input" multiple accept="image/*" onchange="onFiles(this.files)">
+    <span class="drop-icon">📸</span>
+    <div class="drop-title">画像をドラッグ＆ドロップ、またはタップして選択</div>
+    <div class="drop-sub">JPG・PNG・WebP・HEIC 対応 ／ 複数枚同時選択OK<br>スマホの場合は「ファイルを選択」からカメラロールを指定してください</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid-section" style="display:none">
+    <div class="grid-head">
+      <span class="grid-count" id="grid-count">0枚</span>
+      <div class="grid-actions">
+        <button class="btn-secondary" onclick="selectAll()">すべて選択</button>
+        <button class="btn-secondary" onclick="processSelected()">🔄 選択を再処理</button>
+        <button class="btn-secondary" onclick="clearAll()">🗑 クリア</button>
+        <button class="btn-primary" id="btn-process-all" onclick="processAll()">
+          ⚡ 全件処理する
+        </button>
+      </div>
+    </div>
+    <div class="img-grid" id="img-grid"></div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <div style="font-size:36px;margin-bottom:8px">📦</div>
+    画像を追加してください
+  </div>
+
+  <!-- DL bar -->
+  <div class="dl-bar" id="dl-bar">
+    <span class="dl-bar-txt"><strong id="dl-ready-count">0</strong>枚 処理完了・ダウンロード可能</span>
+    <button class="btn-dl-all" id="btn-dl-all" onclick="downloadAll()">
+      ⬇ 全件まとめてDL
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+const items   = [];  // {id, file, origCanvas, procCanvas, status:'idle'|'done'|'error'}
+let   nextId  = 0;
+const opts    = {square:true, white:true, watermark:false, auto:true};
+
+// ── Drop / File input ──
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag-over');
+  onFiles(e.dataTransfer.files);
+}
+
+function onFiles(files){
+  if(!files?.length) return;
+  [...files].forEach(f=>{ if(f.type.startsWith('image/')) addItem(f); });
+  document.getElementById('grid-section').style.display = 'block';
+  document.getElementById('empty-state').classList.remove('show');
+  updateGridCount();
+}
+
+function addItem(file){
+  const id  = nextId++;
+  const item= {id, file, origCanvas:null, procCanvas:null, status:'idle', showing:'proc'};
+  items.push(item);
+  renderCard(item);
+}
+
+// ── Render card ──
+function renderCard(item){
+  const grid = document.getElementById('img-grid');
+  const div  = document.createElement('div');
+  div.className = 'img-card';
+  div.id = `card-${item.id}`;
+  div.innerHTML = `
+    <div class="img-preview-wrap">
+      <img class="img-preview" id="prev-${item.id}" src="" alt="" onclick="toggleSelect(${item.id})">
+      <div class="img-check" onclick="toggleSelect(${item.id})"></div>
+      <div class="img-before-after" id="ba-${item.id}" style="display:none">
+        <button class="ba-btn active" onclick="showBefore(${item.id})">BEFORE</button>
+        <button class="ba-btn inactive" onclick="showAfter(${item.id})">AFTER</button>
+      </div>
+      <div class="img-status" id="status-${item.id}">⏳</div>
+      <div class="processing-overlay" id="overlay-${item.id}">
+        <div class="mini-spinner"></div>処理中...
+      </div>
+    </div>
+    <div class="img-info">
+      <div class="img-name" title="${escHtml(item.file.name)}">${escHtml(item.file.name)}</div>
+      <div class="img-size" id="imgsize-${item.id}">読み込み中...</div>
+    </div>
+    <div class="img-actions">
+      <button class="img-btn" onclick="processSingle(${item.id})">🔄</button>
+      <button class="img-btn dl" id="dlbtn-${item.id}" onclick="downloadSingle(${item.id})" disabled>⬇</button>
+      <button class="img-btn remove" onclick="removeItem(${item.id})">✕</button>
+    </div>`;
+  grid.appendChild(div);
+
+  // Load original
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas  = document.createElement('canvas');
+      canvas.width  = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      item.origCanvas = canvas;
+      item.origImg    = img;
+      document.getElementById(`prev-${item.id}`).src = canvas.toDataURL('image/jpeg',0.85);
+      document.getElementById(`imgsize-${item.id}`).textContent =
+        `${img.width}×${img.height}px`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(item.file);
+}
+
+// ── Process ──
+async function processAll(){
+  const btn = document.getElementById('btn-process-all');
+  btn.disabled = true;
+  const bar  = document.getElementById('progress-bar');
+  bar.classList.add('show');
+
+  for(let i=0;i<items.length;i++){
+    document.getElementById('progress-fill').style.width = ((i+1)/items.length*100) + '%';
+    await processItem(items[i]);
+  }
+
+  btn.disabled = false;
+  updateDlBar();
+}
+
+function processSelected(){
+  const sel = items.filter(it=>it.selected);
+  sel.forEach(it=>processItem(it));
+  setTimeout(updateDlBar, 500);
+}
+
+async function processItem(item){
+  if(!item.origCanvas) return;
+
+  const overlay = document.getElementById(`overlay-${item.id}`);
+  overlay.classList.add('show');
+
+  await new Promise(r=>setTimeout(r,10)); // yield to UI
+
+  try{
+    item.procCanvas = await transform(item.origCanvas);
+    item.status     = 'done';
+    item.showing    = 'proc';
+
+    // Update preview → processed
+    const prev = document.getElementById(`prev-${item.id}`);
+    prev.src = item.procCanvas.toDataURL('image/jpeg',0.92);
+
+    document.getElementById(`status-${item.id}`).textContent = '✅';
+    document.getElementById(`card-${item.id}`).classList.add('done');
+    document.getElementById(`dlbtn-${item.id}`).disabled = false;
+    document.getElementById(`ba-${item.id}`).style.display = 'flex';
+
+    const size = parseInt(document.getElementById('opt-size').value);
+    document.getElementById(`imgsize-${item.id}`).textContent = `${size}×${size}px ✓`;
+
+  }catch(e){
+    item.status = 'error';
+    document.getElementById(`status-${item.id}`).textContent = '❌';
+    document.getElementById(`card-${item.id}`).classList.add('error');
+  }
+
+  overlay.classList.remove('show');
+}
+
+// ── Transform ──
+async function transform(src){
+  const size    = parseInt(document.getElementById('opt-size').value);
+  const bright  = parseInt(document.getElementById('opt-brightness').value);
+  const contrast= parseInt(document.getElementById('opt-contrast').value);
+  const sat     = parseInt(document.getElementById('opt-saturation').value);
+  const sharpen = parseInt(document.getElementById('opt-sharpen').value);
+  const crop    = document.getElementById('opt-crop').value;
+
+  const sw = src.width, sh = src.height;
+  const tmp = document.createElement('canvas');
+
+  // 1. Watermark crop (trim outer 5%)
+  let sx=0, sy=0, sW=sw, sH=sh;
+  if(opts.watermark){
+    const px = Math.floor(sw*0.05), py = Math.floor(sh*0.05);
+    sx=px; sy=py; sW=sw-px*2; sH=sh-py*2;
+  }
+
+  // 2. Square crop
+  if(opts.square){
+    const minSide = Math.min(sW, sH);
+    const offX = crop==='center' ? Math.floor((sW-minSide)/2) : 0;
+    const offY = crop==='top'    ? 0
+               : crop==='bottom' ? Math.floor(sH-minSide)
+               : Math.floor((sH-minSide)/2);
+    tmp.width  = size;
+    tmp.height = size;
+    const ctx = tmp.getContext('2d');
+    if(opts.white){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size); }
+    ctx.drawImage(src, sx+offX, sy+offY, minSide, minSide, 0, 0, size, size);
+  } else {
+    // No square, just resize
+    const aspect = sW/sH;
+    tmp.width  = size;
+    tmp.height = Math.round(size/aspect);
+    const ctx = tmp.getContext('2d');
+    if(opts.white){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,tmp.width,tmp.height); }
+    ctx.drawImage(src, sx, sy, sW, sH, 0, 0, tmp.width, tmp.height);
+  }
+
+  // 3. Pixel manipulation (brightness / contrast / saturation / auto)
+  const ctx  = tmp.getContext('2d');
+  const imgd = ctx.getImageData(0, 0, tmp.width, tmp.height);
+  const data = imgd.data;
+
+  // Auto brightness: analyse luminance and correct if too dark
+  let autoBright = 0;
+  if(opts.auto){
+    let total = 0, cnt = 0;
+    for(let i=0;i<data.length;i+=16){
+      total += (data[i]*0.299 + data[i+1]*0.587 + data[i+2]*0.114);
+      cnt++;
+    }
+    const avg = total/cnt; // 0-255
+    if(avg < 100)       autoBright = Math.round((128-avg)*0.8);
+    else if(avg < 140)  autoBright = Math.round((140-avg)*0.5);
+    else                autoBright = 0;
+  }
+
+  const bAdj  = bright + autoBright;
+  const cAdj  = contrast;
+  const sAdj  = sat;
+  const cFac  = (259*(cAdj+255))/(255*(259-cAdj));
+  const sFac  = 1 + sAdj/100;
+
+  for(let i=0;i<data.length;i+=4){
+    let r = data[i], g = data[i+1], b = data[i+2];
+
+    // Brightness
+    r += bAdj; g += bAdj; b += bAdj;
+
+    // Contrast
+    r = cFac*(r-128)+128;
+    g = cFac*(g-128)+128;
+    b = cFac*(b-128)+128;
+
+    // Saturation
+    const lum = 0.299*r + 0.587*g + 0.114*b;
+    r = lum + (r-lum)*sFac;
+    g = lum + (g-lum)*sFac;
+    b = lum + (b-lum)*sFac;
+
+    data[i]   = Math.max(0,Math.min(255,r));
+    data[i+1] = Math.max(0,Math.min(255,g));
+    data[i+2] = Math.max(0,Math.min(255,b));
+  }
+  ctx.putImageData(imgd, 0, 0);
+
+  // 4. Sharpen (convolution)
+  if(sharpen > 0) applySharp(tmp, sharpen);
+
+  return tmp;
+}
+
+function applySharp(canvas, level){
+  const w   = canvas.width, h = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const src = ctx.getImageData(0,0,w,h);
+  const dst = ctx.createImageData(w,h);
+  const d   = src.data, o = dst.data;
+
+  // Unsharp mask kernel weights by level
+  const amt = [0, 0.4, 0.7, 1.0][level];
+  const kern = [
+    0,      -amt,       0,
+    -amt, 1+4*amt,   -amt,
+    0,      -amt,       0
+  ];
+
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const idx=(y*w+x)*4;
+      for(let c=0;c<3;c++){
+        let v = 0;
+        v += kern[0]*d[((y-1)*w+(x-1))*4+c];
+        v += kern[1]*d[((y-1)*w+x  )*4+c];
+        v += kern[2]*d[((y-1)*w+(x+1))*4+c];
+        v += kern[3]*d[(y    *w+(x-1))*4+c];
+        v += kern[4]*d[(y    *w+x    )*4+c];
+        v += kern[5]*d[(y    *w+(x+1))*4+c];
+        v += kern[6]*d[((y+1)*w+(x-1))*4+c];
+        v += kern[7]*d[((y+1)*w+x    )*4+c];
+        v += kern[8]*d[((y+1)*w+(x+1))*4+c];
+        o[idx+c] = Math.max(0,Math.min(255,v));
+      }
+      o[idx+3] = d[idx+3];
+    }
+  }
+  ctx.putImageData(dst,0,0);
+}
+
+// ── Before / After ──
+function showBefore(id){
+  const item = items.find(it=>it.id===id);
+  if(!item?.origCanvas) return;
+  document.getElementById(`prev-${id}`).src = item.origCanvas.toDataURL('image/jpeg',0.85);
+  item.showing = 'orig';
+  const ba = document.getElementById(`ba-${id}`);
+  ba.children[0].className = 'ba-btn active';
+  ba.children[1].className = 'ba-btn inactive';
+}
+function showAfter(id){
+  const item = items.find(it=>it.id===id);
+  if(!item?.procCanvas) return;
+  document.getElementById(`prev-${id}`).src = item.procCanvas.toDataURL('image/jpeg',0.92);
+  item.showing = 'proc';
+  const ba = document.getElementById(`ba-${id}`);
+  ba.children[0].className = 'ba-btn inactive';
+  ba.children[1].className = 'ba-btn active';
+}
+
+// ── Select ──
+function toggleSelect(id){
+  const item = items.find(it=>it.id===id);
+  item.selected = !item.selected;
+  document.getElementById(`card-${id}`).classList.toggle('selected', item.selected);
+}
+function selectAll(){
+  items.forEach(it=>{ it.selected=true; document.getElementById(`card-${it.id}`)?.classList.add('selected'); });
+}
+
+// ── Download ──
+function downloadSingle(id){
+  const item = items.find(it=>it.id===id);
+  if(!item?.procCanvas) return;
+  const a = document.createElement('a');
+  const base = item.file.name.replace(/\.[^.]+$/,'');
+  a.download = `${base}_edited.jpg`;
+  a.href = item.procCanvas.toDataURL('image/jpeg',0.92);
+  a.click();
+}
+
+function downloadAll(){
+  const done = items.filter(it=>it.status==='done');
+  if(!done.length){ alert('先に処理してください'); return; }
+  done.forEach((it,i)=>{
+    setTimeout(()=>{
+      const a    = document.createElement('a');
+      const base = it.file.name.replace(/\.[^.]+$/,'');
+      a.download = `${base}_edited.jpg`;
+      a.href     = it.procCanvas.toDataURL('image/jpeg',0.92);
+      a.click();
+    }, i*200);
+  });
+  const btn = document.getElementById('btn-dl-all');
+  btn.textContent = `✓ ${done.length}枚ダウンロード中`;
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='⬇ 全件まとめてDL'; btn.classList.remove('done'); }, 3000);
+}
+
+// ── Remove / Clear ──
+function removeItem(id){
+  const idx = items.findIndex(it=>it.id===id);
+  if(idx < 0) return;
+  items.splice(idx,1);
+  document.getElementById(`card-${id}`)?.remove();
+  updateGridCount();
+  updateDlBar();
+  if(!items.length){ document.getElementById('grid-section').style.display='none'; document.getElementById('empty-state').classList.add('show'); }
+}
+
+function clearAll(){
+  items.length = 0;
+  document.getElementById('img-grid').innerHTML = '';
+  document.getElementById('grid-section').style.display = 'none';
+  document.getElementById('empty-state').classList.add('show');
+  document.getElementById('dl-bar').classList.remove('show');
+  document.getElementById('progress-bar').classList.remove('show');
+  document.getElementById('file-input').value = '';
+}
+
+// ── UI helpers ──
+function updateGridCount(){
+  document.getElementById('grid-count').textContent = items.length + '枚';
+}
+function updateDlBar(){
+  const done = items.filter(it=>it.status==='done').length;
+  document.getElementById('dl-ready-count').textContent = done;
+  document.getElementById('dl-bar').classList.toggle('show', done > 0);
+}
+function toggleOpt(el, key){
+  opts[key] = !opts[key];
+  el.classList.toggle('on', opts[key]);
+  el.querySelector('input').checked = opts[key];
+}
+
+const sharpenLabels = ['なし','弱','中','強'];
+document.getElementById('opt-sharpen').addEventListener('change', function(){
+  document.getElementById('lbl-sharpen').textContent = sharpenLabels[this.value];
+});
+document.getElementById('opt-size').addEventListener('change', function(){
+  document.getElementById('lbl-size').textContent = this.options[this.selectedIndex].text.split('（')[0];
+});
+document.getElementById('opt-crop').addEventListener('change', function(){
+  document.getElementById('lbl-crop').textContent = this.options[this.selectedIndex].text;
+});
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
