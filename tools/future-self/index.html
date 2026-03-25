@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>未来の自分からの・辛口フィードバック</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Outfit:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#09090c;
+  --surface:#111118;
+  --border:#1e1e28;
+  --text:#e8e4dc;
+  --muted:#8a8478;
+  --light:#3a3830;
+  --gold:#c8a040;
+  --gold2:#f0c060;
+  --red:#e05040;
+  --green:#40a060;
+  --shadow-lg:0 20px 60px rgba(0,0,0,.6);
+}
+
+html,body{height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+  overflow-x:hidden;
+}
+
+/* stars */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 8%  15%, rgba(200,160,64,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 62%  6%, rgba(200,160,64,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 30%, rgba(200,160,64,.35)0%,transparent 100%),
+    radial-gradient(1px 1px at 22% 75%, rgba(200,160,64,.25)0%,transparent 100%),
+    radial-gradient(1px 1px at 91% 68%, rgba(200,160,64,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 45% 45%, rgba(200,160,64,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 33% 90%, rgba(200,160,64,.22)0%,transparent 100%),
+    radial-gradient(1px 1px at 78% 85%, rgba(200,160,64,.28)0%,transparent 100%),
+    radial-gradient(400px 300px at 0% 0%,   rgba(200,160,64,.04)0%,transparent 60%),
+    radial-gradient(400px 300px at 100% 100%,rgba(60,80,180,.06)0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:580px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:36px;animation:fadeUp .6s ease}
+.header-year{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:16px;display:block;
+  animation:glow 2.5s ease-in-out infinite;
+}
+@keyframes glow{0%,100%{text-shadow:0 0 8px rgba(200,160,64,.3)}50%{text-shadow:0 0 20px rgba(200,160,64,.7)}}
+.header h1{
+  font-family:'Noto Serif JP',serif;font-size:clamp(22px,5vw,32px);font-weight:600;
+  letter-spacing:.04em;line-height:1.35;margin-bottom:8px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.8}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:26px 24px;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);margin-bottom:16px;
+  animation:fadeUp .6s .1s ease both;
+}
+
+.section-label{
+  font-size:10px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.goal-input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid var(--border);border-radius:12px;
+  color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:400;
+  padding:14px 16px;outline:none;resize:none;line-height:1.75;
+  transition:border-color .2s,box-shadow .2s;
+  min-height:90px;
+}
+.goal-input:focus{
+  border-color:rgba(200,160,64,.4);
+  box-shadow:0 0 0 3px rgba(200,160,64,.08);
+  background:rgba(255,255,255,.04);
+}
+.goal-input::placeholder{color:var(--muted)}
+
+/* Version selector */
+.version-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;
+}
+.version-btn{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:14px 10px;border-radius:12px;
+  border:1px solid var(--border);background:rgba(255,255,255,.02);
+  cursor:pointer;transition:all .15s;user-select:none;
+}
+.version-btn:hover{border-color:rgba(200,160,64,.3);background:rgba(200,160,64,.04)}
+.version-btn.active-success{
+  border-color:rgba(64,160,96,.5);
+  background:rgba(64,160,96,.08);
+}
+.version-btn.active-failure{
+  border-color:rgba(224,80,64,.5);
+  background:rgba(224,80,64,.08);
+}
+.version-icon{font-size:26px;line-height:1}
+.version-name{font-size:12px;font-weight:600;color:var(--muted)}
+.version-desc{font-size:10px;color:var(--light);text-align:center;line-height:1.4}
+.version-btn.active-success .version-name{color:var(--green)}
+.version-btn.active-failure .version-name{color:var(--red)}
+
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.preset{
+  font-size:11px;padding:3px 10px;border-radius:100px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.preset:hover{border-color:var(--gold);color:var(--gold)}
+
+.btn-receive{
+  width:100%;
+  background:linear-gradient(135deg,rgba(200,160,64,.15),rgba(200,160,64,.08));
+  border:1px solid rgba(200,160,64,.4);
+  color:var(--gold2);border-radius:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;
+  padding:15px;cursor:pointer;letter-spacing:.04em;
+  transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-receive:hover{
+  background:linear-gradient(135deg,rgba(200,160,64,.22),rgba(200,160,64,.12));
+  border-color:rgba(200,160,64,.7);
+  box-shadow:0 0 24px rgba(200,160,64,.15);
+}
+.btn-receive:active{transform:scale(.99)}
+.btn-receive:disabled{opacity:.4;cursor:default}
+
+/* ── Message card ── */
+.message-card{
+  display:none;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  box-shadow:var(--shadow-lg);
+  animation:messageIn .5s cubic-bezier(.34,1.1,.64,1) both;
+}
+.message-card.show{display:block}
+@keyframes messageIn{
+  from{opacity:0;transform:translateY(20px) scale(.97)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Postmark header */
+.msg-postmark{
+  padding:16px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.02);
+}
+.msg-from{
+  display:flex;flex-direction:column;gap:2px;
+}
+.msg-from-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.msg-from-val{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;
+  letter-spacing:.02em;
+}
+.msg-from-val.success{color:var(--green)}
+.msg-from-val.failure{color:var(--red)}
+.msg-stamp{
+  width:48px;height:48px;border-radius:50%;border:2px dashed;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  text-align:center;line-height:1.2;transform:rotate(-12deg);
+}
+.msg-stamp.success{border-color:var(--green);color:var(--green)}
+.msg-stamp.failure{border-color:var(--red);color:var(--red)}
+
+/* Letter body */
+.msg-body{padding:26px 24px 20px}
+.msg-greeting{
+  font-family:'Noto Serif JP',serif;font-size:13px;font-weight:300;
+  color:var(--muted);margin-bottom:14px;line-height:1.7;
+}
+.msg-text{
+  font-family:'Noto Serif JP',serif;font-size:clamp(15px,3.5vw,17px);
+  font-weight:400;line-height:2.0;color:var(--text);
+  margin-bottom:20px;
+  animation:textReveal .8s ease .2s both;
+}
+@keyframes textReveal{from{opacity:0}to{opacity:1}}
+
+/* Specific message sections */
+.msg-verdict{
+  background:rgba(255,255,255,.03);border-left:3px solid;
+  border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;
+  font-size:13px;line-height:1.75;color:var(--muted);
+}
+.msg-verdict.success{border-left-color:var(--green)}
+.msg-verdict.failure{border-left-color:var(--red)}
+
+.msg-action{
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  color:var(--gold);font-weight:400;line-height:1.8;
+  display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;
+}
+.msg-action-icon{flex-shrink:0;font-size:14px}
+
+.msg-sign{
+  margin-top:22px;text-align:right;
+  border-top:1px solid var(--border);padding-top:16px;
+}
+.msg-sign-from{
+  font-family:'Noto Serif JP',serif;font-size:12px;
+  color:var(--muted);line-height:1.7;
+}
+.msg-sign-name{
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;
+  margin-top:4px;
+}
+.msg-sign-name.success{color:var(--green)}
+.msg-sign-name.failure{color:var(--red)}
+
+/* Footer actions */
+.msg-actions{
+  padding:14px 22px;border-top:1px solid var(--border);
+  display:flex;gap:8px;background:rgba(255,255,255,.01);
+}
+.msg-btn{
+  flex:1;font-size:12px;font-weight:600;padding:9px;border-radius:10px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Outfit',sans-serif;
+}
+.msg-btn:hover{border-color:var(--gold);color:var(--gold)}
+.msg-btn.primary{
+  background:rgba(200,160,64,.12);border-color:rgba(200,160,64,.3);
+  color:var(--gold2);
+}
+.msg-btn.primary:hover{background:rgba(200,160,64,.2)}
+.msg-btn.done{border-color:var(--green);color:var(--green)}
+
+/* ── Loading ── */
+.loading-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:44px 24px;text-align:center;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+  display:none;
+}
+.loading-card.show{display:block}
+.loading-orb{
+  width:50px;height:50px;border-radius:50%;
+  border:2px solid rgba(200,160,64,.2);
+  border-top-color:var(--gold);
+  animation:spin 1.2s linear infinite;margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Noto Serif JP',serif;font-size:14px;color:var(--muted);line-height:1.8}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-year">📡 Signal from 2030</span>
+    <h1>未来の自分から<br>辛口フィードバック</h1>
+    <p>今の目標を入力すると、2030年の自分から<br>「ホントのこと」が届きます。</p>
+  </div>
+
+  <div class="input-card">
+    <span class="section-label">今の目標・やりたいこと</span>
+
+    <div class="preset-row">
+      <button class="preset" onclick="setPreset('副業で月収10万円稼ぐ')">💰 副業</button>
+      <button class="preset" onclick="setPreset('英語をビジネスレベルにする')">🗣 英語</button>
+      <button class="preset" onclick="setPreset('起業して会社を作る')">🚀 起業</button>
+      <button class="preset" onclick="setPreset('体重を10kg減らす')">💪 ダイエット</button>
+      <button class="preset" onclick="setPreset('プログラミングをマスターする')">💻 プログラミング</button>
+      <button class="preset" onclick="setPreset('本を出版する')">📚 出版</button>
+    </div>
+
+    <textarea class="goal-input" id="goal-input"
+      placeholder="例：副業で月収10万円稼ぎたい&#10;英語を話せるようになりたい&#10;起業して自由に生きたい"></textarea>
+
+    <div class="version-row" style="margin-top:14px">
+      <button class="version-btn active-success" id="ver-success" onclick="setVersion('success')">
+        <span class="version-icon">🏆</span>
+        <span class="version-name">成功した自分</span>
+        <span class="version-desc">夢を叶えた未来から<br>愛ある喝を入れる</span>
+      </button>
+      <button class="version-btn" id="ver-failure" onclick="setVersion('failure')">
+        <span class="version-icon">💀</span>
+        <span class="version-name">失敗した自分</span>
+        <span class="version-desc">諦めた未来から<br>後悔の叫びが届く</span>
+      </button>
+    </div>
+
+    <button class="btn-receive" id="btn-receive" onclick="receive()">
+      📨 2030年からの手紙を受け取る
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <div class="loading-orb"></div>
+    <div class="loading-text">2030年の自分から<br>通信を受信中...</div>
+  </div>
+
+  <!-- Message -->
+  <div class="message-card" id="message-card">
+    <div class="msg-postmark">
+      <div class="msg-from">
+        <span class="msg-from-label">From</span>
+        <span class="msg-from-val" id="msg-from-val">—</span>
+      </div>
+      <div class="msg-stamp" id="msg-stamp">2030<br>年</div>
+    </div>
+    <div class="msg-body">
+      <div class="msg-greeting" id="msg-greeting"></div>
+      <div class="msg-text" id="msg-text"></div>
+      <div class="msg-verdict" id="msg-verdict"></div>
+      <div id="msg-actions-list"></div>
+      <div class="msg-sign">
+        <div class="msg-sign-from">2030年 あなた自身より</div>
+        <div class="msg-sign-name" id="msg-sign-name">Future Self</div>
+      </div>
+    </div>
+    <div class="msg-actions">
+      <button class="msg-btn primary" onclick="receive()">🔄 別パターンを見る</button>
+      <button class="msg-btn" id="btn-copy-msg" onclick="copyMsg()">📋 コピー</button>
+      <button class="msg-btn" onclick="share()">🔗 シェア</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let version = 'success';
+
+function setPreset(text){
+  document.getElementById('goal-input').value = text;
+}
+
+function setVersion(v){
+  version = v;
+  const sBtn = document.getElementById('ver-success');
+  const fBtn = document.getElementById('ver-failure');
+  sBtn.className = 'version-btn' + (v==='success' ? ' active-success' : '');
+  fBtn.className = 'version-btn' + (v==='failure' ? ' active-failure' : '');
+}
+
+// ── Receive ──
+async function receive(){
+  const goal = document.getElementById('goal-input').value.trim();
+  if(!goal){ alert('目標を入力してください'); return; }
+
+  const btn = document.getElementById('btn-receive');
+  btn.disabled = true;
+  document.getElementById('message-card').classList.remove('show');
+  document.getElementById('loading-card').classList.add('show');
+
+  try{
+    const data = await callClaude(goal, version);
+    renderMessage(data, version);
+  }catch(e){
+    alert('エラーが発生しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-card').classList.remove('show');
+  }
+}
+
+async function callClaude(goal, ver){
+  const isSuccess = ver === 'success';
+
+  const systemPrompt = isSuccess
+    ? `あなたは2030年に大きな成功を収めた人物です。2025年の自分に向けて、愛情深いが歯に衣着せぬ辛口のフィードバックを送ります。「あのときの自分に言いたかったこと」を率直に伝えてください。口調は少し厳しく、でも愛がある感じで。`
+    : `あなたは2030年に夢を諦め、後悔している人物です。2025年の自分に向けて、「なぜ失敗したか」「何をすべきだったか」を後悔と共に伝えます。少し暗く、でもリアルな警告として。`;
+
+  const userPrompt = `2025年の自分の目標：「${goal}」
+
+以下のJSON形式のみで返答してください：
+{
+  "from_name": "${isSuccess ? '成功した自分（2030）' : '後悔した自分（2030）'}",
+  "greeting": "書き出しの一文（例：「久しぶり。元気にしてるか？」）",
+  "main_message": "メインのメッセージ（150〜200文字）。辛口だが本質を突く内容。",
+  "verdict": "一言判定（50〜80文字）。現状に対するズバリの評価。",
+  "actions": [
+    "今すぐやるべきこと（具体的・短め）",
+    "絶対にやってはいけないこと",
+    "意外だけど重要なアドバイス"
+  ],
+  "sign_off": "締めの一言（20文字以内）"
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      system: systemPrompt,
+      messages:[{role:'user',content:userPrompt}]
+    })
+  });
+
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const text = d.content?.[0]?.text || '';
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+// ── Render ──
+let currentMsgText = '';
+
+function renderMessage(data, ver){
+  const isSuccess = ver === 'success';
+  const cls       = isSuccess ? 'success' : 'failure';
+
+  document.getElementById('msg-from-val').textContent  = data.from_name;
+  document.getElementById('msg-from-val').className    = 'msg-from-val ' + cls;
+  document.getElementById('msg-stamp').className       = 'msg-stamp ' + cls;
+  document.getElementById('msg-greeting').textContent  = data.greeting;
+  document.getElementById('msg-text').textContent      = data.main_message;
+
+  const verdict = document.getElementById('msg-verdict');
+  verdict.textContent = data.verdict;
+  verdict.className   = 'msg-verdict ' + cls;
+
+  const actionsList = document.getElementById('msg-actions-list');
+  const icons = isSuccess ? ['✅','⛔','💡'] : ['🚨','☠️','😭'];
+  actionsList.innerHTML = (data.actions||[]).map((a,i)=>`
+    <div class="msg-action">
+      <span class="msg-action-icon">${icons[i]||'→'}</span>
+      <span>${escHtml(a)}</span>
+    </div>`).join('');
+
+  document.getElementById('msg-sign-name').textContent = data.sign_off;
+  document.getElementById('msg-sign-name').className   = 'msg-sign-name ' + cls;
+
+  // Save for copy
+  currentMsgText = [
+    `📨 2030年の自分より`,
+    ``,
+    data.greeting,
+    ``,
+    data.main_message,
+    ``,
+    `【判定】${data.verdict}`,
+    ``,
+    ...(data.actions||[]).map((a,i)=>`${icons[i]||'→'} ${a}`),
+    ``,
+    `2030年 あなた自身より`,
+    data.sign_off,
+  ].join('\n');
+
+  const card = document.getElementById('message-card');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyMsg(){
+  if(!currentMsgText) return;
+  navigator.clipboard.writeText(currentMsgText).then(()=>{
+    const btn = document.getElementById('btn-copy-msg');
+    btn.textContent = '✓ コピー済み';
+    btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('done'); }, 1500);
+  });
+}
+
+function share(){
+  if(!currentMsgText) return;
+  if(navigator.share){
+    navigator.share({text:currentMsgText, title:'2030年の自分からの手紙'}).catch(()=>{});
+  } else {
+    copyMsg();
+  }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
