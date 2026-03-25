@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投資判断ファクトシート</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --yellow:#d97706;
+  --yellow-l:rgba(217,119,6,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+
+.wrap{max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Search bar ── */
+.search-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:18px 20px;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+}
+
+.search-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+
+.ticker-input{
+  flex:1;min-width:160px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;
+  padding:11px 14px;outline:none;text-transform:uppercase;
+  transition:border-color .18s,box-shadow .18s;letter-spacing:.04em;
+}
+.ticker-input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.ticker-input::placeholder{color:var(--light);font-size:14px;letter-spacing:0}
+
+.api-key-input{
+  flex:2;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:400;
+  padding:11px 14px;outline:none;
+  transition:border-color .18s;
+}
+.api-key-input:focus{border-color:var(--accent);background:var(--white)}
+.api-key-input::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+
+.btn-search{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:11px 24px;cursor:pointer;
+  white-space:nowrap;transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-search:hover{opacity:.9}
+.btn-search:active{transform:scale(.98)}
+.btn-search:disabled{opacity:.5;cursor:default}
+
+/* Preset tickers */
+.preset-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.preset-label{font-size:11px;color:var(--light);font-weight:500}
+.preset-chip{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  padding:3px 10px;border-radius:6px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;font-weight:500;
+}
+.preset-chip:hover{border-color:var(--accent);color:var(--accent)}
+
+.api-note{
+  font-size:11px;color:var(--light);margin-top:8px;line-height:1.6;
+}
+.api-note a{color:var(--accent);text-decoration:none}
+.api-note a:hover{text-decoration:underline}
+
+/* ── Loading ── */
+.loading{
+  text-align:center;padding:40px;color:var(--muted);
+  display:none;
+}
+.loading.show{display:block}
+.loading-spinner{
+  width:32px;height:32px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Error ── */
+.error-card{
+  background:var(--red-l);border:1px solid rgba(220,38,38,.2);
+  border-radius:12px;padding:14px 18px;margin-bottom:14px;
+  font-size:13px;color:var(--red);
+  display:none;
+}
+.error-card.show{display:block}
+
+/* ── Fact sheet ── */
+#factsheet{display:none}
+#factsheet.show{display:block}
+
+/* Company header */
+.company-header{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px 22px;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  position:relative;overflow:hidden;
+}
+.company-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),#60a5fa);
+}
+
+.company-info{}
+.company-name{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);margin-bottom:3px;
+}
+.company-meta{
+  font-size:12px;color:var(--light);display:flex;gap:10px;flex-wrap:wrap;
+}
+.company-ticker{
+  font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;
+  color:var(--accent);
+}
+
+.price-block{text-align:right}
+.current-price{
+  font-family:'Outfit',sans-serif;font-size:32px;font-weight:800;
+  letter-spacing:-.03em;color:var(--text);line-height:1;
+}
+.price-change{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;
+  margin-top:3px;
+}
+.price-change.up  {color:var(--green)}
+.price-change.down{color:var(--red)}
+
+/* ── Metrics grid ── */
+.metrics-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-bottom:12px;
+}
+@media(max-width:600px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:380px){.metrics-grid{grid-template-columns:1fr}}
+
+.metric-box{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  box-shadow:var(--shadow);
+  border-left:3px solid transparent;
+  transition:border-color .2s;
+}
+.metric-box.cheap {border-left-color:var(--green);background:linear-gradient(135deg,var(--green-l),var(--white))}
+.metric-box.fair  {border-left-color:var(--yellow);background:linear-gradient(135deg,var(--yellow-l),var(--white))}
+.metric-box.rich  {border-left-color:var(--red);background:linear-gradient(135deg,var(--red-l),var(--white))}
+
+.metric-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin-bottom:5px}
+.metric-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;color:var(--text);line-height:1;margin-bottom:3px;
+}
+.metric-badge{
+  display:inline-block;font-size:9px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;border-radius:4px;margin-top:3px;
+}
+.badge-cheap {background:var(--green-l);color:var(--green)}
+.badge-fair  {background:var(--yellow-l);color:var(--yellow)}
+.badge-rich  {background:var(--red-l);color:var(--red)}
+.badge-na    {background:var(--bg);color:var(--light)}
+.metric-note{font-size:10px;color:var(--light);margin-top:2px}
+
+/* ── 2-col layout ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:560px){.two-col{grid-template-columns:1fr}}
+
+/* ── Revenue chart ── */
+.chart-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  box-shadow:var(--shadow);
+}
+.chart-title{
+  font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.legend{display:flex;gap:10px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:8px}
+.bar-group{flex:1;display:flex;gap:3px;align-items:flex-end;position:relative}
+.bar{
+  flex:1;border-radius:3px 3px 0 0;
+  transition:height .5s cubic-bezier(.4,0,.2,1);
+  cursor:default;position:relative;
+}
+.bar:hover::after{
+  content:attr(data-val);
+  position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;font-family:'Outfit',sans-serif;
+  font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;
+  white-space:nowrap;pointer-events:none;z-index:10;
+}
+.bar-year{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:var(--light);white-space:nowrap;
+  font-family:'Outfit',sans-serif;font-weight:600;
+}
+
+/* ── Detail table ── */
+.detail-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.detail-table{width:100%;border-collapse:collapse;font-size:13px}
+.detail-table td{
+  padding:9px 16px;border-bottom:1px solid var(--border);color:var(--muted);
+}
+.detail-table tr:last-child td{border-bottom:none}
+.detail-table td:first-child{font-weight:500;color:var(--text);width:55%}
+.detail-table td:last-child{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  font-weight:500;text-align:right;
+}
+.detail-table tr:hover td{background:var(--bg)}
+
+/* ── AI prompt card ── */
+.ai-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+}
+.ai-head{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);
+}
+.ai-head-title{
+  font-size:13px;font-weight:600;color:var(--text);
+  display:flex;align-items:center;gap:7px;
+}
+.ai-prompt-preview{
+  padding:14px 18px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:var(--muted);line-height:1.75;
+  max-height:160px;overflow:hidden;
+  position:relative;
+  white-space:pre-wrap;
+}
+.ai-prompt-preview::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:40px;
+  background:linear-gradient(transparent,var(--white));
+}
+.ai-foot{
+  padding:10px 18px;border-top:1px solid var(--border);
+  display:flex;gap:8px;
+}
+.btn-copy-prompt{
+  flex:1;background:var(--text);color:#fff;border:none;
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:11px;cursor:pointer;
+  transition:opacity .13s;
+}
+.btn-copy-prompt:hover{opacity:.88}
+.btn-copy-prompt.done{background:var(--green)}
+.btn-model{
+  font-size:12px;font-weight:600;padding:10px 16px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+  font-family:'Outfit',sans-serif;
+}
+.btn-model:hover{border-color:var(--text);color:var(--text)}
+.btn-model.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* ── Disclaimer ── */
+.disclaimer{
+  font-size:11px;color:var(--light);text-align:center;
+  line-height:1.7;margin-top:12px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📊 上場企業・投資判断ファクトシート</h1>
+    <p>ティッカーシンボルを入力すると、投資指標を一枚のシートにまとめます。AI分析プロンプトも自動生成。</p>
+  </div>
+
+  <!-- Search -->
+  <div class="search-card">
+    <div class="search-row">
+      <input type="text" class="ticker-input" id="ticker-input"
+        placeholder="AAPL" maxlength="10"
+        onkeydown="if(event.key==='Enter')search()">
+      <input type="text" class="api-key-input" id="api-key"
+        placeholder="Financial Modeling Prep APIキーを入力（無料で取得可）">
+      <button class="btn-search" id="btn-search" onclick="search()">🔍 検索</button>
+    </div>
+    <div class="preset-row">
+      <span class="preset-label">例：</span>
+      <button class="preset-chip" onclick="setTicker('AAPL')">AAPL</button>
+      <button class="preset-chip" onclick="setTicker('MSFT')">MSFT</button>
+      <button class="preset-chip" onclick="setTicker('NVDA')">NVDA</button>
+      <button class="preset-chip" onclick="setTicker('GOOGL')">GOOGL</button>
+      <button class="preset-chip" onclick="setTicker('AMZN')">AMZN</button>
+      <button class="preset-chip" onclick="setTicker('META')">META</button>
+      <button class="preset-chip" onclick="setTicker('TSLA')">TSLA</button>
+      <button class="preset-chip" onclick="setTicker('7203.T')">トヨタ(7203.T)</button>
+      <button class="preset-chip" onclick="setTicker('6758.T')">ソニー(6758.T)</button>
+      <button class="preset-chip" onclick="setTicker('9984.T')">SoftBank(9984.T)</button>
+    </div>
+    <div class="api-note">
+      ※ APIキーは <a href="https://financialmodelingprep.com/register" target="_blank">Financial Modeling Prep</a> で無料取得できます（メール登録のみ・クレカ不要）。
+      キーはブラウザ内でのみ使用され、外部サーバーには送信されません。
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div>データを取得中...</div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-card" id="error-card"></div>
+
+  <!-- Fact sheet -->
+  <div id="factsheet">
+
+    <!-- Company header -->
+    <div class="company-header">
+      <div class="company-info">
+        <div class="company-name" id="fs-name">—</div>
+        <div class="company-meta">
+          <span class="company-ticker" id="fs-ticker">—</span>
+          <span id="fs-exchange">—</span>
+          <span id="fs-sector">—</span>
+          <span id="fs-industry">—</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px;line-height:1.5" id="fs-desc"></div>
+      </div>
+      <div class="price-block">
+        <div class="current-price" id="fs-price">—</div>
+        <div class="price-change" id="fs-change">—</div>
+        <div style="font-size:11px;color:var(--light);margin-top:4px" id="fs-mktcap">時価総額 —</div>
+      </div>
+    </div>
+
+    <!-- Key metrics -->
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <!-- Charts + Details -->
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>売上・純利益推移</span>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#0057ff"></div>売上高</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>純利益</div>
+          </div>
+        </div>
+        <div class="bar-chart" id="revenue-chart" style="padding-bottom:22px"></div>
+      </div>
+      <div class="detail-card">
+        <table class="detail-table" id="detail-table"></table>
+      </div>
+    </div>
+
+    <!-- AI prompt -->
+    <div class="ai-card">
+      <div class="ai-head">
+        <span class="ai-head-title">🤖 AIに分析させるプロンプト（自動生成）</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn-model active" id="model-claude" onclick="setAiModel('claude',this)">Claude</button>
+          <button class="btn-model" id="model-gemini" onclick="setAiModel('gemini',this)">Gemini</button>
+          <button class="btn-model" id="model-gpt" onclick="setAiModel('gpt',this)">GPT</button>
+        </div>
+      </div>
+      <div class="ai-prompt-preview" id="ai-prompt-preview"></div>
+      <div class="ai-foot">
+        <button class="btn-copy-prompt" id="btn-copy-prompt" onclick="copyPrompt()">
+          📋 プロンプトをコピーしてAIで分析
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="disclaimer">
+    ※ 本ツールは投資判断の参考情報を提供するものです。投資は自己責任でお願いします。データは Financial Modeling Prep API より取得。
+  </div>
+
+</div>
+
+<script>
+let currentData = null;
+let aiModel     = 'claude';
+const FMP_BASE  = 'https://financialmodelingprep.com/api/v3';
+
+function setTicker(t){
+  document.getElementById('ticker-input').value = t;
+}
+
+function showError(msg){
+  const el = document.getElementById('error-card');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+function hideError(){ document.getElementById('error-card').classList.remove('show') }
+
+function setAiModel(m, btn){
+  aiModel = m;
+  document.querySelectorAll('.btn-model').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(currentData) renderPrompt(currentData);
+}
+
+async function search(){
+  const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+  const apiKey = document.getElementById('api-key').value.trim();
+
+  if(!ticker){ alert('ティッカーを入力してください'); return; }
+  if(!apiKey){ alert('APIキーを入力してください\n\nhttps://financialmodelingprep.com/register で無料取得できます'); return; }
+
+  hideError();
+  document.getElementById('factsheet').classList.remove('show');
+  document.getElementById('factsheet').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('btn-search').disabled = true;
+
+  try{
+    const [profile, ratios, income, quote] = await Promise.all([
+      fetchFMP(`/profile/${ticker}?apikey=${apiKey}`),
+      fetchFMP(`/ratios-ttm/${ticker}?apikey=${apiKey}`),
+      fetchFMP(`/income-statement/${ticker}?apikey=${apiKey}&limit=4`),
+      fetchFMP(`/quote/${ticker}?apikey=${apiKey}`),
+    ]);
+
+    if(!profile?.length){ throw new Error('企業データが見つかりません。ティッカーを確認してください。'); }
+
+    currentData = { profile:profile[0], ratios:ratios[0]||{}, income, quote:quote[0]||{} };
+    render(currentData);
+    document.getElementById('factsheet').style.display = 'block';
+    document.getElementById('factsheet').classList.add('show');
+    document.getElementById('factsheet').scrollIntoView({behavior:'smooth',block:'start'});
+
+  }catch(e){
+    showError(e.message || 'データの取得に失敗しました。APIキーとティッカーを確認してください。');
+  }finally{
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('btn-search').disabled = false;
+  }
+}
+
+async function fetchFMP(path){
+  const res = await fetch(FMP_BASE + path);
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const data = await res.json();
+  if(data?.['Error Message']) throw new Error(data['Error Message']);
+  return data;
+}
+
+function render(d){
+  const p = d.profile;
+  const r = d.ratios;
+  const q = d.quote;
+  const inc = d.income || [];
+
+  document.getElementById('fs-name').textContent     = p.companyName || '—';
+  document.getElementById('fs-ticker').textContent   = p.symbol || '—';
+  document.getElementById('fs-exchange').textContent = p.exchangeShortName || '';
+  document.getElementById('fs-sector').textContent   = p.sector || '';
+  document.getElementById('fs-industry').textContent = p.industry || '';
+  document.getElementById('fs-desc').textContent     = (p.description||'').slice(0,200) + ((p.description||'').length>200?'…':'');
+  document.getElementById('fs-price').textContent    = fmtPrice(q.price||p.price, p.currency);
+  document.getElementById('fs-mktcap').textContent   = '時価総額 ' + fmtBig(p.mktCap, p.currency);
+
+  const chg   = q.changesPercentage || 0;
+  const chgEl = document.getElementById('fs-change');
+  chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+  chgEl.className   = 'price-change ' + (chg >= 0 ? 'up' : 'down');
+
+  renderMetrics(p, r, q);
+  renderRevenueChart(inc, p.currency);
+  renderDetail(p, r, q, inc);
+  renderPrompt(d);
+}
+
+function valClass(val, low, high){
+  if(val === null || isNaN(val) || val <= 0) return 'na';
+  if(val <= low)  return 'cheap';
+  if(val <= high) return 'fair';
+  return 'rich';
+}
+function badgeLabel(cls){ return {cheap:'割安',fair:'適正',rich:'割高',na:'N/A'}[cls] }
+
+function renderMetrics(p, r, q){
+  const pe  = r.peRatioTTM || null;
+  const pbr = r.priceToBookRatioTTM || null;
+  const dy  = (r.dividendYielTTM || 0) * 100;
+  const roe = (r.returnOnEquityTTM || 0) * 100;
+  const de  = r.debtEquityRatioTTM || null;
+  const cr  = r.currentRatioTTM || null;
+  const ps  = r.priceToSalesRatioTTM || null;
+  const npm = (r.netProfitMarginTTM || 0) * 100;
+
+  const metrics = [
+    {label:'PER（株価収益率）', val: pe ? pe.toFixed(1)+'倍' : 'N/A', cls: valClass(pe, 15, 25), note:'15倍以下：割安目安'},
+    {label:'PBR（株価純資産倍率）', val: pbr ? pbr.toFixed(2)+'倍' : 'N/A', cls: valClass(pbr, 1, 3), note:'1倍以下：解散価値水準'},
+    {label:'配当利回り', val: dy > 0 ? dy.toFixed(2)+'%' : '無配', cls: dy >= 3 ? 'cheap' : dy >= 1 ? 'fair' : 'na', note:'3%以上：高配当目安'},
+    {label:'ROE（自己資本利益率）', val: roe ? roe.toFixed(1)+'%' : 'N/A', cls: roe >= 15 ? 'cheap' : roe >= 8 ? 'fair' : 'rich', note:'15%以上：優良企業目安'},
+    {label:'PSR（株価売上高倍率）', val: ps ? ps.toFixed(2)+'倍' : 'N/A', cls: valClass(ps, 2, 5), note:'2倍以下：割安目安'},
+    {label:'純利益率', val: npm ? npm.toFixed(1)+'%' : 'N/A', cls: npm >= 15 ? 'cheap' : npm >= 5 ? 'fair' : npm > 0 ? 'rich' : 'na', note:'15%以上：高収益企業'},
+    {label:'D/Eレシオ', val: de ? de.toFixed(2) : 'N/A', cls: de !== null ? (de < 1 ? 'cheap' : de < 2 ? 'fair' : 'rich') : 'na', note:'1以下：財務健全目安'},
+    {label:'流動比率', val: cr ? cr.toFixed(2) : 'N/A', cls: cr !== null ? (cr >= 2 ? 'cheap' : cr >= 1 ? 'fair' : 'rich') : 'na', note:'2以上：安全圏目安'},
+  ];
+
+  document.getElementById('metrics-grid').innerHTML = metrics.map(m=>`
+    <div class="metric-box ${m.cls}">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-val">${m.val}</div>
+      <span class="metric-badge badge-${m.cls}">${badgeLabel(m.cls)}</span>
+      <div class="metric-note">${m.note}</div>
+    </div>`).join('');
+}
+
+function renderRevenueChart(inc, currency){
+  if(!inc?.length){ document.getElementById('revenue-chart').innerHTML='<span style="color:var(--light);font-size:12px">データなし</span>'; return; }
+  const years = [...inc].reverse().slice(-4);
+  const maxRev = Math.max(...years.map(y=>Math.abs(y.revenue||0)), 1);
+  const sym = currency === 'JPY' ? '¥' : '$';
+
+  document.getElementById('revenue-chart').innerHTML = years.map(y=>{
+    const rH = Math.abs(y.revenue||0) / maxRev * 100;
+    const nH = Math.max(Math.abs(y.netIncome||0) / maxRev * 100, 2);
+    const yr = (y.date||'').slice(0,4);
+    return `<div class="bar-group">
+      <div class="bar" style="height:${rH}%;background:#0057ff;opacity:.8" data-val="${fmtBig(y.revenue,sym)}"></div>
+      <div class="bar" style="height:${nH}%;background:#059669;opacity:.8" data-val="${fmtBig(y.netIncome,sym)}"></div>
+      <span class="bar-year">${yr}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderDetail(p, r, q, inc){
+  const latest = inc?.[0] || {};
+  const sym = p.currency === 'JPY' ? '¥' : '$';
+  const rows = [
+    ['時価総額',           fmtBig(p.mktCap, sym)],
+    ['52週高値',           fmtPrice(q.yearHigh, p.currency)],
+    ['52週安値',           fmtPrice(q.yearLow,  p.currency)],
+    ['EPS（TTM）',         latest.eps ? fmtPrice(latest.eps, p.currency) : 'N/A'],
+    ['売上高（直近）',     fmtBig(latest.revenue, sym)],
+    ['営業利益（直近）',   fmtBig(latest.operatingIncome, sym)],
+    ['純利益（直近）',     fmtBig(latest.netIncome, sym)],
+    ['従業員数',           p.fullTimeEmployees ? Number(p.fullTimeEmployees).toLocaleString()+'人' : 'N/A'],
+    ['本社所在地',         [p.city, p.country].filter(Boolean).join(', ') || 'N/A'],
+    ['上場市場',           p.exchange || 'N/A'],
+    ['IPO日',              p.ipoDate || 'N/A'],
+    ['ウェブサイト',        p.website || 'N/A'],
+  ];
+
+  document.getElementById('detail-table').innerHTML = rows.map(([l,v])=>`
+    <tr><td>${l}</td><td>${v}</td></tr>`).join('');
+}
+
+function renderPrompt(d){
+  const p   = d.profile;
+  const r   = d.ratios;
+  const q   = d.quote;
+  const inc = d.income || [];
+  const l   = inc[0] || {};
+  const sym = p.currency === 'JPY' ? '¥' : '$';
+
+  const prompt = `以下は${p.companyName}（${p.symbol}）の財務データです。投資判断の参考として詳しく分析してください。
+
+## 企業概要
+- 企業名：${p.companyName}
+- ティッカー：${p.symbol}（${p.exchangeShortName||''}）
+- セクター：${p.sector||'N/A'} / ${p.industry||'N/A'}
+- 所在地：${p.country||'N/A'}
+- 現在株価：${fmtPrice(q.price||p.price, p.currency)}（前日比 ${(q.changesPercentage||0).toFixed(2)}%）
+
+## バリュエーション指標
+- PER（株価収益率）：${r.peRatioTTM ? r.peRatioTTM.toFixed(1)+'倍' : 'N/A'}
+- PBR（株価純資産倍率）：${r.priceToBookRatioTTM ? r.priceToBookRatioTTM.toFixed(2)+'倍' : 'N/A'}
+- PSR（株価売上高倍率）：${r.priceToSalesRatioTTM ? r.priceToSalesRatioTTM.toFixed(2)+'倍' : 'N/A'}
+- 配当利回り：${r.dividendYielTTM ? (r.dividendYielTTM*100).toFixed(2)+'%' : '無配'}
+- 時価総額：${fmtBig(p.mktCap, sym)}
+
+## 収益性指標
+- ROE（自己資本利益率）：${r.returnOnEquityTTM ? (r.returnOnEquityTTM*100).toFixed(1)+'%' : 'N/A'}
+- 純利益率：${r.netProfitMarginTTM ? (r.netProfitMarginTTM*100).toFixed(1)+'%' : 'N/A'}
+- 売上総利益率：${r.grossProfitMarginTTM ? (r.grossProfitMarginTTM*100).toFixed(1)+'%' : 'N/A'}
+
+## 財務健全性
+- D/Eレシオ：${r.debtEquityRatioTTM ? r.debtEquityRatioTTM.toFixed(2) : 'N/A'}
+- 流動比率：${r.currentRatioTTM ? r.currentRatioTTM.toFixed(2) : 'N/A'}
+
+## 直近業績（最新期）
+- 売上高：${fmtBig(l.revenue, sym)}
+- 営業利益：${fmtBig(l.operatingIncome, sym)}
+- 純利益：${fmtBig(l.netIncome, sym)}
+- EPS：${l.eps ? fmtPrice(l.eps, p.currency) : 'N/A'}
+
+## 分析してほしいこと
+1. **割安・割高の判断**：PER・PBR・PSRから見た現在の株価水準を評価してください
+2. **収益性の評価**：ROE・利益率から企業の競争優位性を評価してください
+3. **財務健全性**：D/Eレシオ・流動比率から財務リスクを評価してください
+4. **投資判断サマリー**：強気（買い）・中立・弱気（売り）のどれかを根拠付きで示してください
+5. **リスク要因**：主要なリスクを3点挙げてください`;
+
+  document.getElementById('ai-prompt-preview').textContent = prompt;
+}
+
+function copyPrompt(){
+  const text = document.getElementById('ai-prompt-preview').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('btn-copy-prompt');
+    btn.textContent = '✓ コピーしました！AIに貼り付けてください';
+    btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='📋 プロンプトをコピーしてAIで分析';btn.classList.remove('done');},2500);
+  });
+}
+
+function fmtPrice(v, currency){
+  if(v===null||v===undefined) return 'N/A';
+  const sym = currency === 'JPY' ? '¥' : '$';
+  return sym + Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function fmtBig(v, sym){
+  if(!v) return 'N/A';
+  sym = sym || '$';
+  const abs = Math.abs(v);
+  const sign = v < 0 ? '-' : '';
+  if(abs >= 1e12) return sign + sym + (abs/1e12).toFixed(2) + 'T';
+  if(abs >= 1e9)  return sign + sym + (abs/1e9).toFixed(2)  + 'B';
+  if(abs >= 1e6)  return sign + sym + (abs/1e6).toFixed(2)  + 'M';
+  return sign + sym + abs.toLocaleString();
+}
+</script>
+</body>
+</html>
