@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画像URL・プレビュー & OGP変換</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:40px 16px 100px;
+}
+
+.wrap{max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow-md);margin-bottom:16px;
+}
+
+.url-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.url-input{
+  flex:1;min-width:200px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  padding:11px 14px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.url-input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+.url-input::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px}
+
+.btn-load{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:11px 22px;cursor:pointer;
+  white-space:nowrap;transition:opacity .14s,transform .1s;flex-shrink:0;
+}
+.btn-load:hover{opacity:.9}
+.btn-load:active{transform:scale(.98)}
+
+/* Meta row */
+.meta-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-top:12px;border-top:1px solid var(--border);
+}
+.meta-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.meta-val{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+  color:var(--text);
+}
+.meta-sep{color:var(--border)}
+
+/* OGP meta fields */
+.ogp-fields{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--border);
+}
+@media(max-width:480px){.ogp-fields{grid-template-columns:1fr}}
+
+.field label{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px;letter-spacing:.04em}
+.field input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:8px 11px;outline:none;
+  transition:border-color .15s;
+}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--light)}
+
+/* ── Platform previews ── */
+.platforms{display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+
+.platform-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow);
+}
+.platform-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.platform-head-left{display:flex;align-items:center;gap:8px}
+.platform-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.spec-badge{
+  font-size:10px;font-weight:500;color:var(--muted);
+  background:var(--white);border:1px solid var(--border);
+  border-radius:100px;padding:2px 8px;
+}
+
+.platform-body{padding:16px;background:#f0f2f5}
+
+/* ── X / Twitter preview ── */
+.x-card{
+  max-width:504px;margin:0 auto;
+  background:#000;border:1px solid #2f3336;border-radius:14px;overflow:hidden;
+  font-family:-apple-system,'Segoe UI',sans-serif;
+}
+.x-post-header{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
+.x-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);flex-shrink:0}
+.x-user-name{font-size:14px;font-weight:700;color:#fff}
+.x-user-handle{font-size:12px;color:#71767b}
+.x-post-text{padding:0 12px 8px;font-size:14px;color:#e7e9ea;line-height:1.5}
+.x-card-wrap{
+  margin:0 12px 12px;border:1px solid #2f3336;border-radius:12px;overflow:hidden;
+}
+.x-card-img{
+  width:100%;aspect-ratio:1.91/1;object-fit:cover;
+  background:#1a1a2e;display:block;
+}
+.x-card-img-placeholder{
+  width:100%;aspect-ratio:1.91/1;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:rgba(255,255,255,.15);
+}
+.x-card-body{background:#000;padding:9px 13px}
+.x-card-domain{font-size:13px;color:#71767b;margin-bottom:2px}
+.x-card-title{
+  font-size:14px;font-weight:700;color:#e7e9ea;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.x-card-desc{
+  font-size:13px;color:#71767b;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.x-actions{
+  display:flex;justify-content:space-around;
+  padding:4px 12px 10px;
+}
+.x-action{font-size:13px;color:#71767b;cursor:default}
+
+/* Small card variant */
+.x-card-wrap.small .x-card-img,
+.x-card-wrap.small .x-card-img-placeholder{aspect-ratio:1/1;width:100px;flex-shrink:0}
+.x-card-wrap.small{display:flex}
+.x-card-wrap.small .x-card-body{flex:1}
+
+/* ── Facebook preview ── */
+.fb-card{
+  max-width:504px;margin:0 auto;
+  background:#fff;border:1px solid #dadde1;border-radius:4px;overflow:hidden;
+  font-family:-apple-system,'Segoe UI',Helvetica,sans-serif;
+}
+.fb-img{width:100%;aspect-ratio:1.91/1;object-fit:cover;display:block;background:#e4e6eb}
+.fb-img-placeholder{
+  width:100%;aspect-ratio:1.91/1;
+  background:linear-gradient(135deg,#e4e6eb,#d8dadf);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:rgba(0,0,0,.2);
+}
+.fb-body{background:#f0f2f5;border-top:1px solid #dadde1;padding:10px 12px}
+.fb-domain{font-size:11px;color:#606770;text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
+.fb-title{
+  font-size:15px;font-weight:600;color:#1c1e21;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;
+}
+.fb-desc{
+  font-size:13px;color:#606770;margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.fb-actions{
+  display:flex;border-top:1px solid #dadde1;
+  background:#fff;
+}
+.fb-action{
+  flex:1;text-align:center;font-size:13px;font-weight:600;
+  color:#606770;padding:8px;cursor:default;
+}
+
+/* ── LINE preview ── */
+.line-card{
+  max-width:360px;margin:0 auto;
+  background:#fff;border-radius:12px;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+  font-family:-apple-system,sans-serif;
+}
+.line-img{width:100%;aspect-ratio:1.91/1;object-fit:cover;display:block}
+.line-img-placeholder{
+  width:100%;aspect-ratio:1.91/1;
+  background:linear-gradient(135deg,#dcf8c6,#b5f0a0);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.line-body{padding:10px 12px}
+.line-title{font-size:13px;font-weight:700;color:#111;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+.line-desc{font-size:11px;color:#888;margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.line-domain{font-size:10px;color:#aaa;margin-top:3px}
+
+/* ── Canvas crop tool ── */
+.crop-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md);
+  margin-bottom:14px;
+}
+.crop-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);
+  flex-wrap:wrap;gap:8px;
+}
+.crop-title{font-size:13px;font-weight:600;color:var(--text)}
+
+.crop-formats{display:flex;flex-wrap:wrap;gap:6px}
+.fmt-btn{
+  font-size:12px;font-weight:500;padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+}
+.fmt-btn:hover{border-color:var(--accent);color:var(--accent)}
+.fmt-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.crop-body{padding:20px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+
+.canvas-wrap{
+  flex:1;min-width:260px;
+  background:#1a1a1a;border-radius:10px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  min-height:160px;position:relative;
+}
+canvas#crop-canvas{
+  max-width:100%;display:block;
+  border-radius:4px;
+}
+.canvas-empty{
+  font-size:12px;color:#555;text-align:center;padding:24px;
+}
+
+.crop-info{
+  flex-shrink:0;width:200px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.crop-spec{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.crop-spec-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin-bottom:6px}
+.crop-spec-row{font-size:12px;color:var(--muted);margin-bottom:3px}
+.crop-spec-row span{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--text);
+}
+
+.btn-dl{
+  background:var(--text);color:#fff;border:none;
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:11px;cursor:pointer;
+  transition:opacity .13s,transform .1s;width:100%;
+}
+.btn-dl:hover{opacity:.88}
+.btn-dl:active{transform:scale(.98)}
+.btn-dl.done{background:var(--green)}
+.btn-dl:disabled{opacity:.4;cursor:default}
+
+/* ── Checklist ── */
+.check-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);
+}
+.check-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:12px}
+.check-list{display:flex;flex-direction:column;gap:6px}
+.check-item{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12px;padding:7px 10px;border-radius:8px;
+}
+.check-item.ok  {background:rgba(5,150,105,.06);color:var(--green)}
+.check-item.warn{background:rgba(217,119,6,.05);color:#b45309}
+.check-item.fail{background:rgba(220,38,38,.05);color:var(--red, #dc2626)}
+.check-icon{font-size:13px;flex-shrink:0}
+
+/* Status bar */
+.status{
+  font-size:11px;color:var(--light);text-align:center;padding:6px;
+  display:none;
+}
+.status.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🖼 画像URL・プレビュー & OGP変換</h1>
+    <p>画像URLを貼り付けるだけ。X・Facebook・LINEでの見え方を確認し、最適なサイズにトリミング・ダウンロード。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="url-row">
+      <input type="text" class="url-input" id="img-url"
+        placeholder="https://example.com/image.jpg"
+        onkeydown="if(event.key==='Enter')loadImage()">
+      <button class="btn-load" onclick="loadImage()">🔍 読み込む</button>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta-row" id="meta-row" style="display:none">
+      <div class="meta-item">サイズ：<span class="meta-val" id="m-size">—</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item">比率：<span class="meta-val" id="m-ratio">—</span></div>
+      <span class="meta-sep">|</span>
+      <div class="meta-item">判定：<span class="meta-val" id="m-judge">—</span></div>
+    </div>
+
+    <!-- OGP meta fields -->
+    <div class="ogp-fields">
+      <div class="field">
+        <label>タイトル（og:title）</label>
+        <input type="text" id="og-title" placeholder="ページのタイトル" oninput="updatePreviews()">
+      </div>
+      <div class="field">
+        <label>説明（og:description）</label>
+        <input type="text" id="og-desc" placeholder="ページの説明文" oninput="updatePreviews()">
+      </div>
+      <div class="field">
+        <label>サイトURL</label>
+        <input type="text" id="og-url" placeholder="https://example.com" oninput="updatePreviews()">
+      </div>
+      <div class="field">
+        <label>サイト名（og:site_name）</label>
+        <input type="text" id="og-site" placeholder="サイト名" oninput="updatePreviews()">
+      </div>
+    </div>
+  </div>
+
+  <div class="status" id="status-bar">画像を読み込んでいます...</div>
+
+  <!-- Platform previews -->
+  <div class="platforms" id="platforms" style="display:none">
+
+    <!-- X / Twitter -->
+    <div class="platform-card">
+      <div class="platform-head">
+        <div class="platform-head-left">
+          <span class="platform-label">𝕏 Twitter / X</span>
+          <span class="spec-badge">1200×628px（1.91:1）</span>
+        </div>
+      </div>
+      <div class="platform-body" style="background:#000">
+        <div class="x-card">
+          <div class="x-post-header">
+            <div class="x-avatar"></div>
+            <div>
+              <div class="x-user-name">あなたのアカウント</div>
+              <div class="x-user-handle">@yourhandle · 今</div>
+            </div>
+          </div>
+          <div class="x-post-text">シェアしました 🔗</div>
+          <div class="x-card-wrap" id="x-card-wrap">
+            <div class="x-card-img-placeholder" id="x-img-wrap">🖼</div>
+            <div class="x-card-body">
+              <div class="x-card-domain" id="x-domain">example.com</div>
+              <div class="x-card-title" id="x-title">タイトルがここに表示されます</div>
+              <div class="x-card-desc"  id="x-desc">説明文がここに表示されます</div>
+            </div>
+          </div>
+          <div class="x-actions">
+            <div class="x-action">💬 24</div>
+            <div class="x-action">🔁 8</div>
+            <div class="x-action">❤️ 142</div>
+            <div class="x-action">📊</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facebook -->
+    <div class="platform-card">
+      <div class="platform-head">
+        <div class="platform-head-left">
+          <span class="platform-label">📘 Facebook</span>
+          <span class="spec-badge">1200×628px（1.91:1）</span>
+        </div>
+      </div>
+      <div class="platform-body">
+        <div class="fb-card">
+          <div class="fb-img-placeholder" id="fb-img-wrap">🖼</div>
+          <div class="fb-body">
+            <div class="fb-domain" id="fb-domain">EXAMPLE.COM</div>
+            <div class="fb-title"  id="fb-title">タイトルがここに表示されます</div>
+            <div class="fb-desc"   id="fb-desc">説明文がここに表示されます</div>
+          </div>
+          <div class="fb-actions">
+            <div class="fb-action">👍 いいね！</div>
+            <div class="fb-action">💬 コメント</div>
+            <div class="fb-action">↗️ シェア</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINE -->
+    <div class="platform-card">
+      <div class="platform-head">
+        <div class="platform-head-left">
+          <span class="platform-label">💬 LINE</span>
+          <span class="spec-badge">1200×628px（トーク内）</span>
+        </div>
+      </div>
+      <div class="platform-body" style="background:#87ceeb">
+        <div class="line-card">
+          <div class="line-img-placeholder" id="line-img-wrap">🖼</div>
+          <div class="line-body">
+            <div class="line-title"  id="line-title">タイトルがここに表示されます</div>
+            <div class="line-desc"   id="line-desc">説明文がここに表示されます</div>
+            <div class="line-domain" id="line-domain">example.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Crop tool -->
+  <div class="crop-card" id="crop-card" style="display:none">
+    <div class="crop-head">
+      <span class="crop-title">✂ キャンバスでトリミング & ダウンロード</span>
+      <div class="crop-formats">
+        <button class="fmt-btn active" onclick="setCropFormat('ogp',this)">OGP 1200×628</button>
+        <button class="fmt-btn" onclick="setCropFormat('x-square',this)">X 正方形 1200×1200</button>
+        <button class="fmt-btn" onclick="setCropFormat('story',this)">Story 1080×1920</button>
+        <button class="fmt-btn" onclick="setCropFormat('thumbnail',this)">YouTube 1280×720</button>
+        <button class="fmt-btn" onclick="setCropFormat('square',this)">正方形 1080×1080</button>
+      </div>
+    </div>
+    <div class="crop-body">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="crop-canvas"></canvas>
+        <div class="canvas-empty" id="canvas-empty">画像を読み込むとここに表示されます</div>
+      </div>
+      <div class="crop-info">
+        <div class="crop-spec" id="crop-spec">
+          <div class="crop-spec-label">出力仕様</div>
+          <div class="crop-spec-row">フォーマット：<span id="spec-fmt">OGP</span></div>
+          <div class="crop-spec-row">出力サイズ：<span id="spec-size">1200 × 628</span></div>
+          <div class="crop-spec-row">アスペクト比：<span id="spec-ratio">1.91 : 1</span></div>
+          <div class="crop-spec-row">クロップ：<span id="spec-crop">センタークロップ</span></div>
+        </div>
+        <button class="btn-dl" id="btn-dl" onclick="download()" disabled>⬇ PNGでダウンロード</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="check-card" id="check-card" style="display:none">
+    <div class="check-title">OGP画像チェックリスト</div>
+    <div class="check-list" id="check-list"></div>
+  </div>
+
+</div>
+
+<!-- Hidden img for CORS-safe canvas drawing -->
+<img id="source-img" crossorigin="anonymous" style="display:none">
+
+<script>
+// ── State ──
+let loadedImg   = null;
+let cropFormat  = 'ogp';
+const FORMATS   = {
+  'ogp':       {w:1200,h:628,  label:'OGP',           ratio:'1.91 : 1'},
+  'x-square':  {w:1200,h:1200, label:'X 正方形',       ratio:'1 : 1'},
+  'story':     {w:1080,h:1920, label:'Story',           ratio:'9 : 16'},
+  'thumbnail': {w:1280,h:720,  label:'YouTube Thumb',  ratio:'16 : 9'},
+  'square':    {w:1080,h:1080, label:'正方形',          ratio:'1 : 1'},
+};
+
+// ── Load image ──
+function loadImage(){
+  const url = document.getElementById('img-url').value.trim();
+  if(!url){ alert('URLを入力してください'); return; }
+
+  const statusBar = document.getElementById('status-bar');
+  statusBar.textContent = '画像を読み込んでいます...';
+  statusBar.classList.add('show');
+
+  const img = document.getElementById('source-img');
+  img.onload = () => {
+    loadedImg = img;
+    statusBar.classList.remove('show');
+
+    // Show meta
+    const w  = img.naturalWidth;
+    const h  = img.naturalHeight;
+    const gcd = (a,b)=>b?gcd(b,a%b):a;
+    const g  = gcd(w,h);
+    document.getElementById('m-size').textContent  = `${w} × ${h} px`;
+    document.getElementById('m-ratio').textContent = `${w/g} : ${h/g}`;
+    const ratio = w/h;
+    const judge = ratio > 1.8 ? '✅ OGP最適' : ratio > 1.5 ? '⚠ やや縦長' : ratio > 0.9 ? '🔲 正方形系' : '📱 縦型';
+    document.getElementById('m-judge').textContent = judge;
+    document.getElementById('meta-row').style.display = 'flex';
+
+    // Show sections
+    document.getElementById('platforms').style.display = 'flex';
+    document.getElementById('crop-card').style.display = 'block';
+    document.getElementById('check-card').style.display = 'block';
+
+    // Update UI
+    updatePreviews();
+    drawCanvas();
+    runChecks(w, h, url);
+    document.getElementById('btn-dl').disabled = false;
+  };
+  img.onerror = () => {
+    statusBar.classList.remove('show');
+    // CORSエラーの可能性 → 表示のみプレビューに使用
+    loadWithoutCORS(url);
+  };
+  img.src = url;
+}
+
+// CORS拒否の場合はプレビュー表示のみ（canvas書き込みは不可）
+function loadWithoutCORS(url){
+  const tmp = new Image();
+  tmp.onload = () => {
+    loadedImg = null; // canvas書き込み不可
+    const w = tmp.naturalWidth, h = tmp.naturalHeight;
+    document.getElementById('m-size').textContent  = `${w} × ${h} px`;
+    const gcd=(a,b)=>b?gcd(b,a%b):a; const g=gcd(w,h);
+    document.getElementById('m-ratio').textContent = `${w/g} : ${h/g}`;
+    document.getElementById('m-judge').textContent = '⚠ CORS制限あり（ダウンロード不可）';
+    document.getElementById('meta-row').style.display = 'flex';
+    document.getElementById('platforms').style.display = 'flex';
+    document.getElementById('crop-card').style.display = 'block';
+    document.getElementById('check-card').style.display = 'block';
+
+    // Show preview img without canvas
+    showPreviewImgs(url);
+    showCanvasPreview(url, w, h);
+    updatePreviews();
+    runChecks(w, h, url);
+    document.getElementById('btn-dl').disabled = true;
+    document.getElementById('canvas-empty').style.display = 'none';
+  };
+  tmp.onerror = () => {
+    alert('画像を読み込めませんでした。\n・URLが正しいか確認してください\n・直接アクセス可能な画像URLを使用してください');
+  };
+  tmp.src = url;
+}
+
+// ── Show preview images in SNS cards ──
+function showPreviewImgs(url){
+  const slots = [
+    {id:'x-img-wrap', aspect:'1.91/1'},
+    {id:'fb-img-wrap', aspect:'1.91/1'},
+    {id:'line-img-wrap', aspect:'1.91/1'},
+  ];
+  slots.forEach(({id, aspect})=>{
+    const el = document.getElementById(id);
+    el.innerHTML = `<img src="${escAttr(url)}" style="width:100%;aspect-ratio:${aspect};object-fit:cover;display:block" onerror="this.parentElement.innerHTML='⚠'">`;
+  });
+}
+
+function showCanvasPreview(url, w, h){
+  const fmt    = FORMATS[cropFormat];
+  const canvas = document.getElementById('crop-canvas');
+  canvas.width  = fmt.w;
+  canvas.height = fmt.h;
+  // Draw with CSS only (no canvas write due to CORS)
+  canvas.style.display = 'none';
+  const cWrap = document.getElementById('canvas-wrap');
+  cWrap.style.background = '#111';
+  const preview = document.createElement('img');
+  preview.src = url;
+  preview.style.cssText = `max-width:100%;max-height:260px;object-fit:contain;display:block;border-radius:4px`;
+  const empty = document.getElementById('canvas-empty');
+  if(cWrap.querySelector('.cors-preview')) cWrap.querySelector('.cors-preview').remove();
+  preview.className = 'cors-preview';
+  empty.textContent = '⚠ CORSのため書き込み不可（プレビューのみ）';
+  cWrap.appendChild(preview);
+}
+
+// ── Draw canvas (center-crop) ──
+function drawCanvas(){
+  if(!loadedImg) return;
+  const fmt = FORMATS[cropFormat];
+  const canvas = document.getElementById('crop-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  canvas.width  = fmt.w;
+  canvas.height = fmt.h;
+  canvas.style.display = 'block';
+  document.getElementById('canvas-empty').style.display = 'none';
+  document.querySelector('.cors-preview')?.remove();
+
+  const iw = loadedImg.naturalWidth;
+  const ih = loadedImg.naturalHeight;
+  const tw = fmt.w, th = fmt.h;
+  const scale = Math.max(tw/iw, th/ih);
+  const sw = iw*scale, sh = ih*scale;
+  const dx = (tw-sw)/2, dy = (th-sh)/2;
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0,0,tw,th);
+  ctx.drawImage(loadedImg, dx, dy, sw, sh);
+
+  // Spec labels
+  document.getElementById('spec-fmt').textContent   = fmt.label;
+  document.getElementById('spec-size').textContent  = `${fmt.w} × ${fmt.h}`;
+  document.getElementById('spec-ratio').textContent = fmt.ratio;
+  document.getElementById('spec-crop').textContent  = 'センタークロップ';
+}
+
+// ── Crop format ──
+function setCropFormat(fmt, btn){
+  cropFormat = fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(loadedImg) drawCanvas();
+  else if(document.getElementById('img-url').value) drawCanvas();
+}
+
+// ── Update SNS text previews ──
+function updatePreviews(){
+  const url    = document.getElementById('img-url').value.trim();
+  const title  = document.getElementById('og-title').value.trim() || 'タイトルがここに表示されます';
+  const desc   = document.getElementById('og-desc').value.trim()  || '説明文がここに表示されます';
+  const siteUrl= document.getElementById('og-url').value.trim()   || 'https://example.com';
+  const domain = getDomain(siteUrl);
+
+  document.getElementById('x-domain').textContent = domain;
+  document.getElementById('x-title').textContent  = title;
+  document.getElementById('x-desc').textContent   = desc;
+  document.getElementById('fb-domain').textContent= domain.toUpperCase();
+  document.getElementById('fb-title').textContent = title;
+  document.getElementById('fb-desc').textContent  = desc;
+  document.getElementById('line-title').textContent = title;
+  document.getElementById('line-desc').textContent  = desc;
+  document.getElementById('line-domain').textContent= domain;
+
+  if(url){
+    showPreviewImgs(url);
+    if(loadedImg) drawCanvas();
+  }
+}
+
+// ── Checks ──
+function runChecks(w, h, url){
+  const ratio = w / h;
+  const checks = [];
+
+  // 1. Size
+  if(w >= 1200 && h >= 628){
+    checks.push({s:'ok',  t:`<strong>サイズOK</strong>（${w}×${h}px）— OGP推奨の1200×628px以上です`});
+  } else if(w >= 600){
+    checks.push({s:'warn',t:`<strong>サイズがやや小さい</strong>（${w}×${h}px）— 最低600×315px以上推奨。1200×628pxが理想`});
+  } else {
+    checks.push({s:'fail',t:`<strong>サイズが小さすぎます</strong>（${w}×${h}px）— 600px以上が必要です`});
+  }
+
+  // 2. Aspect ratio
+  if(ratio >= 1.85 && ratio <= 1.95){
+    checks.push({s:'ok',  t:'<strong>アスペクト比OK</strong>（1.91:1）— X・Facebookに最適です'});
+  } else if(ratio >= 1.5 && ratio <= 2.2){
+    checks.push({s:'warn',t:`<strong>アスペクト比がやや外れています</strong>（${ratio.toFixed(2)}:1）— 1.91:1が理想。SNSでトリミングされる可能性があります`});
+  } else {
+    checks.push({s:'fail',t:`<strong>アスペクト比が非推奨</strong>（${ratio.toFixed(2)}:1）— SNSで大きくトリミングされます。右のツールでOGPサイズに変換してください`});
+  }
+
+  // 3. HTTPS
+  if(url.startsWith('https://')){
+    checks.push({s:'ok',  t:'<strong>HTTPS OK</strong>— 安全な接続。SNSのクローラーが正常に取得できます'});
+  } else if(url.startsWith('http://')){
+    checks.push({s:'warn',t:'<strong>HTTPです</strong>— SNSによってはHTTPS必須のため画像が表示されない場合があります'});
+  }
+
+  // 4. File extension hint
+  const ext = url.split('?')[0].split('.').pop().toLowerCase();
+  if(['jpg','jpeg','png','webp'].includes(ext)){
+    checks.push({s:'ok',  t:`<strong>フォーマットOK</strong>（.${ext}）— SNS対応の画像形式です`});
+  } else if(ext === 'gif'){
+    checks.push({s:'warn',t:'<strong>.gif形式</strong>— XはGIFアニメ対応ですが、OGPサムネイルは静止画になります'});
+  } else {
+    checks.push({s:'warn',t:`<strong>拡張子不明（.${ext}）</strong>— JPG・PNG・WebPを推奨します`});
+  }
+
+  // 5. File size hint
+  checks.push({s:'ok', t:'<strong>OGPファイルサイズ目安</strong>— 5MB以下推奨。XはJPGで1MB以下が高速表示されます'});
+
+  document.getElementById('check-list').innerHTML = checks.map(c=>`
+    <div class="check-item ${c.s}">
+      <span class="check-icon">${c.s==='ok'?'✅':c.s==='warn'?'💡':'❌'}</span>
+      <span>${c.t}</span>
+    </div>`).join('');
+}
+
+// ── Download ──
+function download(){
+  const canvas = document.getElementById('crop-canvas');
+  const fmt    = FORMATS[cropFormat];
+  if(!loadedImg){ alert('CORSの制限によりダウンロードできません。\nサーバーに配置された画像URLを使用してください。'); return; }
+  const a = document.createElement('a');
+  a.href     = canvas.toDataURL('image/png');
+  a.download = `ogp_${fmt.w}x${fmt.h}.png`;
+  a.click();
+
+  const btn = document.getElementById('btn-dl');
+  btn.textContent = '✓ ダウンロードしました';
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='⬇ PNGでダウンロード'; btn.classList.remove('done'); }, 2000);
+}
+
+// ── Helpers ──
+function getDomain(url){
+  try{ return new URL(url.startsWith('http')?url:'https://'+url).hostname; }
+  catch(e){ return url || 'example.com'; }
+}
+function escAttr(s){ return s.replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+</script>
+</body>
+</html>
