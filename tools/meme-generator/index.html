@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミームジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f0f2f5;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#ff4400;
+  --accent-l:rgba(255,68,0,.07);
+  --green:#059669;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:32px 16px 80px;
+}
+.wrap{max-width:1000px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header h1 em{color:var(--accent);font-style:normal}
+.header p{font-size:13px;color:var(--muted)}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+
+/* ── Control panel ── */
+.ctrl{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow-md);
+  position:sticky;top:20px;
+}
+.ctrl-section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.ctrl-section:last-child{border-bottom:none}
+.ctrl-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--light);margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+.ctrl-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Upload area */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:10px;
+  padding:22px 14px;text-align:center;cursor:pointer;
+  transition:all .15s;background:var(--bg);position:relative;overflow:hidden;
+}
+.upload-zone:hover,.upload-zone.over{border-color:var(--accent);background:var(--accent-l)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:28px;display:block;margin-bottom:6px}
+.upload-label{font-size:12px;font-weight:600;color:var(--muted)}
+.upload-sub{font-size:10px;color:var(--light);margin-top:3px}
+
+/* Template chips */
+.tmpl-row{display:flex;flex-wrap:wrap;gap:5px}
+.tmpl-btn{
+  font-size:11px;padding:4px 10px;border-radius:6px;
+  border:1px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;font-weight:500;
+}
+.tmpl-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Text inputs */
+.field{margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:11px;font-weight:600;color:var(--light);display:block;margin-bottom:4px;letter-spacing:.04em}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:8px 10px;outline:none;
+  transition:border-color .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field input::placeholder,.field textarea::placeholder{color:var(--light)}
+.field select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:26px;
+}
+.field select option{background:#fff}
+
+/* Slider */
+.slider-field{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.slider-field:last-child{margin-bottom:0}
+.sl-label{font-size:11px;font-weight:600;color:var(--light);min-width:60px}
+input[type=range]{
+  flex:1;height:3px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:2px solid #fff;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.sl-val{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  color:var(--text);min-width:32px;text-align:right;
+}
+
+/* Color row */
+.color-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.color-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.color-item label{font-size:10px;color:var(--light);text-align:center}
+.color-item input[type=color]{
+  width:100%;height:30px;border:1px solid var(--border);
+  border-radius:6px;background:none;cursor:pointer;padding:2px;
+}
+
+/* Position buttons */
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pos-btn{
+  font-size:10px;font-weight:600;padding:5px 4px;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;text-align:center;
+}
+.pos-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pos-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Style chips */
+.style-chips{display:flex;gap:5px;flex-wrap:wrap}
+.style-chip{
+  font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+  font-family:'Outfit',sans-serif;
+}
+.style-chip:hover{border-color:var(--text);color:var(--text)}
+.style-chip.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* Generate button */
+.btn-generate{
+  width:100%;background:linear-gradient(135deg,#e83000,#ff6600);
+  color:#fff;border:none;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;
+  padding:13px;cursor:pointer;letter-spacing:.04em;
+  box-shadow:0 4px 20px rgba(255,68,0,.3);
+  transition:transform .1s,opacity .13s,box-shadow .15s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-generate:hover{opacity:.92;box-shadow:0 6px 28px rgba(255,68,0,.4);transform:translateY(-1px)}
+.btn-generate:active{transform:scale(.99)}
+
+/* ── Canvas panel ── */
+.canvas-panel{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);
+  flex-wrap:wrap;gap:7px;
+}
+.panel-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.panel-acts{display:flex;gap:6px}
+.p-btn{
+  font-size:11px;font-weight:600;padding:5px 13px;border-radius:7px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.p-btn:hover{border-color:var(--text);color:var(--text)}
+.p-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.p-btn.primary:hover{opacity:.9}
+.p-btn.done{border-color:var(--green);color:var(--green)}
+
+.canvas-wrap{
+  background:#111;min-height:300px;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+  background-image:repeating-conic-gradient(#1a1a1a 0% 25%,#111 0% 50%) 0/20px 20px;
+}
+canvas#meme-canvas{
+  max-width:100%;max-height:540px;display:block;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+}
+
+.canvas-empty{
+  color:#555;text-align:center;font-size:13px;padding:40px;
+}
+.canvas-empty-icon{font-size:48px;display:block;margin-bottom:10px;opacity:.3}
+
+/* Live update indicator */
+.live-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;color:var(--green);
+  background:var(--green-l,rgba(5,150,105,.08));border:1px solid rgba(5,150,105,.2);
+  border-radius:100px;padding:2px 9px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 1.5s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>💥 <em>Meme</em> Generator</h1>
+    <p>画像をアップして文字を入れるだけ。インパクト最強のミーム画像が一瞬で完成。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Controls -->
+    <div class="ctrl">
+
+      <!-- Upload -->
+      <div class="ctrl-section">
+        <div class="ctrl-title">画像</div>
+        <div class="upload-zone" id="upload-zone"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="onDrop(event)">
+          <input type="file" id="file-input" accept="image/*" onchange="onFile(this.files[0])">
+          <span class="upload-icon">🖼</span>
+          <div class="upload-label">クリック or ドラッグ＆ドロップ</div>
+          <div class="upload-sub">JPG・PNG・WebP・GIF</div>
+        </div>
+      </div>
+
+      <!-- Templates -->
+      <div class="ctrl-section">
+        <div class="ctrl-title">テンプレート文字</div>
+        <div class="tmpl-row">
+          <button class="tmpl-btn" onclick="setTemplate('私が悪いのか？','そうだ')">王道</button>
+          <button class="tmpl-btn" onclick="setTemplate('それな','完全にそれ')">それな</button>
+          <button class="tmpl-btn" onclick="setTemplate('WAIT','WHAT?!')">英語系</button>
+          <button class="tmpl-btn" onclick="setTemplate('これが','天才か？')">天才か</button>
+          <button class="tmpl-btn" onclick="setTemplate('世界よ','これが日本だ')">日本だ</button>
+          <button class="tmpl-btn" onclick="setTemplate('なんで','誰も言わないの？')">疑問系</button>
+          <button class="tmpl-btn" onclick="setTemplate('','限界')">一言</button>
+          <button class="tmpl-btn" onclick="setTemplate('','')">クリア</button>
+        </div>
+      </div>
+
+      <!-- Top text -->
+      <div class="ctrl-section">
+        <div class="ctrl-title">上段テキスト</div>
+        <div class="field">
+          <textarea id="text-top" rows="2" placeholder="上に入れる文字（空欄でも可）" oninput="render()"></textarea>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">サイズ</span>
+          <input type="range" id="sl-top-size" min="20" max="120" value="60" oninput="render()">
+          <span class="sl-val" id="sv-top-size">60</span>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">縦位置</span>
+          <input type="range" id="sl-top-y" min="0" max="50" value="8" oninput="render()">
+          <span class="sl-val" id="sv-top-y">8%</span>
+        </div>
+      </div>
+
+      <!-- Bottom text -->
+      <div class="ctrl-section">
+        <div class="ctrl-title">下段テキスト</div>
+        <div class="field">
+          <textarea id="text-bottom" rows="2" placeholder="下に入れる文字（空欄でも可）" oninput="render()"></textarea>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">サイズ</span>
+          <input type="range" id="sl-bot-size" min="20" max="120" value="60" oninput="render()">
+          <span class="sl-val" id="sv-bot-size">60</span>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">縦位置</span>
+          <input type="range" id="sl-bot-y" min="50" max="100" value="94" oninput="render()">
+          <span class="sl-val" id="sv-bot-y">94%</span>
+        </div>
+      </div>
+
+      <!-- Style -->
+      <div class="ctrl-section">
+        <div class="ctrl-title">スタイル</div>
+
+        <div class="field" style="margin-bottom:10px">
+          <label>フォント</label>
+          <select id="font-sel" onchange="render()">
+            <option value="Impact,Arial Black,sans-serif">Impact（定番ミーム）</option>
+            <option value="'Noto Sans JP',sans-serif" selected>Noto Sans JP</option>
+            <option value="Georgia,serif">Georgia</option>
+            <option value="'Comic Sans MS',cursive">Comic Sans</option>
+            <option value="Arial Black,sans-serif">Arial Black</option>
+            <option value="monospace">Monospace</option>
+          </select>
+        </div>
+
+        <div class="color-row" style="margin-bottom:10px">
+          <div class="color-item">
+            <label>文字色</label>
+            <input type="color" id="col-text" value="#ffffff" oninput="render()">
+          </div>
+          <div class="color-item">
+            <label>縁取り色</label>
+            <input type="color" id="col-stroke" value="#000000" oninput="render()">
+          </div>
+          <div class="color-item">
+            <label>影の色</label>
+            <input type="color" id="col-shadow" value="#000000" oninput="render()">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <span class="sl-label">縁取り太さ</span>
+          <input type="range" id="sl-stroke" min="0" max="20" value="6" oninput="render()">
+          <span class="sl-val" id="sv-stroke">6</span>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">影の強さ</span>
+          <input type="range" id="sl-shadow-blur" min="0" max="30" value="8" oninput="render()">
+          <span class="sl-val" id="sv-shadow-blur">8</span>
+        </div>
+        <div class="slider-field">
+          <span class="sl-label">行間</span>
+          <input type="range" id="sl-lineh" min="0.8" max="2.0" step="0.1" value="1.1" oninput="render()">
+          <span class="sl-val" id="sv-lineh">1.1</span>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="ctrl-title" style="margin-bottom:7px">文字スタイル</div>
+          <div class="style-chips">
+            <button class="style-chip active" id="sc-bold" onclick="toggleStyle('bold',this)">B 太字</button>
+            <button class="style-chip" id="sc-italic" onclick="toggleStyle('italic',this)"><i>I</i> 斜体</button>
+            <button class="style-chip active" id="sc-upper" onclick="toggleStyle('upper',this)">AA 大文字</button>
+            <button class="style-chip" id="sc-center" onclick="toggleStyle('center',this)">≡ 中央</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="ctrl-title" style="margin-bottom:7px">画像調整</div>
+          <div class="slider-field">
+            <span class="sl-label">明るさ</span>
+            <input type="range" id="sl-bright" min="50" max="150" value="100" oninput="render()">
+            <span class="sl-val" id="sv-bright">100%</span>
+          </div>
+          <div class="slider-field">
+            <span class="sl-label">コントラスト</span>
+            <input type="range" id="sl-contrast" min="50" max="200" value="100" oninput="render()">
+            <span class="sl-val" id="sv-contrast">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrl-section">
+        <button class="btn-generate" onclick="download()">
+          💾 ミームをダウンロード
+        </button>
+      </div>
+    </div>
+
+    <!-- Canvas panel -->
+    <div class="canvas-panel">
+      <div class="panel-head">
+        <span class="panel-label">プレビュー</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          <div class="panel-acts">
+            <button class="p-btn" onclick="document.getElementById('file-input').click()">📂 画像変更</button>
+            <button class="p-btn primary" id="btn-dl" onclick="download()">⬇ DL</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap" id="canvas-wrap">
+        <div class="canvas-empty" id="canvas-empty">
+          <span class="canvas-empty-icon">🎭</span>
+          左から画像をアップロードすると<br>ミームのプレビューが表示されます
+        </div>
+        <canvas id="meme-canvas" style="display:none"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──
+let sourceImg   = null;
+let styles      = {bold:true, italic:false, upper:true, center:false};
+let renderTimer = null;
+
+// ── File handling ──
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('over');
+  const f = e.dataTransfer.files?.[0];
+  if(f) onFile(f);
+}
+
+function onFile(file){
+  if(!file||!file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{
+      sourceImg = img;
+      document.getElementById('canvas-empty').style.display = 'none';
+      document.getElementById('meme-canvas').style.display  = 'block';
+      render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Template ──
+function setTemplate(top, bot){
+  document.getElementById('text-top').value    = top;
+  document.getElementById('text-bottom').value = bot;
+  render();
+}
+
+// ── Style toggles ──
+function toggleStyle(key, btn){
+  styles[key] = !styles[key];
+  btn.classList.toggle('active', styles[key]);
+  render();
+}
+
+// ── Main render ──
+function render(){
+  if(!sourceImg) return;
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(_render, 30);
+}
+
+function _render(){
+  const canvas  = document.getElementById('meme-canvas');
+  const ctx     = canvas.getContext('2d');
+
+  // Canvas size from image (max 1000px wide)
+  const maxW  = 1000;
+  const scale = Math.min(1, maxW / sourceImg.naturalWidth);
+  canvas.width  = Math.round(sourceImg.naturalWidth  * scale);
+  canvas.height = Math.round(sourceImg.naturalHeight * scale);
+
+  // Get values
+  const topText     = document.getElementById('text-top').value;
+  const botText     = document.getElementById('text-bottom').value;
+  const topSize     = parseInt(document.getElementById('sl-top-size').value);
+  const botSize     = parseInt(document.getElementById('sl-bot-size').value);
+  const topYpct     = parseInt(document.getElementById('sl-top-y').value);
+  const botYpct     = parseInt(document.getElementById('sl-bot-y').value);
+  const fontFamily  = document.getElementById('font-sel').value;
+  const colText     = document.getElementById('col-text').value;
+  const colStroke   = document.getElementById('col-stroke').value;
+  const colShadow   = document.getElementById('col-shadow').value;
+  const strokeW     = parseInt(document.getElementById('sl-stroke').value);
+  const shadowBlur  = parseInt(document.getElementById('sl-shadow-blur').value);
+  const lineH       = parseFloat(document.getElementById('sl-lineh').value);
+  const bright      = parseInt(document.getElementById('sl-bright').value);
+  const contrast    = parseInt(document.getElementById('sl-contrast').value);
+
+  // Sync labels
+  document.getElementById('sv-top-size').textContent   = topSize;
+  document.getElementById('sv-bot-size').textContent   = botSize;
+  document.getElementById('sv-top-y').textContent      = topYpct+'%';
+  document.getElementById('sv-bot-y').textContent      = botYpct+'%';
+  document.getElementById('sv-stroke').textContent     = document.getElementById('sl-stroke').value;
+  document.getElementById('sv-shadow-blur').textContent= shadowBlur;
+  document.getElementById('sv-lineh').textContent      = lineH;
+  document.getElementById('sv-bright').textContent     = bright+'%';
+  document.getElementById('sv-contrast').textContent   = contrast+'%';
+
+  // Draw image with filters
+  ctx.filter = `brightness(${bright}%) contrast(${contrast}%)`;
+  ctx.drawImage(sourceImg, 0, 0, canvas.width, canvas.height);
+  ctx.filter = 'none';
+
+  // Font style string
+  const weight = styles.bold   ? 'bold'   : 'normal';
+  const fstyle = styles.italic ? 'italic' : 'normal';
+  const align  = styles.center ? 'center' : 'center'; // always center for memes
+
+  // Draw text helper
+  function drawMemeText(rawText, fontSize, yPct){
+    if(!rawText.trim()) return;
+    const text  = styles.upper ? rawText.toUpperCase() : rawText;
+    const lines = text.split('\n');
+    const scaledSize = Math.round(fontSize * (canvas.width / 500));
+    ctx.font         = `${fstyle} ${weight} ${scaledSize}px ${fontFamily}`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle    = colText;
+    ctx.strokeStyle  = colStroke;
+    ctx.lineWidth    = strokeW * (canvas.width / 500);
+    ctx.lineJoin     = 'round';
+    ctx.shadowColor  = colShadow;
+    ctx.shadowBlur   = shadowBlur;
+    ctx.shadowOffsetX= 0;
+    ctx.shadowOffsetY= 0;
+
+    const lineStep = scaledSize * lineH;
+    const totalH   = lineStep * lines.length;
+    const baseY    = canvas.height * (yPct/100);
+    // Center block
+    const startY   = baseY - totalH/2 + lineStep/2;
+
+    lines.forEach((line, i)=>{
+      const y = startY + i * lineStep;
+      const x = canvas.width / 2;
+
+      // Word wrap if too wide
+      const wrappedLines = wrapText(ctx, line, canvas.width - 20);
+      wrappedLines.forEach((wl, wi)=>{
+        const wy = y + wi * lineStep;
+        if(strokeW > 0) ctx.strokeText(wl, x, wy);
+        ctx.fillText(wl, x, wy);
+      });
+    });
+    ctx.shadowBlur = 0;
+  }
+
+  drawMemeText(topText, topSize, topYpct);
+  drawMemeText(botText, botSize, botYpct);
+}
+
+// ── Word wrap ──
+function wrapText(ctx, text, maxW){
+  if(ctx.measureText(text).width <= maxW) return [text];
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(w=>{
+    const test = cur ? cur+' '+w : w;
+    if(ctx.measureText(test).width > maxW && cur){
+      lines.push(cur); cur = w;
+    } else cur = test;
+  });
+  if(cur) lines.push(cur);
+  return lines.length ? lines : [text];
+}
+
+// ── Download ──
+function download(){
+  if(!sourceImg){ alert('画像をアップロードしてください'); return; }
+  _render();
+  const a = document.createElement('a');
+  a.download = 'meme.png';
+  a.href     = document.getElementById('meme-canvas').toDataURL('image/png');
+  a.click();
+
+  const btn = document.getElementById('btn-dl');
+  const orig = btn.textContent;
+  btn.textContent = '✓ 保存完了';
+  btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent=orig; btn.classList.remove('done'); },1600);
+}
+
+// Also render on any input change
+document.querySelectorAll('input,select,textarea').forEach(el=>{
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+</script>
+</body>
+</html>
