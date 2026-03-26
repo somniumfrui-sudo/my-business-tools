@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>レスポンシブ・一括画面確認ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0e1117;
+  --surface:#161b22;
+  --surface2:#1c2333;
+  --border:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --light:#484f58;
+  --accent:#58a6ff;
+  --accent-l:rgba(88,166,255,.10);
+  --green:#3fb950;
+  --shadow-md:0 4px 20px rgba(0,0,0,.4);
+}
+
+html,body{height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;
+  overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(88,166,255,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(88,166,255,.015) 1px,transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;z-index:0;
+}
+
+/* ── Top bar ── */
+.topbar{
+  position:relative;z-index:10;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  flex-wrap:wrap;
+}
+.topbar-title{
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;
+  color:var(--text);white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* Device tabs */
+.device-tabs{display:flex;gap:4px}
+.dtab{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Outfit',sans-serif;
+}
+.dtab:hover{border-color:var(--text);color:var(--text)}
+.dtab.active{background:var(--accent-l);border-color:rgba(88,166,255,.35);color:var(--accent)}
+.dtab-icon{font-size:14px}
+.dtab-size{font-size:9px;font-family:'JetBrains Mono',monospace;opacity:.7;margin-top:1px}
+
+/* Zoom control */
+.zoom-row{display:flex;align-items:center;gap:7px;margin-left:auto}
+.zoom-label{font-size:11px;color:var(--muted)}
+.zoom-btn{
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .12s,border-color .12s;
+}
+.zoom-btn:hover{color:var(--text);border-color:var(--text)}
+.zoom-val{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+  color:var(--text);min-width:38px;text-align:center;
+}
+
+/* Action buttons */
+.tb-btn{
+  font-size:11px;font-weight:600;padding:6px 13px;border-radius:7px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .12s;
+  font-family:'Outfit',sans-serif;white-space:nowrap;
+}
+.tb-btn:hover{border-color:var(--text);color:var(--text)}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#000}
+.tb-btn.primary:hover{opacity:.9}
+
+/* ── Main area ── */
+.main-area{
+  flex:1;display:flex;overflow:hidden;position:relative;z-index:1;
+}
+
+/* ── Code panel ── */
+.code-panel{
+  width:380px;flex-shrink:0;
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--border);
+  background:var(--surface);
+  transition:width .3s ease;
+}
+.code-panel.collapsed{width:0;overflow:hidden}
+
+.code-panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;border-bottom:1px solid var(--border);
+  background:var(--surface2);flex-shrink:0;
+}
+.code-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.code-acts{display:flex;gap:4px}
+.c-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 8px;border-radius:5px;
+  transition:color .12s,background .12s;
+}
+.c-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
+
+textarea#html-input{
+  flex:1;width:100%;background:var(--surface);border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:400;
+  color:var(--text);padding:14px;resize:none;line-height:1.7;
+  tab-size:2;
+}
+textarea#html-input::placeholder{
+  color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  line-height:1.7;
+}
+
+.code-foot{
+  padding:8px 14px;border-top:1px solid var(--border);
+  background:var(--surface2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.code-stats{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.btn-run{
+  background:var(--green);color:#000;border:none;
+  border-radius:7px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:800;padding:7px 16px;cursor:pointer;
+  transition:opacity .12s;letter-spacing:.02em;
+}
+.btn-run:hover{opacity:.9}
+
+/* ── Preview area ── */
+.preview-area{
+  flex:1;overflow:auto;
+  display:flex;flex-direction:column;
+}
+
+/* All-3 mode */
+.triple-view{
+  display:flex;align-items:flex-start;gap:20px;
+  padding:24px 24px 40px;
+  min-height:100%;
+}
+.triple-view.hidden{display:none}
+
+/* Single mode */
+.single-view{
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 24px 40px;
+  min-height:100%;
+}
+.single-view.hidden{display:none}
+
+/* Device frame */
+.device-frame{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+
+.device-label{
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:6px;
+}
+.device-label-size{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:3px;padding:1px 5px;color:var(--light);
+}
+
+/* Phone mockup */
+.mockup-phone{
+  background:#1a1a1a;border-radius:36px;
+  padding:10px 8px;
+  box-shadow:0 0 0 1px #333,0 8px 32px rgba(0,0,0,.5);
+  position:relative;
+}
+.mockup-phone::before{
+  content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:48px;height:4px;background:#333;border-radius:2px;
+}
+.mockup-phone .screen-inner{border-radius:28px;overflow:hidden;margin-top:6px}
+
+/* Tablet mockup */
+.mockup-tablet{
+  background:#1c1c1c;border-radius:20px;
+  padding:14px 10px;
+  box-shadow:0 0 0 1px #333,0 8px 32px rgba(0,0,0,.5);
+}
+.mockup-tablet .screen-inner{border-radius:10px;overflow:hidden}
+
+/* Desktop mockup */
+.mockup-desktop{
+  background:#1a1a1a;border-radius:10px 10px 0 0;
+  padding:28px 8px 0;
+  box-shadow:0 0 0 1px #333;
+  position:relative;
+}
+.mockup-desktop::before{
+  content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:6px;height:6px;border-radius:50%;background:#444;
+}
+.mockup-desktop .screen-inner{border-radius:2px;overflow:hidden}
+.mockup-desktop-base{
+  background:#2a2a2a;
+  height:14px;border-radius:0 0 4px 4px;
+  box-shadow:0 0 0 1px #333;
+  position:relative;
+}
+.mockup-desktop-base::before{
+  content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:40px;height:4px;border-radius:2px;background:#3a3a3a;
+}
+.mockup-desktop-stand{
+  width:60px;height:10px;background:#222;margin:0 auto;
+  border-radius:0 0 6px 6px;border:1px solid #333;border-top:none;
+}
+
+/* iframe */
+.preview-iframe{
+  display:block;border:none;background:#fff;
+  transform-origin:top left;
+}
+
+/* Empty state */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:12px;color:var(--light);font-size:13px;text-align:center;
+  padding:40px;
+}
+.empty-icon{font-size:48px;opacity:.25}
+
+/* Ruler / size indicator */
+.ruler{
+  position:fixed;bottom:14px;right:16px;z-index:100;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+}
+
+/* Rotate badge */
+.rotate-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.rotate-badge:hover{color:var(--text);border-color:var(--text)}
+.rotate-badge.on{color:var(--accent);border-color:rgba(88,166,255,.3);background:var(--accent-l)}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-title">🖥️ レスポンシブ・プレビュー</div>
+
+  <div class="device-tabs" id="device-tabs">
+    <button class="dtab active" id="dtab-all" onclick="setMode('all',this)">
+      <span class="dtab-icon">🖥📱</span> 全画面同時
+    </button>
+    <button class="dtab" id="dtab-mobile" onclick="setMode('mobile',this)">
+      <span class="dtab-icon">📱</span>
+      <div><div>スマホ</div><div class="dtab-size">390px</div></div>
+    </button>
+    <button class="dtab" id="dtab-tablet" onclick="setMode('tablet',this)">
+      <span class="dtab-icon">📟</span>
+      <div><div>タブレット</div><div class="dtab-size">768px</div></div>
+    </button>
+    <button class="dtab" id="dtab-desktop" onclick="setMode('desktop',this)">
+      <span class="dtab-icon">🖥</span>
+      <div><div>デスクトップ</div><div class="dtab-size">1280px</div></div>
+    </button>
+  </div>
+
+  <button class="rotate-badge" id="rotate-btn" onclick="toggleRotate()">⟳ 横向き</button>
+
+  <div class="zoom-row">
+    <span class="zoom-label">ズーム</span>
+    <button class="zoom-btn" onclick="adjustZoom(-10)">−</button>
+    <span class="zoom-val" id="zoom-val">50%</span>
+    <button class="zoom-btn" onclick="adjustZoom(10)">＋</button>
+  </div>
+
+  <button class="tb-btn" onclick="toggleCode()">◀ コード</button>
+  <button class="tb-btn" onclick="loadSample()">サンプル</button>
+  <button class="tb-btn primary" onclick="run()">▶ プレビュー更新</button>
+</div>
+
+<!-- Main -->
+<div class="main-area">
+
+  <!-- Code panel -->
+  <div class="code-panel" id="code-panel">
+    <div class="code-panel-head">
+      <span class="code-label">HTMLコード</span>
+      <div class="code-acts">
+        <button class="c-btn" onclick="pasteCode()">貼り付け</button>
+        <button class="c-btn" onclick="clearCode()">クリア</button>
+      </div>
+    </div>
+    <textarea id="html-input"
+      placeholder="ここにHTMLコードを貼り付けてください。&#10;&#10;&lt;!DOCTYPE html&gt;&#10;&lt;html&gt;&#10;  &lt;head&gt;...&lt;/head&gt;&#10;  &lt;body&gt;...&lt;/body&gt;&#10;&lt;/html&gt;&#10;&#10;入力するとリアルタイムでプレビューが更新されます。"
+      oninput="onInput()" onkeydown="handleTab(event)" spellcheck="false"></textarea>
+    <div class="code-foot">
+      <span class="code-stats" id="code-stats">0行 · 0文字</span>
+      <button class="btn-run" onclick="run()">▶ 反映</button>
+    </div>
+  </div>
+
+  <!-- Preview area -->
+  <div class="preview-area" id="preview-area">
+
+    <!-- Triple view -->
+    <div class="triple-view" id="triple-view">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- Single view -->
+    <div class="single-view hidden" id="single-view">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" id="empty-state">
+      <span class="empty-icon">📐</span>
+      <div>左のエリアにHTMLコードを貼り付けてください</div>
+      <div style="font-size:11px;color:var(--light);margin-top:4px">「サンプル」ボタンでデモを確認できます</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Ruler -->
+<div class="ruler" id="ruler" style="display:none">—</div>
+
+<script>
+// ── State ──
+let mode     = 'all';   // all | mobile | tablet | desktop
+let zoom     = 50;      // %
+let rotated  = false;
+let debounceTimer = null;
+let currentHTML = '';
+
+const DEVICES = {
+  mobile:  {w:390,  h:844,  label:'📱 スマホ',    size:'390px',  mockup:'phone'},
+  tablet:  {w:768,  h:1024, label:'📟 タブレット', size:'768px',  mockup:'tablet'},
+  desktop: {w:1280, h:800,  label:'🖥 デスクトップ', size:'1280px', mockup:'desktop'},
+};
+
+// ── Input ──
+function handleTab(e){
+  if(e.key!=='Tab') return;
+  e.preventDefault();
+  const ta=e.target,s=ta.selectionStart,end=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+'  '+ta.value.slice(end);
+  ta.selectionStart=ta.selectionEnd=s+2;
+}
+
+function onInput(){
+  const code = document.getElementById('html-input').value;
+  const lines = code ? code.split('\n').length : 0;
+  document.getElementById('code-stats').textContent = `${lines}行 · ${code.length.toLocaleString()}文字`;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(run, 600);
+}
+
+// ── Run / Render ──
+function run(){
+  const code = document.getElementById('html-input').value.trim();
+  if(!code){
+    showEmpty();
+    return;
+  }
+  currentHTML = code;
+  document.getElementById('empty-state').style.display = 'none';
+
+  if(mode === 'all'){
+    renderTriple(code);
+  } else {
+    renderSingle(code, mode);
+  }
+  document.getElementById('ruler').style.display = 'block';
+}
+
+function showEmpty(){
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('triple-view').classList.add('hidden');
+  document.getElementById('single-view').classList.add('hidden');
+  document.getElementById('ruler').style.display = 'none';
+}
+
+// ── Triple view ──
+function renderTriple(code){
+  document.getElementById('triple-view').classList.remove('hidden');
+  document.getElementById('single-view').classList.add('hidden');
+
+  const container = document.getElementById('triple-view');
+  container.innerHTML = '';
+  Object.entries(DEVICES).forEach(([key, dev])=>{
+    const w = rotated && key!=='desktop' ? dev.h : dev.w;
+    const h = rotated && key!=='desktop' ? dev.w : dev.h;
+    container.appendChild(buildFrame(code, key, dev, w, h));
+  });
+  updateRuler();
+}
+
+// ── Single view ──
+function renderSingle(code, deviceKey){
+  document.getElementById('triple-view').classList.add('hidden');
+  document.getElementById('single-view').classList.remove('hidden');
+
+  const dev = DEVICES[deviceKey];
+  const w   = rotated && deviceKey!=='desktop' ? dev.h : dev.w;
+  const h   = rotated && deviceKey!=='desktop' ? dev.w : dev.h;
+
+  const container = document.getElementById('single-view');
+  container.innerHTML = '';
+  container.appendChild(buildFrame(code, deviceKey, dev, w, h));
+  updateRuler();
+}
+
+// ── Build frame ──
+function buildFrame(code, key, dev, w, h){
+  const z = zoom/100;
+
+  // Create iframe
+  const iframe = document.createElement('iframe');
+  iframe.className = 'preview-iframe';
+  iframe.style.width  = w + 'px';
+  iframe.style.height = h + 'px';
+  iframe.style.transform = `scale(${z})`;
+  iframe.style.transformOrigin = 'top left';
+  iframe.setAttribute('sandbox','allow-scripts allow-same-origin');
+
+  // Screen wrapper (scaled size)
+  const screen = document.createElement('div');
+  screen.className = 'screen-inner';
+  screen.style.width  = Math.round(w*z)+'px';
+  screen.style.height = Math.round(h*z)+'px';
+  screen.style.overflow = 'hidden';
+  screen.appendChild(iframe);
+
+  // Mockup shell
+  let mockupEl, extraEl = null;
+  if(key === 'mobile'){
+    mockupEl = document.createElement('div');
+    mockupEl.className = 'mockup-phone';
+    mockupEl.appendChild(screen);
+  } else if(key === 'tablet'){
+    mockupEl = document.createElement('div');
+    mockupEl.className = 'mockup-tablet';
+    mockupEl.appendChild(screen);
+  } else {
+    mockupEl = document.createElement('div');
+    mockupEl.className = 'mockup-desktop';
+    mockupEl.appendChild(screen);
+    const base = document.createElement('div');
+    base.className = 'mockup-desktop-base';
+    const stand = document.createElement('div');
+    stand.className = 'mockup-desktop-stand';
+    extraEl = document.createElement('div');
+    extraEl.appendChild(base);
+    extraEl.appendChild(stand);
+  }
+
+  // Label
+  const label = document.createElement('div');
+  label.className = 'device-label';
+  label.innerHTML = `${dev.label} <span class="device-label-size">${w}×${h}</span>`;
+
+  // Frame wrapper
+  const frame = document.createElement('div');
+  frame.className = 'device-frame';
+  frame.appendChild(label);
+  frame.appendChild(mockupEl);
+  if(extraEl) frame.appendChild(extraEl);
+
+  // Write HTML into iframe (after appended to DOM)
+  requestAnimationFrame(()=>{
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(code);
+    doc.close();
+  });
+
+  return frame;
+}
+
+// ── Mode ──
+function setMode(m, btn){
+  mode = m;
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(currentHTML) run();
+}
+
+// ── Zoom ──
+function adjustZoom(delta){
+  zoom = Math.max(20, Math.min(100, zoom+delta));
+  document.getElementById('zoom-val').textContent = zoom + '%';
+  if(currentHTML) run();
+}
+
+// ── Rotate ──
+function toggleRotate(){
+  rotated = !rotated;
+  document.getElementById('rotate-btn').classList.toggle('on', rotated);
+  document.getElementById('rotate-btn').textContent = rotated ? '⟳ 縦向きに戻す' : '⟳ 横向き';
+  if(currentHTML) run();
+}
+
+// ── Ruler ──
+function updateRuler(){
+  const dev = DEVICES[mode] || DEVICES.mobile;
+  const w   = rotated && mode!=='desktop'&&mode!=='all' ? dev.h : dev.w;
+  document.getElementById('ruler').textContent =
+    mode === 'all' ? `全幅表示 ズーム ${zoom}%` : `${w}px · ズーム ${zoom}%`;
+}
+
+// ── Toggle code panel ──
+function toggleCode(){
+  const panel = document.getElementById('code-panel');
+  panel.classList.toggle('collapsed');
+}
+
+// ── Paste / Clear ──
+async function pasteCode(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('html-input').value = t;
+    onInput();
+  }catch(e){ document.getElementById('html-input').focus(); }
+}
+function clearCode(){
+  document.getElementById('html-input').value = '';
+  currentHTML = '';
+  showEmpty();
+  document.getElementById('code-stats').textContent = '0行 · 0文字';
+}
+
+// ── Sample ──
+function loadSample(){
+  document.getElementById('html-input').value = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サンプルページ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:#f5f7fa;color:#111}
+.hero{
+  background:linear-gradient(135deg,#0057ff,#7c3aed);
+  color:#fff;padding:60px 20px;text-align:center;
+}
+.hero h1{font-size:clamp(24px,5vw,48px);font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
+.hero p{font-size:clamp(14px,3vw,18px);opacity:.85;margin-bottom:28px}
+.hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{padding:12px 28px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#fff;color:#0057ff}
+.btn-secondary{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4)}
+.section{max-width:900px;margin:0 auto;padding:48px 20px}
+.section h2{font-size:clamp(20px,4vw,32px);font-weight:800;margin-bottom:8px}
+.section-sub{color:#6b7280;margin-bottom:32px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:#fff;border-radius:16px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.card-icon{font-size:28px;margin-bottom:10px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.card p{font-size:13px;color:#6b7280;line-height:1.7}
+.footer{text-align:center;padding:32px;font-size:13px;color:#9ca3af;border-top:1px solid #e4e8ef}
+@media(max-width:480px){
+  .hero{padding:40px 16px}
+  .section{padding:32px 16px}
+}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>🚀 All AI Toolbox</h1>
+  <p>100種類以上の楽しくて便利な無料AIツール</p>
+  <div class="hero-btns">
+    <button class="btn btn-primary">ツールを見る</button>
+    <button class="btn btn-secondary">詳細はこちら</button>
+  </div>
+</div>
+<div class="section">
+  <h2>特徴</h2>
+  <p class="section-sub">登録不要・完全無料・すべてブラウザで動作</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h3>爆速起動</h3>
+      <p>インストール不要。URLを開くだけで即使えます。</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔒</div>
+      <h3>プライバシー安全</h3>
+      <p>データはブラウザ内で処理。サーバーに送信されません。</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h3>目的特化型</h3>
+      <p>一つの問題を一つのツールで解決するシンプル設計。</p>
+    </div>
+  </div>
+</div>
+<div class="footer">© 2025 All AI Toolbox — すべて無料・ログイン不要</div>
+</body>
+</html>`;
+  onInput();
+}
+</script>
+</body>
+</html>
