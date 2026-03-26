@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>想定Q&A・反論処理ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --orange:#d97706;
+  --orange-l:rgba(217,119,6,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:820px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;display:block;
+}
+
+textarea#idea-input{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  padding:13px 14px;outline:none;resize:vertical;line-height:1.8;min-height:120px;
+  transition:border-color .18s,box-shadow .18s,background .18s;
+}
+textarea#idea-input:focus{
+  border-color:var(--accent);background:var(--white);
+  box-shadow:0 0 0 3px var(--accent-l);
+}
+textarea#idea-input::placeholder{color:var(--light)}
+
+/* Persona + Intensity row */
+.options-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:480px){.options-row{grid-template-columns:1fr}}
+
+.opt-group label{font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:5px}
+.opt-group select{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:8px 10px;outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+  transition:border-color .15s;
+}
+.opt-group select:focus{border-color:var(--accent)}
+.opt-group select option{background:var(--white)}
+.opt-group select optgroup{font-weight:700}
+
+/* Persona chips */
+.persona-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.persona-chip{
+  display:flex;align-items:center;gap:4px;
+  font-size:12px;padding:5px 12px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  user-select:none;font-weight:500;
+}
+.persona-chip:hover{border-color:var(--text);color:var(--text)}
+.persona-chip.active{background:var(--text);border-color:var(--text);color:#fff}
+
+.btn-generate{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:15px;font-weight:800;padding:14px;cursor:pointer;
+  transition:opacity .13s,transform .1s;margin-top:12px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-generate:hover{opacity:.88}
+.btn-generate:active{transform:scale(.99)}
+.btn-generate:disabled{opacity:.4;cursor:default}
+
+/* ── Loading ── */
+.loading-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:44px 24px;text-align:center;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;
+}
+.loading-card.show{display:block}
+.loading-ring{width:40px;height:40px;border:3px solid var(--border);border-top-color:#111318;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Results ── */
+.results-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;flex-wrap:wrap;gap:8px;
+}
+.results-title{
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:var(--text);
+}
+.results-meta{font-size:12px;color:var(--muted)}
+.results-actions{display:flex;gap:6px}
+.r-btn{
+  font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.r-btn:hover{border-color:var(--text);color:var(--text)}
+.r-btn.done{border-color:var(--green);color:var(--green)}
+
+/* Q&A cards */
+.qa-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+
+.qa-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow);
+  animation:cardIn .3s cubic-bezier(.34,1.1,.64,1) both;
+}
+.qa-card:nth-child(1){animation-delay:.02s}
+.qa-card:nth-child(2){animation-delay:.05s}
+.qa-card:nth-child(3){animation-delay:.08s}
+.qa-card:nth-child(4){animation-delay:.11s}
+.qa-card:nth-child(5){animation-delay:.14s}
+.qa-card:nth-child(6){animation-delay:.17s}
+.qa-card:nth-child(7){animation-delay:.20s}
+.qa-card:nth-child(8){animation-delay:.23s}
+.qa-card:nth-child(9){animation-delay:.26s}
+.qa-card:nth-child(10){animation-delay:.29s}
+
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(8px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+
+/* Difficulty bar */
+.qa-head{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.qa-num{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;
+  color:var(--light);min-width:22px;
+}
+.qa-category{
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:2px 8px;border-radius:4px;flex-shrink:0;
+}
+.cat-logic   {background:rgba(37,99,235,.09);color:#1e3a8a}
+.cat-finance {background:rgba(5,150,105,.08);color:#065f46}
+.cat-risk    {background:rgba(220,38,38,.08);color:#991b1b}
+.cat-market  {background:rgba(217,119,6,.08);color:#92400e}
+.cat-team    {background:rgba(124,58,237,.08);color:#5b21b6}
+.cat-tech    {background:rgba(8,145,178,.08);color:#0e7490}
+.cat-ethics  {background:rgba(161,161,170,.08);color:#3f3f46}
+
+/* Difficulty dots */
+.difficulty{display:flex;gap:3px;margin-left:auto;flex-shrink:0}
+.diff-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--border);transition:background .2s;
+}
+.diff-1 .diff-dot:nth-child(-n+1){background:var(--green)}
+.diff-2 .diff-dot:nth-child(-n+2){background:var(--orange)}
+.diff-3 .diff-dot:nth-child(-n+3){background:var(--red)}
+
+.qa-body{padding:14px 16px}
+
+/* Question */
+.qa-question{
+  display:flex;align-items:flex-start;gap:9px;
+  margin-bottom:10px;
+}
+.q-icon{
+  font-size:18px;flex-shrink:0;line-height:1.4;
+}
+.q-text{
+  font-size:14px;font-weight:600;color:var(--text);line-height:1.6;
+}
+
+/* Answer */
+.qa-answer-wrap{
+  background:var(--green-l);border:1px solid rgba(5,150,105,.2);
+  border-radius:9px;padding:11px 14px;
+}
+.qa-answer-label{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--green);margin-bottom:5px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.qa-answer-toggle{
+  background:none;border:none;cursor:pointer;font-size:11px;
+  color:var(--green);opacity:.7;transition:opacity .12s;
+}
+.qa-answer-toggle:hover{opacity:1}
+.qa-answer-text{
+  font-size:13px;color:var(--muted);line-height:1.75;
+  display:none;
+}
+.qa-answer-text.open{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.qa-actions{
+  display:flex;gap:5px;margin-top:10px;justify-content:flex-end;
+}
+.qa-btn{
+  font-size:11px;font-weight:500;padding:4px 11px;border-radius:6px;
+  border:1px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.qa-btn:hover{border-color:var(--accent);color:var(--accent)}
+.qa-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* ── Prep guide card ── */
+.prep-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px;
+  display:none;animation:fadeIn .3s ease;
+}
+.prep-card.show{display:block}
+.prep-title{
+  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--light);margin-bottom:12px;
+}
+.prep-body{font-size:13px;color:var(--muted);line-height:1.8}
+.prep-body strong{color:var(--text);font-weight:600}
+
+/* copy all bar */
+.copy-all-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:11px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:var(--shadow);
+}
+.copy-all-label{font-size:12px;color:var(--muted)}
+.btn-copy-all{
+  background:var(--text);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:700;padding:8px 18px;cursor:pointer;
+  transition:opacity .13s;flex-shrink:0;
+}
+.btn-copy-all:hover{opacity:.88}
+.btn-copy-all.done{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🔥 想定Q&A・反論処理ジェネレーター</h1>
+    <p>企画・アイデアを貼ると、意地悪な上司・投資家・懐疑論者が言いそうな<br>「ツッコミ10問」と「模範回答」を自動生成。プレゼン前の最終対策に。</p>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <span class="card-label">企画・アイデアの概要</span>
+    <textarea id="idea-input"
+      placeholder="例：月額980円のAIツールまとめサービスを作る。個人でも使いやすいように100種類以上のツールを無料で提供し、広告収入で運営する。ターゲットは副業・フリーランスを目指す会社員。&#10;&#10;企画書の文章、ビジネスモデルの説明、スライドのメモなど何でも貼り付けてください。"></textarea>
+
+    <div class="options-row">
+      <div class="opt-group">
+        <label>質問者のペルソナ</label>
+        <select id="persona-select">
+          <optgroup label="── ビジネス ──">
+            <option value="bossy_boss">意地悪な上司（細かい・否定的）</option>
+            <option value="vc_investor">シビアなVC・投資家</option>
+            <option value="skeptic_board">懐疑的な取締役会</option>
+            <option value="rival_competitor">競合他社の戦略担当</option>
+          </optgroup>
+          <optgroup label="── 専門家 ──">
+            <option value="cfo">CFO・財務担当役員</option>
+            <option value="lawyer">リスクを見る弁護士</option>
+            <option value="engineer">懐疑的なシニアエンジニア</option>
+          </optgroup>
+          <optgroup label="── その他 ──">
+            <option value="customer">厳しいユーザー・顧客</option>
+            <option value="media">批判的なジャーナリスト</option>
+            <option value="mix" selected>全方位ミックス（おすすめ）</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>辛口レベル</label>
+        <select id="level-select">
+          <option value="mild">まあまあ辛口（練習用）</option>
+          <option value="hard" selected>かなり辛口（本番対策）</option>
+          <option value="brutal">容赦なし（最終兵器）</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-gen" onclick="generate()">
+      🔥 ツッコミ10問を生成する
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <div class="loading-ring"></div>
+    <div class="loading-text" id="loading-text">意地悪な上司が質問を考案中...<br><small style="opacity:.6">一番痛いところを突いてきます</small></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-area"></div>
+
+</div>
+
+<script>
+const PERSONA_LABELS = {
+  bossy_boss:'意地悪な上司',
+  vc_investor:'シビアな投資家',
+  skeptic_board:'懐疑的な取締役会',
+  rival_competitor:'競合他社',
+  cfo:'CFO',
+  lawyer:'弁護士',
+  engineer:'シニアエンジニア',
+  customer:'厳しいユーザー',
+  media:'批判的ジャーナリスト',
+  mix:'全方位ミックス',
+};
+const LEVEL_LABELS = {mild:'まあまあ辛口',hard:'かなり辛口',brutal:'容赦なし'};
+const LOADING_MSGS = [
+  '意地悪な上司が質問を考案中...',
+  'CFOが財務を穴探し中...',
+  '懐疑論者が弱点を探索中...',
+  '投資家が難癖をつけ中...',
+];
+
+const CAT_MAP = {
+  logic:  {label:'論理・整合性', cls:'cat-logic'},
+  finance:{label:'財務・収益性', cls:'cat-finance'},
+  risk:   {label:'リスク・競合', cls:'cat-risk'},
+  market: {label:'市場・顧客', cls:'cat-market'},
+  team:   {label:'チーム・実行力', cls:'cat-team'},
+  tech:   {label:'技術・実現性', cls:'cat-tech'},
+  ethics: {label:'法律・倫理', cls:'cat-ethics'},
+};
+
+async function generate(){
+  const idea    = document.getElementById('idea-input').value.trim();
+  if(!idea){ alert('企画・アイデアを入力してください'); return; }
+
+  const persona = document.getElementById('persona-select').value;
+  const level   = document.getElementById('level-select').value;
+  const btn     = document.getElementById('btn-gen');
+  btn.disabled  = true;
+
+  document.getElementById('results-area').innerHTML = '';
+  const lc = document.getElementById('loading-card');
+  document.getElementById('loading-text').innerHTML =
+    LOADING_MSGS[Math.floor(Math.random()*LOADING_MSGS.length)] +
+    '<br><small style="opacity:.6">一番痛いところを突いてきます</small>';
+  lc.classList.add('show');
+
+  try{
+    const data = await callClaude(idea, persona, level);
+    renderResults(data, persona, level);
+  }catch(e){
+    document.getElementById('results-area').innerHTML =
+      `<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;color:var(--red)">⚠ エラー：${escHtml(e.message)}</div>`;
+  }finally{
+    btn.disabled = false;
+    lc.classList.remove('show');
+  }
+}
+
+async function callClaude(idea, persona, level){
+  const personaDescs = {
+    bossy_boss: 'あなたは15年以上の経験を持つ厳格な部長。細かい数字・実現性・リスクを責め立て、「それで本当に儲かるの？」「前例はあるの？」といった現実的な反論を好む。',
+    vc_investor:'あなたはシリコンバレー帰りのシビアなVC。Exit戦略・TAM・競合との差別化・スケーラビリティを容赦なく問い詰める。',
+    skeptic_board:'あなたは保守的な取締役会メンバー。コンプライアンス・既存事業への影響・リソース配分を厳しく問う。',
+    rival_competitor:'あなたは業界を知り尽くした競合他社の戦略担当。「うちにはすでにある」「なぜ我々に勝てると思う？」と攻撃する。',
+    cfo:'あなたはCFO。ROI・キャッシュフロー・回収期間・財務リスクを数字で徹底的に問い詰める。',
+    lawyer:'あなたはリスクマネジメントを担当する弁護士。規制・知的財産・個人情報・契約リスクを探す。',
+    engineer:'あなたは技術負債を嫌うシニアエンジニア。技術的実現性・スケーラビリティ・セキュリティ・工数を懐疑的に問う。',
+    customer:'あなたは騙されたくない厳しいユーザー。「本当に使えるの？」「他のサービスと何が違うの？」と本音で聞く。',
+    media:'あなたは批判的なジャーナリスト。社会的影響・倫理問題・誇大宣伝を追及する。',
+    mix:'様々な立場（上司・投資家・顧客・競合・専門家）を組み合わせた全方位の厳しい質問者として。',
+  };
+  const levelDescs = {
+    mild:'現実的で建設的な指摘を中心に、改善のヒントになるような質問を。',
+    hard:'かなり辛口で、弱点を容赦なく突く。ただし的外れな意地悪は避け、論理的に鋭い質問を。',
+    brutal:'完全に容赦なし。最悪のシナリオ、根本的な否定、プロジェクト中止を示唆する質問も含める。',
+  };
+
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:3000,
+      system:`${personaDescs[persona]}\n辛口レベル：${levelDescs[level]}\n\n以下の企画・アイデアに対して、最も鋭い10個の反論・質問を生成してください。質問は具体的で、企画者が準備していなければ答えられないほど鋭いものにしてください。`,
+      messages:[{role:'user', content:`以下の企画に対して想定Q&Aを生成してください。
+
+企画内容：
+${idea}
+
+以下のJSON形式のみで返答してください：
+{
+  "overall_assessment": "全体評価（2文。どこが一番弱いか）",
+  "questions": [
+    {
+      "category": "logic|finance|risk|market|team|tech|ethics のいずれか",
+      "difficulty": 1〜3の整数（1=普通、2=難しい、3=超難しい）,
+      "question": "質問文（1〜2文、具体的で鋭い）",
+      "why_hard": "なぜこの質問が難しいか（1文）",
+      "model_answer": "模範回答の方向性（2〜3文。どう答えるべきか）"
+    }
+  ]
+}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+let allQA = [];
+
+function renderResults(data, persona, level){
+  allQA = data.questions || [];
+
+  const area = document.getElementById('results-area');
+  area.innerHTML = '';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'results-header';
+  header.innerHTML = `
+    <div>
+      <div class="results-title">💥 想定ツッコミ ${allQA.length}問</div>
+      <div class="results-meta">${PERSONA_LABELS[persona]} ／ ${LEVEL_LABELS[level]}</div>
+    </div>
+    <div class="results-actions">
+      <button class="r-btn" onclick="expandAll()">全回答を開く</button>
+      <button class="r-btn" onclick="collapseAll()">全回答を閉じる</button>
+    </div>`;
+  area.appendChild(header);
+
+  // Assessment
+  if(data.overall_assessment){
+    const prep = document.createElement('div');
+    prep.className = 'prep-card show';
+    prep.innerHTML = `
+      <div class="prep-title">📋 全体評価</div>
+      <div class="prep-body">${escHtml(data.overall_assessment)}</div>`;
+    area.appendChild(prep);
+  }
+
+  // QA list
+  const list = document.createElement('div');
+  list.className = 'qa-list';
+  allQA.forEach((q,i) => list.appendChild(buildCard(q, i)));
+  area.appendChild(list);
+
+  // Copy all bar
+  const bar = document.createElement('div');
+  bar.className = 'copy-all-bar';
+  bar.innerHTML = `
+    <span class="copy-all-label">全10問＋回答をまとめてコピー</span>
+    <button class="btn-copy-all" id="btn-copy-all" onclick="copyAll()">📋 全件コピー</button>`;
+  area.appendChild(bar);
+
+  area.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildCard(q, i){
+  const cat = CAT_MAP[q.category] || {label:q.category, cls:'cat-logic'};
+  const diff= Math.min(3, Math.max(1, q.difficulty||2));
+  const dots= [1,2,3].map(d=>`<div class="diff-dot"></div>`).join('');
+
+  const card = document.createElement('div');
+  card.className = 'qa-card';
+  card.id = `qcard-${i}`;
+  card.innerHTML = `
+    <div class="qa-head">
+      <span class="qa-num">Q${i+1}</span>
+      <span class="qa-category ${cat.cls}">${cat.label}</span>
+      <div class="difficulty diff-${diff}">${dots}</div>
+    </div>
+    <div class="qa-body">
+      <div class="qa-question">
+        <span class="q-icon">${['','😤','💀','☠️'][diff]}</span>
+        <div class="q-text">${escHtml(q.question)}</div>
+      </div>
+      <div class="qa-answer-wrap">
+        <div class="qa-answer-label">
+          <span>💡 模範回答の方向性</span>
+          <button class="qa-answer-toggle" onclick="toggleAnswer(${i})">▼ 表示</button>
+        </div>
+        <div class="qa-answer-text" id="ans-${i}">${escHtml(q.model_answer||'')}<br><br><span style="font-size:11px;color:var(--light)">⚡ ${escHtml(q.why_hard||'')}</span></div>
+      </div>
+      <div class="qa-actions">
+        <button class="qa-btn" onclick="copyCard(${i})">📋 この質問をコピー</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+function toggleAnswer(i){
+  const ans = document.getElementById(`ans-${i}`);
+  const btn = document.querySelector(`#qcard-${i} .qa-answer-toggle`);
+  const open = ans.classList.toggle('open');
+  btn.textContent = open ? '▲ 閉じる' : '▼ 表示';
+}
+function expandAll(){ allQA.forEach((_,i)=>{ document.getElementById(`ans-${i}`)?.classList.add('open'); const b=document.querySelector(`#qcard-${i} .qa-answer-toggle`); if(b) b.textContent='▲ 閉じる'; }); }
+function collapseAll(){ allQA.forEach((_,i)=>{ document.getElementById(`ans-${i}`)?.classList.remove('open'); const b=document.querySelector(`#qcard-${i} .qa-answer-toggle`); if(b) b.textContent='▼ 表示'; }); }
+
+function copyCard(i){
+  const q = allQA[i];
+  if(!q) return;
+  const text = `Q${i+1}. ${q.question}\n\n▶ 模範回答の方向性：\n${q.model_answer}`;
+  navigator.clipboard.writeText(text);
+  const btns = document.querySelectorAll(`#qcard-${i} .qa-btn`);
+  btns.forEach(btn=>{ btn.textContent='✓ コピー済み'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='📋 この質問をコピー'; btn.classList.remove('copied'); },1500); });
+}
+
+function copyAll(){
+  const lines = allQA.map((q,i)=>`Q${i+1}. [${CAT_MAP[q.category]?.label||q.category}] ${'★'.repeat(q.difficulty||1)}\n${q.question}\n\n▶ 模範回答：\n${q.model_answer}`).join('\n\n──────────\n\n');
+  navigator.clipboard.writeText(lines).then(()=>{
+    const btn = document.getElementById('btn-copy-all');
+    btn.textContent='✓ コピーしました！';btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 全件コピー';btn.classList.remove('done'); },2000);
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
