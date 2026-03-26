@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音声スクリプト・タイム計算機</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.07);
+  --yellow:#d97706;
+  --yellow-l:rgba(217,119,6,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:860px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+
+/* ── Editor ── */
+.editor-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.editor-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-wrap:wrap;gap:6px;
+}
+.editor-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.editor-acts{display:flex;gap:5px}
+.e-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;
+  transition:color .12s,background .12s;
+}
+.e-btn:hover{color:var(--accent);background:var(--accent-l)}
+
+textarea#script{
+  width:100%;min-height:340px;background:var(--white);border:none;outline:none;
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  color:var(--text);padding:16px;resize:vertical;line-height:1.9;
+  tab-size:2;
+}
+textarea#script::placeholder{color:var(--light);font-size:13px}
+
+/* Line numbers overlay effect */
+.editor-foot{
+  padding:8px 16px;border-top:1px solid var(--border);
+  background:var(--bg);font-size:10px;color:var(--light);
+  display:flex;gap:14px;flex-wrap:wrap;
+  font-family:'JetBrains Mono',monospace;font-weight:500;
+}
+.foot-val{color:var(--text);font-weight:600}
+
+/* ── Speed selector ── */
+.speed-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+  margin-bottom:10px;
+}
+.speed-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);
+}
+.speed-options{padding:12px 14px;display:flex;flex-direction:column;gap:7px}
+
+.speed-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 13px;border-radius:10px;
+  border:1.5px solid var(--border);background:var(--bg);
+  cursor:pointer;transition:all .14s;text-align:left;
+  position:relative;overflow:hidden;
+}
+.speed-btn:hover{border-color:var(--text)}
+.speed-btn.active{background:var(--text);border-color:var(--text)}
+.speed-icon{font-size:18px;flex-shrink:0}
+.speed-info{}
+.speed-name{font-size:13px;font-weight:600;color:var(--muted);transition:color .14s}
+.speed-btn.active .speed-name{color:#fff}
+.speed-desc{font-size:10px;color:var(--light);transition:color .14s;line-height:1.4}
+.speed-btn.active .speed-desc{color:rgba(255,255,255,.6)}
+.speed-wpm{
+  margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;
+  font-weight:600;color:var(--light);flex-shrink:0;transition:color .14s;
+}
+.speed-btn.active .speed-wpm{color:rgba(255,255,255,.7)}
+
+/* Pause setting */
+.pause-row{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-top:1px solid var(--border);
+}
+.pause-label{font-size:12px;color:var(--muted);flex:1}
+.pause-select{
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:7px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:12px;
+  padding:5px 8px;outline:none;cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center;padding-right:22px;
+  transition:border-color .14s;
+}
+.pause-select:focus{border-color:var(--accent)}
+
+/* ── Main time display ── */
+.time-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md);
+  margin-bottom:10px;
+}
+.time-hero{
+  padding:20px 16px 16px;
+  background:linear-gradient(160deg,var(--bg),var(--white));
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.time-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:8px}
+.time-display{
+  font-family:'Outfit',sans-serif;font-size:clamp(36px,8vw,52px);
+  font-weight:800;letter-spacing:-.03em;color:var(--text);line-height:1;
+  animation:popIn .3s cubic-bezier(.34,1.3,.64,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.time-sub{font-size:12px;color:var(--muted);margin-top:5px}
+
+/* Detail rows */
+.time-details{display:flex;flex-direction:column}
+.time-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;border-bottom:1px solid var(--border);
+  font-size:12px;
+}
+.time-row:last-child{border-bottom:none}
+.tr-label{color:var(--muted)}
+.tr-val{
+  font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);
+  font-size:12px;
+}
+
+/* ── Platform fit cards ── */
+.platform-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.platform-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);
+}
+.platform-list{display:flex;flex-direction:column}
+.platform-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  transition:background .12s;
+}
+.platform-row:last-child{border-bottom:none}
+.pf-icon{font-size:18px;flex-shrink:0}
+.pf-info{flex:1;min-width:0}
+.pf-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.pf-range{font-size:10px;color:var(--light)}
+.pf-status{
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 9px;border-radius:100px;flex-shrink:0;
+}
+.pf-ok     {background:var(--green-l);color:var(--green)}
+.pf-short  {background:var(--yellow-l);color:var(--yellow)}
+.pf-over   {background:var(--red-l);  color:var(--red)}
+.pf-perfect{background:rgba(0,87,255,.08);color:var(--accent)}
+
+/* ── Progress bars for text analysis ── */
+.analysis-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;
+  box-shadow:var(--shadow);margin-top:10px;
+  display:none;
+}
+.analysis-card.show{display:block}
+.analysis-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:12px}
+.analysis-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;
+}
+.analysis-row:last-child{margin-bottom:0}
+.ar-label{color:var(--muted);min-width:80px;font-weight:500}
+.ar-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.ar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.ar-val{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);min-width:40px;text-align:right;font-size:11px}
+
+/* Copy report */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:11px 14px;
+  display:flex;gap:7px;box-shadow:var(--shadow);
+  grid-column:1/-1;
+}
+.act-btn{
+  flex:1;font-size:12px;font-weight:600;padding:9px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;text-align:center;
+}
+.act-btn:hover{border-color:var(--text);color:var(--text)}
+.act-btn.primary{background:var(--text);border-color:var(--text);color:#fff}
+.act-btn.primary:hover{opacity:.88}
+.act-btn.done{border-color:var(--green);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🎙️ 音声スクリプト・タイム計算機</h1>
+    <p>台本を貼り付けるだけで、読み上げ時間を正確に算出。YouTube・TikTokの尺に合わせた調整もサポート。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Editor -->
+    <div>
+      <div class="editor-card">
+        <div class="editor-head">
+          <span class="editor-label">スクリプト（台本）</span>
+          <div class="editor-acts">
+            <button class="e-btn" onclick="pasteScript()">貼り付け</button>
+            <button class="e-btn" onclick="loadSample()">サンプル</button>
+            <button class="e-btn" onclick="clearScript()">クリア</button>
+          </div>
+        </div>
+        <textarea id="script"
+          placeholder="ここに台本を貼り付けてください。&#10;&#10;ナレーション、セリフ、解説文など何でもOKです。&#10;コメントや記号（♪、【】など）も含めて貼り付けると、より正確に計算されます。"
+          oninput="calc()"></textarea>
+        <div class="editor-foot">
+          <span>文字数：<span class="foot-val" id="f-chars">0</span></span>
+          <span>行数：<span class="foot-val" id="f-lines">0</span></span>
+          <span>文数：<span class="foot-val" id="f-sents">0</span></span>
+          <span>段落：<span class="foot-val" id="f-paras">0</span></span>
+        </div>
+      </div>
+
+      <!-- Analysis -->
+      <div class="analysis-card" id="analysis-card">
+        <div class="analysis-title">テキスト分析</div>
+        <div class="analysis-row">
+          <span class="ar-label">日本語比率</span>
+          <div class="ar-bar"><div class="ar-fill" id="af-ja" style="background:#0057ff;width:0%"></div></div>
+          <span class="ar-val" id="av-ja">0%</span>
+        </div>
+        <div class="analysis-row">
+          <span class="ar-label">英語・数字</span>
+          <div class="ar-bar"><div class="ar-fill" id="af-en" style="background:#059669;width:0%"></div></div>
+          <span class="ar-val" id="av-en">0%</span>
+        </div>
+        <div class="analysis-row">
+          <span class="ar-label">記号・間</span>
+          <div class="ar-bar"><div class="ar-fill" id="af-sym" style="background:#d97706;width:0%"></div></div>
+          <span class="ar-val" id="av-sym">0%</span>
+        </div>
+        <div class="analysis-row">
+          <span class="ar-label">感嘆・強調</span>
+          <div class="ar-bar"><div class="ar-fill" id="af-excl" style="background:#dc2626;width:0%"></div></div>
+          <span class="ar-val" id="av-excl">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+
+      <!-- Speed selector -->
+      <div class="speed-card">
+        <div class="speed-head">読み上げ速度</div>
+        <div class="speed-options">
+          <button class="speed-btn" id="sp-slow" onclick="setSpeed('slow',this)">
+            <span class="speed-icon">🐢</span>
+            <div class="speed-info">
+              <div class="speed-name">ゆっくり丁寧</div>
+              <div class="speed-desc">ナレーション・教育・落ち着き系</div>
+            </div>
+            <span class="speed-wpm">260文字/分</span>
+          </button>
+          <button class="speed-btn active" id="sp-normal" onclick="setSpeed('normal',this)">
+            <span class="speed-icon">🎙</span>
+            <div class="speed-info">
+              <div class="speed-name">標準（おすすめ）</div>
+              <div class="speed-desc">YouTube解説・一般的な動画</div>
+            </div>
+            <span class="speed-wpm">320文字/分</span>
+          </button>
+          <button class="speed-btn" id="sp-fast" onclick="setSpeed('fast',this)">
+            <span class="speed-icon">⚡</span>
+            <div class="speed-info">
+              <div class="speed-name">テンポよく</div>
+              <div class="speed-desc">TikTok・ショート動画・エンタメ系</div>
+            </div>
+            <span class="speed-wpm">380文字/分</span>
+          </button>
+          <button class="speed-btn" id="sp-fast2" onclick="setSpeed('fast2',this)">
+            <span class="speed-icon">🔥</span>
+            <div class="speed-info">
+              <div class="speed-name">高速（早口）</div>
+              <div class="speed-desc">急ぎ足・情報量多め・切り抜き向け</div>
+            </div>
+            <span class="speed-wpm">450文字/分</span>
+          </button>
+        </div>
+        <div class="pause-row">
+          <span class="pause-label">句読点・改行の間</span>
+          <select class="pause-select" id="pause-sel" onchange="calc()">
+            <option value="0">なし</option>
+            <option value="0.5">短め（0.5秒）</option>
+            <option value="1" selected>標準（1秒）</option>
+            <option value="1.5">長め（1.5秒）</option>
+            <option value="2">ゆったり（2秒）</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Time display -->
+      <div class="time-card">
+        <div class="time-hero">
+          <div class="time-label">推定再生時間</div>
+          <div class="time-display" id="time-display">0:00</div>
+          <div class="time-sub" id="time-sub">テキストを入力してください</div>
+        </div>
+        <div class="time-details">
+          <div class="time-row">
+            <span class="tr-label">純粋な読み上げ</span>
+            <span class="tr-val" id="tr-pure">0:00</span>
+          </div>
+          <div class="time-row">
+            <span class="tr-label">句読点・間</span>
+            <span class="tr-val" id="tr-pause">+0:00</span>
+          </div>
+          <div class="time-row">
+            <span class="tr-label">段落間のブレス</span>
+            <span class="tr-val" id="tr-breath">+0:00</span>
+          </div>
+          <div class="time-row">
+            <span class="tr-label">実質文字数</span>
+            <span class="tr-val" id="tr-effective">0文字</span>
+          </div>
+          <div class="time-row">
+            <span class="tr-label">分速換算</span>
+            <span class="tr-val" id="tr-wpm">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform fit -->
+      <div class="platform-card">
+        <div class="platform-head">プラットフォーム適合チェック</div>
+        <div class="platform-list" id="platform-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Copy bar -->
+  <div class="copy-bar" style="margin-top:12px">
+    <button class="act-btn primary" onclick="calc()">🔄 再計算</button>
+    <button class="act-btn" id="btn-copy" onclick="copyReport()">📋 レポートをコピー</button>
+    <button class="act-btn" onclick="adjustTo()">✂ 尺に合わせて調整ヒント</button>
+  </div>
+
+</div>
+
+<script>
+// ── Constants ──
+const SPEEDS = {
+  slow:   {cpm:260, label:'ゆっくり丁寧'},
+  normal: {cpm:320, label:'標準'},
+  fast:   {cpm:380, label:'テンポよく'},
+  fast2:  {cpm:450, label:'高速（早口）'},
+};
+
+const PLATFORMS = [
+  {icon:'🎵', name:'TikTok / Reels',  min:15,  max:60,  sweet:30,  label:'15〜60秒'},
+  {icon:'📱', name:'YouTube Shorts',  min:15,  max:60,  sweet:45,  label:'15〜60秒'},
+  {icon:'📺', name:'YouTube（解説）',  min:300, max:900, sweet:480, label:'5〜15分'},
+  {icon:'🎙', name:'Podcast（短編）',  min:180, max:600, sweet:300, label:'3〜10分'},
+  {icon:'🎬', name:'YouTube（Vlog）',  min:600, max:1200,sweet:720, label:'10〜20分'},
+  {icon:'📻', name:'Podcast（標準）',  min:1200,max:3600,sweet:1800,label:'20〜60分'},
+];
+
+let speed = 'normal';
+let totalSecs = 0;
+
+// ── Speed ──
+function setSpeed(s, btn){
+  speed = s;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  calc();
+}
+
+// ── Main calc ──
+function calc(){
+  const raw  = document.getElementById('script').value;
+  const pause= parseFloat(document.getElementById('pause-sel').value);
+  const cpm  = SPEEDS[speed].cpm;
+
+  // Text stats
+  const chars  = raw.length;
+  const lines  = raw ? raw.split('\n').length : 0;
+  const sents  = (raw.match(/[。！？.!?]+/g)||[]).length;
+  const paras  = raw ? raw.split(/\n\n+/).filter(p=>p.trim()).length : 0;
+
+  document.getElementById('f-chars').textContent = chars.toLocaleString();
+  document.getElementById('f-lines').textContent = lines.toLocaleString();
+  document.getElementById('f-sents').textContent = sents.toLocaleString();
+  document.getElementById('f-paras').textContent = paras.toLocaleString();
+
+  if(!raw.trim()){
+    document.getElementById('time-display').textContent = '0:00';
+    document.getElementById('time-sub').textContent = 'テキストを入力してください';
+    renderPlatforms(0);
+    document.getElementById('analysis-card').classList.remove('show');
+    return;
+  }
+
+  // Text analysis
+  const jaChars   = (raw.match(/[\u3040-\u9fff\uff01-\uffef]/g)||[]).length;
+  const enChars   = (raw.match(/[a-zA-Z0-9]/g)||[]).length;
+  const symChars  = (raw.match(/[、。，．「」『』【】\[\]（）\(\)…‥・]/g)||[]).length;
+  const exclChars = (raw.match(/[！!？?♪★☆◆◇▶▷]/g)||[]).length;
+  const total     = chars || 1;
+
+  setBar('af-ja',  'av-ja',  jaChars,   total);
+  setBar('af-en',  'av-en',  enChars,   total);
+  setBar('af-sym', 'av-sym', symChars,  total);
+  setBar('af-excl','av-excl',exclChars, total);
+  document.getElementById('analysis-card').classList.add('show');
+
+  // Effective char count (remove non-spoken)
+  const stripped = raw
+    .replace(/[【】\[\]（）\(\)「」『』《》〈〉]/g,'')
+    .replace(/https?:\/\/\S+/g,'URL')
+    .replace(/\s+/g,' ')
+    .trim();
+  const effectiveChars = stripped.length;
+
+  // Pause calculation
+  const punctCount  = (raw.match(/[、。，．,.]|\n/g)||[]).length;
+  const pauseSecs   = punctCount * pause;
+  const breathSecs  = paras * 0.8; // breath between paragraphs
+
+  // Pure reading time
+  const pureSecs   = (effectiveChars / cpm) * 60;
+  const totalSec   = pureSecs + pauseSecs + breathSecs;
+  totalSecs        = totalSec;
+
+  // Display
+  document.getElementById('time-display').innerHTML =
+    `<span class="count-anim">${fmtTime(totalSec)}</span>`;
+  document.getElementById('time-sub').textContent =
+    `${SPEEDS[speed].label}・${effectiveChars.toLocaleString()}文字 (間 ${fmtTime(pauseSecs+breathSecs)} 含む)`;
+
+  document.getElementById('tr-pure').textContent   = fmtTime(pureSecs);
+  document.getElementById('tr-pause').textContent  = '+' + fmtTime(pauseSecs);
+  document.getElementById('tr-breath').textContent = '+' + fmtTime(breathSecs);
+  document.getElementById('tr-effective').textContent = effectiveChars.toLocaleString() + '文字';
+  document.getElementById('tr-wpm').textContent    = SPEEDS[speed].cpm + '文字/分';
+
+  renderPlatforms(totalSec);
+}
+
+function setBar(fillId, valId, count, total){
+  const pct = Math.round(count/total*100);
+  document.getElementById(fillId).style.width = pct + '%';
+  document.getElementById(valId).textContent  = pct + '%';
+}
+
+function fmtTime(sec){
+  const s   = Math.round(sec);
+  const m   = Math.floor(s/60);
+  const ss  = s%60;
+  if(m >= 60){
+    const h = Math.floor(m/60);
+    return `${h}:${String(m%60).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+  return `${m}:${String(ss).padStart(2,'0')}`;
+}
+
+// ── Platform fit ──
+function renderPlatforms(sec){
+  const sec_ = Math.round(sec);
+  document.getElementById('platform-list').innerHTML = PLATFORMS.map(p=>{
+    let cls, label;
+    const near = Math.abs(sec_-p.sweet) < (p.sweet*0.1);
+    if(sec_ >= p.min && sec_ <= p.max){
+      cls   = near ? 'pf-perfect' : 'pf-ok';
+      label = near ? '◎ ピッタリ！' : '✓ 適合';
+    } else if(sec_ < p.min){
+      const shortage = p.min - sec_;
+      cls   = 'pf-short';
+      label = `▲ あと ${fmtTime(shortage)} 短い`;
+    } else {
+      const over = sec_ - p.max;
+      cls   = 'pf-over';
+      label = `▼ ${fmtTime(over)} 超過`;
+    }
+    return `
+    <div class="platform-row">
+      <span class="pf-icon">${p.icon}</span>
+      <div class="pf-info">
+        <div class="pf-name">${p.name}</div>
+        <div class="pf-range">${p.label}</div>
+      </div>
+      <span class="pf-status ${cls}">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Adjust hint ──
+function adjustTo(){
+  const script = document.getElementById('script').value.trim();
+  if(!script){ alert('スクリプトを入力してください'); return; }
+
+  const target = prompt(
+    `現在の尺：${fmtTime(totalSecs)}\n\n目標の秒数を入力してください（例：60、300、600）`,
+    '60'
+  );
+  if(!target) return;
+
+  const targetSec = parseInt(target);
+  if(isNaN(targetSec)||targetSec<=0){ alert('正しい秒数を入力してください'); return; }
+
+  const cpm = SPEEDS[speed].cpm;
+  const currentChars = document.getElementById('script').value.replace(/\s+/g,' ').trim().length;
+  const targetChars  = Math.round((targetSec/60)*cpm);
+  const diff         = targetChars - currentChars;
+  const pct          = Math.round((diff/currentChars)*100);
+
+  const msg = diff > 0
+    ? `目標（${fmtTime(targetSec)}）まであと ${Math.abs(diff)}文字（${Math.abs(pct)}%）追加が必要です。\n\n💡 ヒント：\n・具体例やエピソードを加える\n・数字の根拠を説明する\n・まとめの一文を追加する`
+    : `目標（${fmtTime(targetSec)}）にするには ${Math.abs(diff)}文字（${Math.abs(pct)}%）削除が必要です。\n\n💡 ヒント：\n・枕詞・接続詞を削る\n・繰り返し表現をまとめる\n・例を1つに絞る`;
+
+  alert(msg);
+}
+
+// ── Sample ──
+function loadSample(){
+  document.getElementById('script').value = `【はじめに】
+皆さん、こんにちは。今日は「習慣化を最短で成功させる3つの秘訣」をお伝えします。
+
+【本題①：小さく始める】
+まず最初のポイントは「とにかく小さく始めること」です。多くの人が習慣化に失敗する理由は、最初から高い目標を設定してしまうことにあります。
+
+例えば、毎日1時間の運動を目標にした場合、多くの人が三日以内に挫折します。でも、毎日1分だけスクワットをするという目標なら、どうでしょうか？
+
+【本題②：トリガーを作る】
+次に大切なのが、「トリガー」つまり引き金となる行動を設定することです。既に習慣になっている行動に、新しい行動を紐づけるのです。
+
+「歯を磨いた後に読書をする」「コーヒーを飲みながら英語アプリを開く」といった形で、セットにしてしまうわけです。
+
+【まとめ】
+今日お伝えした「小さく始める」「トリガーを作る」、この2つを実践するだけで、習慣化の成功率は格段に上がります。ぜひ今日から試してみてください！`;
+  calc();
+}
+
+async function pasteScript(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('script').value = t;
+    calc();
+  }catch(e){ document.getElementById('script').focus(); }
+}
+
+function clearScript(){
+  document.getElementById('script').value = '';
+  calc();
+}
+
+// ── Copy report ──
+function copyReport(){
+  const script = document.getElementById('script').value.trim();
+  if(!script){ alert('スクリプトを入力してください'); return; }
+
+  const report = [
+    '■ 音声スクリプト・タイム計算レポート',
+    `読み上げ速度：${SPEEDS[speed].label}（${SPEEDS[speed].cpm}文字/分）`,
+    `推定再生時間：${fmtTime(totalSecs)}`,
+    '',
+    '【各プラットフォームとの適合】',
+    ...PLATFORMS.map(p=>{
+      const sec_ = Math.round(totalSecs);
+      if(sec_>=p.min&&sec_<=p.max) return `✓ ${p.name}（${p.label}）：適合`;
+      if(sec_<p.min) return `▲ ${p.name}（${p.label}）：あと${fmtTime(p.min-sec_)}短い`;
+      return `▼ ${p.name}（${p.label}）：${fmtTime(sec_-p.max)}超過`;
+    }),
+  ].join('\n');
+
+  navigator.clipboard.writeText(report).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent='✓ コピー済み';btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 レポートをコピー';btn.classList.remove('done'); },1600);
+  });
+}
+
+// Init
+calc();
+</script>
+</body>
+</html>
