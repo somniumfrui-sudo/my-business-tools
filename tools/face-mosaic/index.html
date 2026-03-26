@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顔モザイクツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<!-- face-api.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:800px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:24px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+.privacy-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;color:var(--green);
+  background:var(--green-l);border:1px solid rgba(5,150,105,.2);
+  border-radius:100px;padding:4px 12px;margin-top:8px;
+}
+
+/* ── Drop zone ── */
+.dropzone{
+  background:var(--white);border:2px dashed var(--border);
+  border-radius:16px;padding:48px 24px;text-align:center;
+  cursor:pointer;transition:all .2s;
+  box-shadow:var(--shadow);margin-bottom:14px;
+  position:relative;
+}
+.dropzone:hover,.dropzone.over{border-color:var(--accent);background:var(--accent-l)}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:44px;display:block;margin-bottom:12px}
+.drop-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--muted);line-height:1.7}
+
+/* ── Settings card ── */
+.settings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+}
+.setting-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.setting-label{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+
+.seg{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}
+.seg-btn{
+  font-size:12px;font-weight:600;padding:6px 14px;
+  background:transparent;border:none;color:var(--muted);
+  cursor:pointer;transition:all .13s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.seg-btn:not(:last-child){border-right:1px solid var(--border)}
+.seg-btn:hover{background:var(--bg);color:var(--text)}
+.seg-btn.active{background:var(--text);color:#fff}
+
+.slider-row{display:flex;align-items:center;gap:8px}
+.slider-val{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text);min-width:32px}
+input[type=range]{
+  width:100px;height:3px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--text);border:2px solid #fff;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+.toggle-row{display:flex;align-items:center;gap:6px}
+.toggle{
+  width:36px;height:20px;border-radius:100px;background:var(--border);
+  cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--accent)}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:16px;height:16px;border-radius:50%;background:#fff;
+  transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle.on::after{transform:translateX(16px)}
+.toggle-label{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* ── Canvas area ── */
+.canvas-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow-md);margin-bottom:14px;
+  display:none;
+}
+.canvas-card.show{display:block}
+
+.canvas-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);
+}
+.canvas-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.canvas-acts{display:flex;gap:6px}
+.c-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 9px;border-radius:5px;transition:color .12s,background .12s;
+}
+.c-btn:hover{color:var(--accent);background:var(--accent-l)}
+
+.canvas-wrap{
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;background:#f0f0f0;
+  background-image:repeating-conic-gradient(#e0e0e0 0% 25%,#f0f0f0 0% 50%) 0/20px 20px;
+  min-height:200px;position:relative;
+}
+canvas#output{
+  max-width:100%;max-height:600px;display:block;
+  border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.12);
+}
+
+/* Processing overlay */
+.processing{
+  position:absolute;inset:0;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(4px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;font-size:13px;color:var(--muted);font-weight:500;
+}
+.processing.show{display:flex}
+.proc-ring{
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.canvas-foot{
+  padding:8px 16px;border-top:1px solid var(--border);background:var(--bg);
+  font-size:11px;color:var(--light);display:flex;gap:14px;flex-wrap:wrap;
+}
+.cv-stat{display:flex;align-items:center;gap:4px}
+.cv-val{font-family:'Outfit',sans-serif;font-weight:600;color:var(--text)}
+
+/* ── Action bar ── */
+.action-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.btn-primary{
+  flex:2;min-width:140px;background:#111318;color:#fff;border:none;
+  border-radius:11px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-primary:hover{opacity:.88}
+.btn-primary:active{transform:scale(.99)}
+.btn-primary:disabled{opacity:.4;cursor:default}
+.btn-sub{
+  flex:1;min-width:100px;background:var(--white);color:var(--muted);
+  border:1.5px solid var(--border);border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:13px;cursor:pointer;transition:all .13s;text-align:center;
+}
+.btn-sub:hover{border-color:var(--text);color:var(--text)}
+.btn-sub.done{border-color:var(--green);color:var(--green)}
+
+/* ── Tips ── */
+.tips-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);
+}
+.tips-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin-bottom:10px}
+.tips-list{display:flex;flex-direction:column;gap:6px}
+.tip-row{
+  display:flex;align-items:center;gap:9px;
+  font-size:12px;color:var(--muted);padding:6px 8px;border-radius:7px;
+}
+.tip-row:nth-child(odd){background:var(--bg)}
+.tip-icon{font-size:14px;flex-shrink:0}
+
+/* Model loading bar */
+.model-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow);
+}
+.model-bar-text{font-size:13px;color:var(--muted);flex:1}
+.model-bar-text strong{color:var(--text)}
+.model-prog{width:120px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0}
+.model-prog-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .5s}
+
+/* Manual region */
+.manual-hint{
+  font-size:11px;color:var(--muted);text-align:center;padding:6px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🙈 顔モザイクツール</h1>
+    <p>写真をアップロードすると、顔を自動検出してモザイクをかけます。</p>
+    <div class="privacy-badge">🔒 すべてブラウザ内処理・サーバー送信なし</div>
+  </div>
+
+  <!-- Model loading indicator -->
+  <div class="model-bar" id="model-bar">
+    <div class="model-bar-text"><strong>AI顔認識モデルを読み込み中…</strong><br>初回のみ少し時間がかかります（約5MB）</div>
+    <div class="model-prog"><div class="model-prog-fill" id="model-prog-fill"></div></div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone"
+    ondragover="event.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="onDrop(event)">
+    <input type="file" id="file-input" accept="image/*" onchange="onFile(this.files[0])">
+    <span class="drop-icon">📷</span>
+    <div class="drop-title">画像をドラッグ＆ドロップ、またはタップして選択</div>
+    <div class="drop-sub">JPG・PNG・WebP 対応<br>処理はすべてブラウザ内で完結します</div>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings-card">
+    <div class="setting-group">
+      <span class="setting-label">モザイク強度：</span>
+      <div class="slider-row">
+        <input type="range" id="sl-intensity" min="4" max="32" value="14" step="2" oninput="onSettingChange(this.value,'intensity')">
+        <span class="slider-val" id="sv-intensity">14</span>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <span class="setting-label">スタイル：</span>
+      <div class="seg" id="style-seg">
+        <button class="seg-btn active" onclick="setStyle('mosaic',this)">モザイク</button>
+        <button class="seg-btn" onclick="setStyle('blur',this)">ぼかし</button>
+        <button class="seg-btn" onclick="setStyle('black',this)">黒塗り</button>
+        <button class="seg-btn" onclick="setStyle('emoji',this)">絵文字</button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <span class="setting-label">顔の余白：</span>
+      <div class="slider-row">
+        <input type="range" id="sl-padding" min="0" max="60" value="20" oninput="onSettingChange(this.value,'padding')">
+        <span class="slider-val" id="sv-padding">20%</span>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle on" id="tog-all" onclick="toggleAll()"></div>
+      <span class="toggle-label">全顔を自動処理</span>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-card" id="canvas-card">
+    <div class="canvas-head">
+      <span class="canvas-label">プレビュー</span>
+      <div class="canvas-acts">
+        <button class="c-btn" onclick="resetCanvas()">↺ リセット</button>
+        <button class="c-btn" id="btn-undo" onclick="undo()">↩ 元に戻す</button>
+      </div>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="output"></canvas>
+      <div class="processing" id="processing">
+        <div class="proc-ring"></div>
+        <span id="proc-text">顔を検出中…</span>
+      </div>
+    </div>
+    <div class="manual-hint" id="manual-hint" style="display:none">
+      💡 見逃した顔は画像上をクリックして手動でモザイクを追加できます
+    </div>
+    <div class="canvas-foot">
+      <div class="cv-stat">検出：<span class="cv-val" id="cv-faces">0</span>件</div>
+      <div class="cv-stat">サイズ：<span class="cv-val" id="cv-size">—</span></div>
+      <div class="cv-stat">処理時間：<span class="cv-val" id="cv-time">—</span></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-bar" id="action-bar" style="display:none">
+    <button class="btn-primary" id="btn-apply" onclick="applyMosaic()">
+      🙈 モザイクを適用する
+    </button>
+    <button class="btn-sub" id="btn-dl" onclick="downloadResult()">⬇ ダウンロード</button>
+    <button class="btn-sub" onclick="clearAll()">🗑 クリア</button>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips-card">
+    <div class="tips-title">使い方・ヒント</div>
+    <div class="tips-list">
+      <div class="tip-row"><span class="tip-icon">📸</span>写真をアップロードすると顔を自動検出してモザイクを適用します</div>
+      <div class="tip-row"><span class="tip-icon">🖱</span>見逃した顔はキャンバス上をクリックして手動でモザイクを追加できます</div>
+      <div class="tip-row"><span class="tip-icon">🎨</span>モザイク・ぼかし・黒塗り・絵文字の4スタイルから選べます</div>
+      <div class="tip-row"><span class="tip-icon">🔒</span>処理はすべてブラウザ内で完結。画像がサーバーに送られることはありません</div>
+      <div class="tip-row"><span class="tip-icon">💡</span>横顔・小さい顔・マスク着用の顔は検出できない場合があります</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Hidden source img -->
+<img id="source-img" style="display:none" crossorigin="anonymous">
+
+<script>
+// ── State ──
+let sourceImg    = null;
+let detections   = [];
+let mosaicStyle  = 'mosaic';
+let intensity    = 14;
+let paddingPct   = 20;
+let autoAll      = true;
+let modelReady   = false;
+let history      = []; // canvas state snapshots
+let manualMode   = false;
+
+// ── Load face-api models ──
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+
+async function loadModels(){
+  const fill = document.getElementById('model-prog-fill');
+  try{
+    fill.style.width = '20%';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    fill.style.width = '60%';
+    await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+    fill.style.width = '100%';
+    modelReady = true;
+    setTimeout(()=>{
+      document.getElementById('model-bar').style.display = 'none';
+    }, 600);
+  }catch(e){
+    // fallback: try without landmarks
+    try{
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      fill.style.width = '100%';
+      modelReady = true;
+      setTimeout(()=>{ document.getElementById('model-bar').style.display = 'none'; },600);
+    }catch(e2){
+      document.getElementById('model-bar').innerHTML = `<div style="font-size:12px;color:#dc2626">⚠ モデルの読み込みに失敗しました。リロードしてください。</div>`;
+    }
+  }
+}
+
+loadModels();
+
+// ── File input ──
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('over');
+  const f = e.dataTransfer.files?.[0];
+  if(f) onFile(f);
+}
+
+function onFile(file){
+  if(!file||!file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('source-img');
+    img.onload = ()=>{
+      sourceImg = img;
+      initCanvas();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('dropzone').style.display = 'none';
+}
+
+// ── Init canvas with source ──
+function initCanvas(){
+  const canvas = document.getElementById('output');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = sourceImg.naturalWidth;
+  canvas.height = sourceImg.naturalHeight;
+  ctx.drawImage(sourceImg, 0, 0);
+  saveHistory();
+
+  document.getElementById('canvas-card').classList.add('show');
+  document.getElementById('action-bar').style.display = 'flex';
+  document.getElementById('cv-size').textContent = `${sourceImg.naturalWidth}×${sourceImg.naturalHeight}`;
+  document.getElementById('canvas-card').scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Enable click-to-mosaic
+  canvas.onclick = onCanvasClick;
+
+  applyMosaic();
+}
+
+// ── Detect and apply ──
+async function applyMosaic(){
+  if(!sourceImg) return;
+  if(!modelReady){ alert('モデルを読み込み中です。しばらくお待ちください。'); return; }
+
+  const btn  = document.getElementById('btn-apply');
+  btn.disabled = true;
+  showProcessing('顔を検出中…');
+  const t0 = performance.now();
+
+  // Reset canvas to original
+  const canvas = document.getElementById('output');
+  const ctx    = canvas.getContext('2d');
+  ctx.drawImage(sourceImg, 0, 0);
+
+  try{
+    // Detect faces
+    const opts = new faceapi.TinyFaceDetectorOptions({inputSize:416, scoreThreshold:0.35});
+    detections = await faceapi.detectAllFaces(document.getElementById('source-img'), opts);
+
+    document.getElementById('cv-faces').textContent = detections.length;
+    document.getElementById('cv-time').textContent  = Math.round(performance.now()-t0)+'ms';
+
+    if(detections.length === 0){
+      showProcessing('顔が検出されませんでした。\n画像をクリックして手動でモザイクを追加できます。', false);
+      setTimeout(hideProcessing, 2500);
+      document.getElementById('manual-hint').style.display='block';
+      btn.disabled = false;
+      return;
+    }
+
+    // Apply mosaic to each face
+    detections.forEach(det=>{
+      const box = det.box;
+      const pad = paddingPct/100;
+      const x   = Math.max(0, box.x    - box.width  * pad);
+      const y   = Math.max(0, box.y    - box.height * pad);
+      const w   = Math.min(canvas.width  - x, box.width  * (1+pad*2));
+      const h   = Math.min(canvas.height - y, box.height * (1+pad*2));
+      applyEffect(ctx, x, y, w, h);
+    });
+
+    saveHistory();
+    document.getElementById('manual-hint').style.display='block';
+
+  }catch(e){
+    console.error(e);
+  }finally{
+    hideProcessing();
+    btn.disabled = false;
+  }
+}
+
+// ── Apply visual effect ──
+function applyEffect(ctx, x, y, w, h, customIntensity){
+  const px = customIntensity || intensity;
+  x=Math.round(x); y=Math.round(y); w=Math.round(w); h=Math.round(h);
+  if(w<=0||h<=0) return;
+
+  if(mosaicStyle === 'mosaic'){
+    // Pixelate
+    const block = Math.max(4, Math.round(px));
+    const imgd  = ctx.getImageData(x, y, w, h);
+    const data  = imgd.data;
+    for(let bx=0;bx<w;bx+=block){
+      for(let by=0;by<h;by+=block){
+        const idx = (by*w+bx)*4;
+        const r=data[idx], g=data[idx+1], b=data[idx+2];
+        for(let dx=0;dx<block&&bx+dx<w;dx++){
+          for(let dy=0;dy<block&&by+dy<h;dy++){
+            const i2=((by+dy)*w+(bx+dx))*4;
+            data[i2]=r; data[i2+1]=g; data[i2+2]=b;
+          }
+        }
+      }
+    }
+    ctx.putImageData(imgd, x, y);
+
+  } else if(mosaicStyle === 'blur'){
+    // Blur via multiple downscale
+    const tmp = document.createElement('canvas');
+    tmp.width=w; tmp.height=h;
+    const tc=tmp.getContext('2d');
+    const factor = Math.max(2, Math.round(px/4));
+    // draw small
+    tc.drawImage(ctx.canvas, x,y,w,h, 0,0, Math.max(1,Math.round(w/factor)), Math.max(1,Math.round(h/factor)));
+    // scale back up blurry
+    tc.imageSmoothingEnabled=true;
+    tc.imageSmoothingQuality='low';
+    tc.drawImage(tmp, 0,0,Math.round(w/factor),Math.round(h/factor), 0,0,w,h);
+    ctx.drawImage(tmp, 0,0,w,h, x,y,w,h);
+
+  } else if(mosaicStyle === 'black'){
+    ctx.fillStyle='#000';
+    ctx.fillRect(x,y,w,h);
+
+  } else if(mosaicStyle === 'emoji'){
+    ctx.fillStyle='rgba(0,0,0,.1)';
+    ctx.fillRect(x,y,w,h);
+    ctx.font=`${Math.round(h*.7)}px serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('😶', x+w/2, y+h/2);
+  }
+}
+
+// ── Click to add manual mosaic ──
+function onCanvasClick(e){
+  if(!sourceImg) return;
+  const canvas = document.getElementById('output');
+  const rect   = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx     = (e.clientX - rect.left) * scaleX;
+  const cy     = (e.clientY - rect.top)  * scaleY;
+
+  // Apply a square mosaic around click point
+  const size = Math.round(Math.max(canvas.width, canvas.height) * 0.12);
+  const x    = Math.max(0, cx - size/2);
+  const y    = Math.max(0, cy - size/2);
+  const w    = Math.min(canvas.width  - x, size);
+  const h    = Math.min(canvas.height - y, size);
+
+  const ctx = canvas.getContext('2d');
+  applyEffect(ctx, x, y, w, h);
+  saveHistory();
+}
+
+// ── History ──
+function saveHistory(){
+  const canvas = document.getElementById('output');
+  history.push(canvas.toDataURL());
+  if(history.length > 20) history.shift();
+}
+
+function undo(){
+  if(history.length < 2){ return; }
+  history.pop();
+  const prev = history[history.length-1];
+  const canvas = document.getElementById('output');
+  const ctx    = canvas.getContext('2d');
+  const img    = new Image();
+  img.onload = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+  img.src = prev;
+}
+
+function resetCanvas(){
+  if(!sourceImg) return;
+  const canvas = document.getElementById('output');
+  const ctx    = canvas.getContext('2d');
+  ctx.drawImage(sourceImg, 0, 0);
+  saveHistory();
+  document.getElementById('cv-faces').textContent = 0;
+}
+
+// ── Settings ──
+function onSettingChange(val, type){
+  if(type==='intensity'){
+    intensity = parseInt(val);
+    document.getElementById('sv-intensity').textContent = val;
+  } else {
+    paddingPct = parseInt(val);
+    document.getElementById('sv-padding').textContent = val+'%';
+  }
+}
+
+function setStyle(s, btn){
+  mosaicStyle = s;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleAll(){
+  autoAll = !autoAll;
+  document.getElementById('tog-all').classList.toggle('on', autoAll);
+}
+
+// ── Processing overlay ──
+function showProcessing(text='処理中…', spin=true){
+  const p = document.getElementById('processing');
+  p.classList.add('show');
+  p.querySelector('.proc-ring').style.display = spin?'block':'none';
+  document.getElementById('proc-text').textContent = text;
+}
+function hideProcessing(){
+  document.getElementById('processing').classList.remove('show');
+}
+
+// ── Download ──
+function downloadResult(){
+  const canvas = document.getElementById('output');
+  const a      = document.createElement('a');
+  a.download   = 'mosaic_result.png';
+  a.href       = canvas.toDataURL('image/png');
+  a.click();
+  const btn = document.getElementById('btn-dl');
+  btn.textContent='✓ ダウンロード完了';btn.classList.add('done');
+  setTimeout(()=>{ btn.textContent='⬇ ダウンロード'; btn.classList.remove('done'); },1800);
+}
+
+// ── Clear ──
+function clearAll(){
+  sourceImg = null;
+  detections = [];
+  history = [];
+  document.getElementById('dropzone').style.display = 'block';
+  document.getElementById('canvas-card').classList.remove('show');
+  document.getElementById('action-bar').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('manual-hint').style.display = 'none';
+  const canvas = document.getElementById('output');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+}
+</script>
+</body>
+</html>
