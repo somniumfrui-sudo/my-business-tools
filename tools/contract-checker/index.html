@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>契約書・リスクワード・チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+
+  /* risk levels */
+  --r1-bg:rgba(220,38,38,.09);   --r1-border:rgba(220,38,38,.3);   --r1-text:#991b1b;   --r1-chip:#dc2626;
+  --r2-bg:rgba(217,119,6,.09);   --r2-border:rgba(217,119,6,.3);   --r2-text:#92400e;   --r2-chip:#d97706;
+  --r3-bg:rgba(37,99,235,.08);   --r3-border:rgba(37,99,235,.3);   --r3-text:#1e3a8a;   --r3-chip:#2563eb;
+  --r4-bg:rgba(5,150,105,.08);   --r4-border:rgba(5,150,105,.3);   --r4-text:#065f46;   --r4-chip:#059669;
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:1040px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+.disclaimer{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--light);
+  background:var(--white);border:1px solid var(--border);
+  border-radius:100px;padding:4px 12px;margin-top:8px;
+}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+
+/* ── Editor card ── */
+.editor-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.editor-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-wrap:wrap;gap:6px;
+}
+.editor-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light)}
+.editor-acts{display:flex;gap:5px}
+.e-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 8px;border-radius:5px;transition:color .12s,background .12s;
+}
+.e-btn:hover{color:var(--text);background:var(--border)}
+.e-btn.done{color:#059669}
+
+/* Input / Output toggle */
+.view-tabs{display:flex;gap:4px}
+.vtab{
+  font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.vtab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+#contract-input{
+  width:100%;min-height:440px;background:var(--white);border:none;outline:none;
+  font-family:'Noto Serif JP',serif;font-size:13.5px;font-weight:400;
+  color:var(--text);padding:16px;resize:vertical;line-height:2.0;
+}
+#contract-input::placeholder{color:var(--light);font-family:'Noto Sans JP',sans-serif;font-size:13px}
+
+/* Highlighted output */
+#highlight-view{
+  display:none;min-height:440px;padding:16px;
+  font-family:'Noto Serif JP',serif;font-size:13.5px;line-height:2.0;
+  color:var(--text);overflow-y:auto;
+}
+#highlight-view.show{display:block}
+
+/* Line-level highlight */
+.hl-line{
+  display:block;padding:2px 6px;border-radius:4px;margin:1px 0;
+  border-left:3px solid transparent;
+  transition:background .15s;
+}
+.hl-line:hover{filter:brightness(.97)}
+.hl-line.r1{background:var(--r1-bg);border-left-color:var(--r1-chip)}
+.hl-line.r2{background:var(--r2-bg);border-left-color:var(--r2-chip)}
+.hl-line.r3{background:var(--r3-bg);border-left-color:var(--r3-chip)}
+.hl-line.r4{background:var(--r4-bg);border-left-color:var(--r4-chip)}
+
+/* Word highlight within line */
+.hw{font-weight:700;border-radius:2px;padding:0 1px;cursor:help;border-bottom:1.5px solid}
+.hw.r1{color:var(--r1-text);background:rgba(220,38,38,.14);border-color:var(--r1-chip)}
+.hw.r2{color:var(--r2-text);background:rgba(217,119,6,.14);border-color:var(--r2-chip)}
+.hw.r3{color:var(--r3-text);background:rgba(37,99,235,.12);border-color:var(--r3-chip)}
+.hw.r4{color:var(--r4-text);background:rgba(5,150,105,.12);border-color:var(--r4-chip)}
+
+.editor-foot{
+  padding:7px 16px 8px;border-top:1px solid var(--border);
+  background:var(--bg);font-size:10px;color:var(--light);
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+
+/* ── Analyze button ── */
+.btn-analyze{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:700;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;margin-top:12px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-analyze:hover{opacity:.88}
+.btn-analyze:active{transform:scale(.99)}
+.btn-analyze:disabled{opacity:.4;cursor:default}
+
+/* ── Sidebar ── */
+.sidebar{display:flex;flex-direction:column;gap:10px}
+
+/* Score card */
+.score-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px;box-shadow:var(--shadow-md);
+}
+.score-ring-wrap{position:relative;width:76px;height:76px;margin:0 auto 10px}
+.score-svg{width:76px;height:76px;transform:rotate(-90deg)}
+.sc-bg  {fill:none;stroke:#f0f0f0;stroke-width:7}
+.sc-fill{fill:none;stroke-width:7;stroke-linecap:round;stroke-dasharray:204;stroke-dashoffset:204;transition:stroke-dashoffset .7s ease,stroke .4s}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:var(--text);line-height:1}
+.score-max{font-size:9px;color:var(--light)}
+.score-label{font-size:12px;font-weight:600;color:var(--muted);text-align:center;margin-bottom:12px}
+
+/* Severity counts */
+.sev-counts{display:flex;flex-direction:column;gap:5px}
+.sev-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-radius:7px;font-size:12px;font-weight:500;
+  cursor:pointer;transition:filter .12s;
+}
+.sev-row:hover{filter:brightness(.96)}
+.sev-row.r1{background:var(--r1-bg);color:var(--r1-text)}
+.sev-row.r2{background:var(--r2-bg);color:var(--r2-text)}
+.sev-row.r3{background:var(--r3-bg);color:var(--r3-text)}
+.sev-row.r4{background:var(--r4-bg);color:var(--r4-text)}
+.sev-count{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800}
+
+/* Found terms list */
+.terms-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;box-shadow:var(--shadow);
+}
+.terms-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--light);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.terms-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.term-item{
+  padding:9px 13px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:8px;
+  cursor:pointer;transition:background .12s;
+}
+.term-item:last-child{border-bottom:none}
+.term-item:hover{background:var(--bg)}
+.term-chip{
+  font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 6px;border-radius:4px;flex-shrink:0;color:#fff;margin-top:1px;
+}
+.term-info{flex:1;min-width:0}
+.term-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.term-desc{font-size:11px;color:var(--light);line-height:1.45}
+.term-empty{padding:16px;text-align:center;font-size:12px;color:var(--light)}
+
+/* Legend */
+.legend-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
+}
+.legend-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:9px}
+.legend-list{display:flex;flex-direction:column;gap:5px}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);font-weight:500}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* Copy/Export */
+.copy-bar{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:11px 14px;
+  display:flex;gap:7px;box-shadow:var(--shadow);
+}
+.act-btn{
+  flex:1;font-size:11px;font-weight:600;padding:8px;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .12s;text-align:center;
+}
+.act-btn:hover{border-color:var(--text);color:var(--text)}
+.act-btn.primary{background:var(--text);border-color:var(--text);color:#fff}
+.act-btn.primary:hover{opacity:.88}
+.act-btn.done{border-color:#059669;color:#059669}
+
+/* Loading */
+.loading-overlay{
+  display:none;position:absolute;inset:0;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(3px);
+  align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  font-size:13px;color:var(--muted);z-index:10;border-radius:16px;
+}
+.loading-overlay.show{display:flex}
+.loading-ring{width:36px;height:36px;border:3px solid var(--border);border-top-color:#111318;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📄 契約書・リスクワード・チェッカー</h1>
+    <p>契約書のドラフトを貼り付けると、見落としがちな重要条項と危険な表現をハイライトします。</p>
+    <div class="disclaimer">⚠ 本ツールは参考情報の提供のみが目的です。法的判断は必ず弁護士にご相談ください。</div>
+  </div>
+
+  <div class="layout">
+
+    <!-- Editor -->
+    <div style="position:relative">
+      <div class="editor-card" id="editor-card">
+        <div class="editor-head">
+          <span class="editor-label">契約書テキスト</span>
+          <div class="editor-acts">
+            <div class="view-tabs">
+              <button class="vtab active" id="vtab-input" onclick="switchView('input',this)">入力</button>
+              <button class="vtab" id="vtab-hl" onclick="switchView('hl',this)">ハイライト</button>
+            </div>
+            <button class="e-btn" onclick="pasteText()">貼り付け</button>
+            <button class="e-btn" onclick="loadSample()">サンプル</button>
+            <button class="e-btn" onclick="clearAll()">クリア</button>
+          </div>
+        </div>
+
+        <textarea id="contract-input"
+          placeholder="ここに契約書のテキストを貼り付けてください。&#10;&#10;例：&#10;第1条（目的）本契約は…&#10;第5条（自動更新）本契約の有効期間は1年とし、期間満了の1ヶ月前までに…"
+          oninput="liveCheck()"></textarea>
+
+        <div id="highlight-view"></div>
+
+        <div class="editor-foot">
+          <span id="foot-chars">0文字</span>
+          <span id="foot-lines">0行</span>
+          <span id="foot-hits" style="color:var(--r1-text)">検出 0件</span>
+        </div>
+      </div>
+
+      <!-- Loading overlay -->
+      <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-ring"></div>
+        AIが契約書を精査中...
+      </div>
+
+      <button class="btn-analyze" id="btn-analyze" onclick="aiAnalyze()">
+        🤖 AIで詳細リスク分析する
+      </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Score -->
+      <div class="score-card">
+        <div class="score-ring-wrap">
+          <svg class="score-svg" viewBox="0 0 76 76">
+            <circle class="sc-bg"   cx="38" cy="38" r="30"/>
+            <circle class="sc-fill" id="sc-fill" cx="38" cy="38" r="30"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="score-num">—</div>
+            <div class="score-max">/100</div>
+          </div>
+        </div>
+        <div class="score-label" id="score-label">テキストを貼り付けてください</div>
+        <div class="sev-counts">
+          <div class="sev-row r1" onclick="jumpToLevel(1)">
+            <span>🔴 要注意（高リスク）</span>
+            <span class="sev-count" id="cnt-r1">0</span>
+          </div>
+          <div class="sev-row r2" onclick="jumpToLevel(2)">
+            <span>🟠 注意（中リスク）</span>
+            <span class="sev-count" id="cnt-r2">0</span>
+          </div>
+          <div class="sev-row r3" onclick="jumpToLevel(3)">
+            <span>🔵 確認推奨</span>
+            <span class="sev-count" id="cnt-r3">0</span>
+          </div>
+          <div class="sev-row r4" onclick="jumpToLevel(4)">
+            <span>🟢 重要条項（存在確認）</span>
+            <span class="sev-count" id="cnt-r4">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Found terms -->
+      <div class="terms-card">
+        <div class="terms-head">
+          <span>検出されたキーワード</span>
+          <span id="terms-total" style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text)">0件</span>
+        </div>
+        <div class="terms-list" id="terms-list">
+          <div class="term-empty">テキストを入力すると検出結果が表示されます</div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend-card">
+        <div class="legend-title">ハイライト凡例</div>
+        <div class="legend-list">
+          <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>要注意：片務的・不利な条件</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>注意：見落としがちな条件</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>確認：重要な権利・義務</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div>重要条項の存在確認</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="copy-bar">
+        <button class="act-btn primary" onclick="switchView('hl',document.getElementById('vtab-hl'))">👁 ハイライト表示</button>
+        <button class="act-btn" id="btn-copy" onclick="copyReport()">📋 レポート</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ── Risk keyword database ──
+// ══════════════════════════════════════════════
+const RISK_WORDS = [
+  // ── レベル1: 要注意（赤）──
+  {w:'自動更新',      r:1, desc:'契約が自動的に更新される条項。解約のタイミングを見落とすと費用が継続します。'},
+  {w:'自動的に更新',  r:1, desc:'契約が自動的に更新される条項。'},
+  {w:'損害賠償',      r:1, desc:'損害賠償の上限・範囲が明確か確認が必要です。'},
+  {w:'損害賠償額',    r:1, desc:'損害賠償額の算定方法・上限を必ず確認してください。'},
+  {w:'無制限',        r:1, desc:'制限のない義務・責任が発生します。リスクが非常に高い表現です。'},
+  {w:'いかなる場合も',r:1, desc:'例外なく適用される条件。非常に強い拘束力があります。'},
+  {w:'一切の責任を負わない', r:1, desc:'相手方の責任が全面免除される条項。自社リスクが増大します。'},
+  {w:'責任を負わない',r:1, desc:'責任免除条項。どの範囲が免除されるか確認が必要です。'},
+  {w:'不可抗力',      r:1, desc:'不可抗力の定義範囲を確認してください。相手方に有利に設定されている場合があります。'},
+  {w:'知的財産権の譲渡', r:1, desc:'成果物や発明の知的財産権が相手方に移転します。'},
+  {w:'独占的',        r:1, desc:'独占的な権利・義務が発生します。他社との取引が制限される可能性があります。'},
+  {w:'専属的',        r:1, desc:'専属的な合意。他の選択肢が大きく制限されます。'},
+  {w:'取消不能',      r:1, desc:'一度合意すると撤回できない条件です。'},
+  {w:'即時解除',      r:1, desc:'相手方が即時に契約を解除できる条件を確認してください。'},
+  {w:'違約金',        r:1, desc:'違約金の金額・発生条件を明確に確認する必要があります。'},
+
+  // ── レベル2: 注意（橙）──
+  {w:'自動継続',      r:2, desc:'自動更新と同様の効果。更新停止の手続きを確認してください。'},
+  {w:'合意管轄',      r:2, desc:'紛争時の裁判管轄地が定められています。自社に不利な地域でないか確認を。'},
+  {w:'専属的合意管轄',r:2, desc:'特定の裁判所にのみ管轄権があります。'},
+  {w:'準拠法',        r:2, desc:'適用される法律が指定されています。日本法以外の場合は注意が必要です。'},
+  {w:'秘密保持',      r:2, desc:'秘密保持義務の範囲・期間・対象を確認してください。'},
+  {w:'守秘義務',      r:2, desc:'秘密保持義務の内容を詳細に確認してください。'},
+  {w:'競業避止',      r:2, desc:'契約終了後も同業他社への転職・起業が制限される可能性があります。'},
+  {w:'競業禁止',      r:2, desc:'同業他社との取引・活動が禁止されます。範囲・期間を確認してください。'},
+  {w:'再委託',        r:2, desc:'業務の再委託（外注）に制限がある場合があります。'},
+  {w:'善管注意義務',  r:2, desc:'専門家として高い注意義務が課せられます。標準以上の責任が生じます。'},
+  {w:'連帯保証',      r:2, desc:'主たる債務者と連帯して保証する義務が生じます。リスクが高い保証形式です。'},
+  {w:'担保',          r:2, desc:'担保提供の条件・範囲を確認してください。'},
+  {w:'抵当',          r:2, desc:'不動産などが担保に取られます。'},
+  {w:'履行遅延',      r:2, desc:'履行遅延時のペナルティ・損害賠償規定を確認してください。'},
+  {w:'遅延損害金',    r:2, desc:'遅延損害金の利率・起算点を確認してください。'},
+  {w:'優先交渉権',    r:2, desc:'相手方に優先的な交渉権が与えられています。'},
+  {w:'先買権',        r:2, desc:'相手方に先買権が認められています。第三者への譲渡が制限されます。'},
+
+  // ── レベル3: 確認推奨（青）──
+  {w:'解除権',        r:3, desc:'どのような場合に契約解除できるか確認してください。'},
+  {w:'解約条件',      r:3, desc:'解約の手続き・条件・通知期間を確認してください。'},
+  {w:'解約通知',      r:3, desc:'解約の通知方法・期限を確認してください。'},
+  {w:'期間満了',      r:3, desc:'契約期間終了後の取扱いを確認してください。'},
+  {w:'期限の利益',    r:3, desc:'期限の利益喪失条項の内容を確認してください。'},
+  {w:'著作権',        r:3, desc:'著作権の帰属・利用範囲を確認してください。'},
+  {w:'著作権の帰属',  r:3, desc:'成果物の著作権が誰に帰属するか確認が必要です。'},
+  {w:'特許',          r:3, desc:'特許権の取扱い・帰属を確認してください。'},
+  {w:'免責',          r:3, desc:'免責の範囲・条件を確認してください。'},
+  {w:'保証',          r:3, desc:'保証の内容・期間・範囲を確認してください。'},
+  {w:'瑕疵担保',      r:3, desc:'瑕疵担保責任の内容・期間を確認してください。'},
+  {w:'契約変更',      r:3, desc:'契約内容の変更手続きを確認してください。相手方が一方的に変更できる条項に注意。'},
+  {w:'一方的に変更',  r:3, desc:'相手方が一方的に条件変更できる可能性があります。'},
+  {w:'費用負担',      r:3, desc:'費用負担の範囲・方法を確認してください。'},
+  {w:'反社会的勢力',  r:3, desc:'反社会的勢力排除条項の有無を確認してください（あることが望ましい）。'},
+  {w:'個人情報',      r:3, desc:'個人情報の取扱い・利用目的・第三者提供について確認してください。'},
+  {w:'支払条件',      r:3, desc:'支払期限・方法・通貨を確認してください。'},
+  {w:'検収',          r:3, desc:'検収条件・期間・基準を確認してください。'},
+
+  // ── レベル4: 重要条項の存在確認（緑）──
+  {w:'本契約の目的',  r:4, desc:'契約目的が明確に定義されています。'},
+  {w:'有効期間',      r:4, desc:'契約の有効期間が定められています。開始日・終了日を確認してください。'},
+  {w:'支払方法',      r:4, desc:'代金の支払方法が定められています。'},
+  {w:'成果物',        r:4, desc:'成果物の定義・仕様・納期を確認してください。'},
+  {w:'納期',          r:4, desc:'納期・スケジュールが定められています。'},
+  {w:'協議',          r:4, desc:'協議による解決規定が含まれています（紛争解決の第一ステップ）。'},
+  {w:'誠実に協議',    r:4, desc:'誠実協議義務が定められています。'},
+  {w:'裁判外紛争解決',r:4, desc:'ADR（裁判外紛争解決）条項が含まれています。'},
+  {w:'仲裁',          r:4, desc:'仲裁による紛争解決が定められています。仲裁機関・準拠ルールを確認してください。'},
+  {w:'完全合意',      r:4, desc:'本契約が当事者間の完全な合意であることを示す条項です。'},
+  {w:'分離可能性',    r:4, desc:'一部条項が無効でも他の条項が有効であることを定めた条項です。'},
+];
+
+let currentView = 'input';
+let lastHits = [];
+
+// ── Live check ──
+function liveCheck(){
+  const text = document.getElementById('contract-input').value;
+  document.getElementById('foot-chars').textContent = text.length.toLocaleString() + '文字';
+  document.getElementById('foot-lines').textContent = (text ? text.split('\n').length : 0) + '行';
+
+  const hits = findHits(text);
+  lastHits = hits;
+  updateScore(hits);
+  renderTermsList(hits);
+  document.getElementById('foot-hits').textContent = '検出 ' + hits.length + '件';
+
+  if(currentView === 'hl') buildHighlight(text, hits);
+}
+
+// ── Find hits ──
+function findHits(text){
+  const found = [];
+  const seen  = new Set();
+  const lines = text.split('\n');
+
+  RISK_WORDS.forEach(rw=>{
+    let matchLines = [];
+    lines.forEach((line,i)=>{
+      if(line.includes(rw.w)){
+        matchLines.push(i);
+      }
+    });
+    if(matchLines.length > 0 && !seen.has(rw.w)){
+      seen.add(rw.w);
+      found.push({...rw, lines:matchLines, count:matchLines.length});
+    }
+  });
+  return found.sort((a,b)=>a.r-b.r);
+}
+
+// ── Score ──
+const CIRC = 2*Math.PI*30; // r=30 → ≈188.5
+function updateScore(hits){
+  const c1=hits.filter(h=>h.r===1).length;
+  const c2=hits.filter(h=>h.r===2).length;
+  const c3=hits.filter(h=>h.r===3).length;
+  const c4=hits.filter(h=>h.r===4).length;
+
+  document.getElementById('cnt-r1').textContent = c1;
+  document.getElementById('cnt-r2').textContent = c2;
+  document.getElementById('cnt-r3').textContent = c3;
+  document.getElementById('cnt-r4').textContent = c4;
+
+  const text = document.getElementById('contract-input').value.trim();
+  if(!text){
+    document.getElementById('sc-fill').style.strokeDashoffset = CIRC;
+    document.getElementById('score-num').textContent = '—';
+    document.getElementById('score-label').textContent = 'テキストを貼り付けてください';
+    return;
+  }
+
+  const penalty = c1*15 + c2*8 + c3*4;
+  const score   = Math.max(0, Math.min(100, 100-penalty));
+  const offset  = CIRC*(1-score/100);
+  const color   = score>=80?'#059669':score>=60?'#2563eb':score>=40?'#d97706':'#dc2626';
+
+  const fill = document.getElementById('sc-fill');
+  fill.style.strokeDashoffset = offset;
+  fill.style.stroke = color;
+  document.getElementById('score-num').textContent = score;
+  document.getElementById('score-label').textContent =
+    score>=80?'✅ リスク少':score>=60?'⚠ 要確認':score>=40?'🔶 要修正':'🚨 高リスク';
+}
+
+// ── Render terms list ──
+const CHIP_COLORS = ['','#dc2626','#d97706','#2563eb','#059669'];
+const CHIP_LABELS = ['','要注意','注意','確認','重要条項'];
+function renderTermsList(hits){
+  document.getElementById('terms-total').textContent = hits.length + '件';
+  if(!hits.length){
+    document.getElementById('terms-list').innerHTML = '<div class="term-empty">キーワードが検出されませんでした</div>';
+    return;
+  }
+  document.getElementById('terms-list').innerHTML = hits.map(h=>`
+    <div class="term-item" onclick="scrollToWord('${escAttr(h.w)}')">
+      <span class="term-chip" style="background:${CHIP_COLORS[h.r]}">${CHIP_LABELS[h.r]}</span>
+      <div class="term-info">
+        <div class="term-name">${escHtml(h.w)} <span style="font-size:10px;color:var(--light);font-weight:400">(${h.count}箇所)</span></div>
+        <div class="term-desc">${escHtml(h.desc)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Highlight view ──
+function buildHighlight(text, hits){
+  const lines  = text.split('\n');
+  const lineMap = {}; // lineIdx → max risk level
+  hits.forEach(h=>{
+    h.lines.forEach(li=>{
+      lineMap[li] = Math.min(lineMap[li]||99, h.r);
+    });
+  });
+
+  // Build word→risk map for inline highlighting
+  const wordRisk = {};
+  hits.forEach(h=>{ wordRisk[h.w] = h.r; });
+  const allWords = Object.keys(wordRisk).sort((a,b)=>b.length-a.length); // longest first
+
+  const html = lines.map((line, i)=>{
+    const lvl = lineMap[i];
+    let content = escHtml(line);
+
+    // Inline word highlights
+    allWords.forEach(w=>{
+      const r   = wordRisk[w];
+      const esc = escHtml(w);
+      const re  = new RegExp(esc.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,'\\$&'),'g');
+      content = content.replace(re,
+        `<span class="hw r${r}" title="${escHtml(CHIP_LABELS[r])}：${escHtml(RISK_WORDS.find(rw=>rw.w===w)?.desc||'')}">${esc}</span>`);
+    });
+
+    if(lvl){
+      return `<span class="hl-line r${lvl}">${content||'&nbsp;'}</span>`;
+    }
+    return `<span class="hl-line">${content||'&nbsp;'}</span>`;
+  }).join('');
+
+  document.getElementById('highlight-view').innerHTML = html;
+}
+
+// ── Switch view ──
+function switchView(v, btn){
+  currentView = v;
+  document.querySelectorAll('.vtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const inp = document.getElementById('contract-input');
+  const hl  = document.getElementById('highlight-view');
+
+  if(v === 'input'){
+    inp.style.display = ''; hl.classList.remove('show');
+  } else {
+    inp.style.display = 'none'; hl.classList.add('show');
+    buildHighlight(inp.value, lastHits);
+  }
+}
+
+// ── AI Analysis ──
+async function aiAnalyze(){
+  const text = document.getElementById('contract-input').value.trim();
+  if(!text){ alert('契約書テキストを入力してください'); return; }
+
+  const btn = document.getElementById('btn-analyze');
+  btn.disabled = true;
+  document.getElementById('loading-overlay').classList.add('show');
+
+  try{
+    const summary = await callClaude(text);
+    showAiResult(summary);
+  }catch(e){
+    alert('AI分析に失敗しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+}
+
+async function callClaude(text){
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1200,
+      system:`あなたは契約書のリスク分析を行う法律の専門家です。契約書のテキストを読んで、リスクのある条項・不利な条件・見落としがちな重要点を日本語で簡潔に指摘します。必ず「本ツールは参考情報のみを目的とし、法的アドバイスではない」旨を末尾に記載してください。`,
+      messages:[{role:'user',content:`以下の契約書を分析してください。
+
+${text.slice(0,4000)}
+
+以下のJSON形式で返答してください：
+{
+  "overall": "全体評価（2文程度）",
+  "high_risks": ["高リスク項目1","高リスク項目2"],
+  "medium_risks": ["中リスク項目1","中リスク項目2"],
+  "missing": ["欠けている可能性がある重要条項1","重要条項2"],
+  "advice": "総合アドバイス（2〜3文）"
+}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+function showAiResult(data){
+  // Show as modal-like overlay at bottom of terms list
+  const el = document.getElementById('terms-list');
+  const sections = [
+    {title:'🔴 高リスク項目', items:data.high_risks||[], color:'#dc2626'},
+    {title:'🟠 中リスク項目', items:data.medium_risks||[], color:'#d97706'},
+    {title:'📋 欠けている可能性のある条項', items:data.missing||[], color:'#2563eb'},
+  ];
+  const html = `
+    <div style="padding:12px 14px;border-top:2px solid #111318;background:#f0f2f5">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#374151;margin-bottom:10px">🤖 AI詳細分析</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:10px;line-height:1.6">${escHtml(data.overall||'')}</div>
+      ${sections.map(s=>s.items.length?`
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;color:${s.color};margin-bottom:4px">${s.title}</div>
+          ${s.items.map(i=>`<div style="font-size:11px;color:#374151;padding:3px 0;border-bottom:1px solid #e4e8ef;line-height:1.5">• ${escHtml(i)}</div>`).join('')}
+        </div>`:'').join('')}
+      <div style="font-size:11px;color:#6b7280;margin-top:8px;padding:8px;background:#fff;border-radius:6px;line-height:1.6">${escHtml(data.advice||'')}</div>
+      <div style="font-size:10px;color:#b0b7c3;margin-top:6px">※本分析は参考情報のみを目的とします。法的判断は弁護士にご相談ください。</div>
+    </div>`;
+  el.insertAdjacentHTML('beforeend', html);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── Helpers ──
+function scrollToWord(word){
+  switchView('hl', document.getElementById('vtab-hl'));
+  setTimeout(()=>{
+    const spans = document.querySelectorAll('.hw');
+    for(const sp of spans){
+      if(sp.textContent === word){
+        sp.scrollIntoView({behavior:'smooth',block:'center'});
+        sp.style.outline = '2px solid #111318';
+        setTimeout(()=>sp.style.outline='',2000);
+        break;
+      }
+    }
+  },100);
+}
+
+function jumpToLevel(level){
+  switchView('hl', document.getElementById('vtab-hl'));
+  setTimeout(()=>{
+    const el = document.querySelector(`.hl-line.r${level}`);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
+}
+
+async function pasteText(){
+  try{
+    const t = await navigator.clipboard.readText();
+    document.getElementById('contract-input').value = t;
+    liveCheck();
+  }catch(e){ document.getElementById('contract-input').focus(); }
+}
+
+function clearAll(){
+  document.getElementById('contract-input').value = '';
+  document.getElementById('highlight-view').innerHTML = '';
+  switchView('input', document.getElementById('vtab-input'));
+  liveCheck();
+}
+
+function loadSample(){
+  document.getElementById('contract-input').value = `業務委託契約書
+
+第１条（目的）
+本契約は、甲（委託者）が乙（受託者）に対して、下記の業務を委託することを目的とする。
+
+第２条（有効期間）
+本契約の有効期間は、契約締結日より１年間とする。ただし、期間満了の１ヶ月前までにいずれかの当事者から書面による解約通知がない場合には、自動更新されるものとし、以後も同様とする。
+
+第３条（業務内容）
+乙は、甲から委託された業務を善管注意義務をもって誠実に遂行するものとする。成果物の著作権は甲に帰属するものとする。
+
+第４条（報酬及び支払条件）
+甲は、乙に対して月額金○○万円を毎月末日までに支払うものとする。支払いが遅延した場合には、遅延損害金として年利14.6%を付加するものとする。
+
+第５条（秘密保持）
+乙は、本契約の履行にあたり知得した甲の秘密情報を第三者に開示してはならない。本条の義務は契約終了後３年間継続する。
+
+第６条（競業禁止）
+乙は、本契約終了後２年間、甲と競合する業務を行ってはならない。
+
+第７条（損害賠償）
+乙が本契約に違反した場合、甲に生じた一切の損害を賠償するものとする。ただし、甲は、いかなる場合も損害賠償責任を負わないものとする。
+
+第８条（合意管轄）
+本契約に関する紛争については、○○地方裁判所を専属的合意管轄とする。
+
+第９条（反社会的勢力の排除）
+両当事者は、反社会的勢力でないことを表明・保証する。`;
+  liveCheck();
+}
+
+function copyReport(){
+  const hits = lastHits;
+  if(!hits.length){ alert('先にチェックを実行してください'); return; }
+  const lines = [
+    '■ 契約書リスクチェックレポート',
+    `検出件数：${hits.length}件`,
+    '',
+    ...hits.map(h=>`[${['','要注意','注意','確認','重要条項'][h.r]}] ${h.w}\n  → ${h.desc}`)
+  ];
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent='✓ コピー済み';btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 レポート';btn.classList.remove('done'); },1500);
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;') }
+</script>
+</body>
+</html>
