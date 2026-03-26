@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>賞味期限リマインダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f5f7fa;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --green:#059669;
+  --green-l:rgba(5,150,105,.08);
+  --yellow:#d97706;
+  --yellow-l:rgba(217,119,6,.08);
+  --red:#dc2626;
+  --red-l:rgba(220,38,38,.08);
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:32px 16px 100px;
+}
+.wrap{max-width:540px;margin:0 auto}
+
+/* ── Alert banner ── */
+.alert-banner{
+  border-radius:14px;padding:14px 18px;margin-bottom:14px;
+  display:none;animation:slideDown .35s ease;
+}
+.alert-banner.show{display:flex;align-items:flex-start;gap:10px}
+.alert-banner.urgent{background:var(--red-l);border:1.5px solid rgba(220,38,38,.25)}
+.alert-banner.warning{background:var(--yellow-l);border:1.5px solid rgba(217,119,6,.25)}
+.alert-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.alert-body{flex:1}
+.alert-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.alert-detail{font-size:12px;color:var(--muted);line-height:1.6}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:3px;
+}
+.header p{font-size:13px;color:var(--muted)}
+
+/* ── Stats bar ── */
+.stats-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:8px;margin-bottom:12px;
+}
+.stat-box{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:11px;padding:11px 10px;text-align:center;box-shadow:var(--shadow);
+  cursor:pointer;transition:transform .12s;
+}
+.stat-box:hover{transform:translateY(-1px)}
+.stat-val{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  line-height:1;margin-bottom:2px;
+}
+.stat-val.red{color:var(--red)}
+.stat-val.yellow{color:var(--yellow)}
+.stat-val.green{color:var(--green)}
+.stat-label{font-size:9px;color:var(--light);font-weight:500;letter-spacing:.03em}
+
+/* ── Add form ── */
+.add-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:14px;padding:16px;
+  box-shadow:var(--shadow-md);margin-bottom:12px;
+}
+.add-row{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+
+.field{flex:1;min-width:0}
+.field label{font-size:11px;font-weight:600;color:var(--light);display:block;margin-bottom:4px;letter-spacing:.04em}
+.field input,.field select{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  padding:8px 10px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.field input:focus,.field select:focus{
+  border-color:var(--accent);background:var(--white);
+}
+.field input::placeholder{color:var(--light)}
+.field select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;
+}
+
+.btn-add{
+  background:var(--accent);color:#fff;border:none;
+  border-radius:8px;font-family:'Outfit',sans-serif;
+  font-size:13px;font-weight:700;padding:9px 18px;cursor:pointer;
+  align-self:flex-end;flex-shrink:0;white-space:nowrap;
+  transition:opacity .13s,transform .1s;
+}
+.btn-add:hover{opacity:.9}
+.btn-add:active{transform:scale(.98)}
+
+/* Quick presets */
+.presets{display:flex;flex-wrap:wrap;gap:4px}
+.preset{
+  font-size:11px;padding:3px 9px;border-radius:100px;
+  border:1px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Filter bar ── */
+.filter-bar{
+  display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;
+}
+.f-btn{
+  font-size:11px;font-weight:600;padding:4px 11px;border-radius:100px;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.f-btn:hover{border-color:var(--text);color:var(--text)}
+.f-btn.active{background:var(--text);border-color:var(--text);color:#fff}
+.sort-btn{
+  margin-left:auto;font-size:11px;font-weight:500;padding:4px 11px;
+  border-radius:100px;border:1.5px solid var(--border);background:var(--white);
+  color:var(--muted);cursor:pointer;transition:all .12s;
+}
+.sort-btn:hover{border-color:var(--text);color:var(--text)}
+
+/* ── Item list ── */
+.item-list{display:flex;flex-direction:column;gap:7px}
+
+.item-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:var(--shadow);
+  transition:transform .12s,box-shadow .12s;
+  animation:itemIn .2s ease both;
+}
+@keyframes itemIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.item-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.item-card.expired{border-color:rgba(220,38,38,.25);background:var(--red-l)}
+.item-card.urgent {border-color:rgba(220,38,38,.2); background:rgba(220,38,38,.04)}
+.item-card.warning{border-color:rgba(217,119,6,.2);  background:rgba(217,119,6,.04)}
+.item-card.fresh  {border-color:rgba(5,150,105,.15); background:rgba(5,150,105,.03)}
+
+/* Status indicator */
+.item-status{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.expired-dot {background:var(--red);   box-shadow:0 0 5px rgba(220,38,38,.4)}
+.urgent-dot  {background:var(--red);   animation:blink 1.2s ease-in-out infinite}
+.warning-dot {background:var(--yellow)}
+.fresh-dot   {background:var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Category icon */
+.item-icon{font-size:22px;flex-shrink:0;line-height:1}
+
+/* Item info */
+.item-info{flex:1;min-width:0}
+.item-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-date-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--light)}
+.item-date{font-family:'Outfit',sans-serif;font-weight:500}
+
+/* Days badge */
+.days-badge{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;
+  padding:3px 10px;border-radius:100px;flex-shrink:0;white-space:nowrap;
+}
+.badge-expired{background:var(--red-l);   color:var(--red)}
+.badge-urgent {background:var(--red-l);   color:var(--red)}
+.badge-warning{background:var(--yellow-l);color:var(--yellow)}
+.badge-fresh  {background:var(--green-l); color:var(--green)}
+
+/* Delete btn */
+.del-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--light);font-size:16px;padding:3px 4px;
+  border-radius:5px;flex-shrink:0;transition:color .12s,background .12s;
+}
+.del-btn:hover{color:var(--red);background:var(--red-l)}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:36px;color:var(--light);font-size:13px;
+}
+.empty-icon{font-size:36px;display:block;margin-bottom:8px;opacity:.4}
+
+/* ── Notification permission ── */
+.notif-card{
+  background:var(--yellow-l);border:1px solid rgba(217,119,6,.25);
+  border-radius:12px;padding:12px 16px;margin-bottom:12px;
+  display:none;align-items:center;gap:10px;font-size:12px;
+}
+.notif-card.show{display:flex}
+.btn-notif{
+  margin-left:auto;background:var(--yellow);color:#fff;border:none;
+  border-radius:7px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;
+  padding:6px 12px;cursor:pointer;flex-shrink:0;transition:opacity .12s;
+}
+.btn-notif:hover{opacity:.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Alert banner -->
+  <div class="alert-banner" id="alert-banner">
+    <span class="alert-icon" id="alert-icon">⚠️</span>
+    <div class="alert-body">
+      <div class="alert-title" id="alert-title">—</div>
+      <div class="alert-detail" id="alert-detail">—</div>
+    </div>
+  </div>
+
+  <!-- Notification permission -->
+  <div class="notif-card" id="notif-card">
+    <span>🔔</span>
+    <span>ブラウザ通知を許可すると、期限が近い食品をお知らせできます</span>
+    <button class="btn-notif" onclick="requestNotif()">許可する</button>
+  </div>
+
+  <div class="header">
+    <h1>🥗 賞味期限リマインダー</h1>
+    <p>食品名と日付を登録するだけ。開くたびに期限チェック。</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-box" onclick="setFilter('expired')">
+      <div class="stat-val red"  id="cnt-expired">0</div>
+      <div class="stat-label">期限切れ</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('urgent')">
+      <div class="stat-val red"  id="cnt-urgent">0</div>
+      <div class="stat-label">3日以内</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('warning')">
+      <div class="stat-val yellow" id="cnt-warning">0</div>
+      <div class="stat-label">7日以内</div>
+    </div>
+    <div class="stat-box" onclick="setFilter('all')">
+      <div class="stat-val green" id="cnt-total">0</div>
+      <div class="stat-label">登録合計</div>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <div class="add-card">
+    <div class="add-row">
+      <div class="field" style="flex:2;min-width:130px">
+        <label>食品名</label>
+        <input type="text" id="f-name" placeholder="例：牛乳・鶏むね肉・豆腐"
+          onkeydown="if(event.key==='Enter')addItem()">
+      </div>
+      <div class="field" style="min-width:80px">
+        <label>カテゴリ</label>
+        <select id="f-cat">
+          <option value="🥛 乳製品">🥛 乳製品</option>
+          <option value="🥩 肉・魚">🥩 肉・魚</option>
+          <option value="🥦 野菜">🥦 野菜</option>
+          <option value="🍳 卵">🍳 卵</option>
+          <option value="🍞 パン・穀物">🍞 パン・穀物</option>
+          <option value="🧃 飲み物">🧃 飲み物</option>
+          <option value="🍱 惣菜">🍱 惣菜</option>
+          <option value="🥫 缶詰・保存食">🥫 缶詰・保存食</option>
+          <option value="🍫 お菓子">🍫 お菓子</option>
+          <option value="💊 サプリ・薬">💊 サプリ・薬</option>
+          <option value="📦 その他">📦 その他</option>
+        </select>
+      </div>
+      <div class="field" style="min-width:130px">
+        <label>賞味・消費期限</label>
+        <input type="date" id="f-date">
+      </div>
+      <button class="btn-add" onclick="addItem()" style="align-self:flex-end">＋ 追加</button>
+    </div>
+    <div class="presets">
+      <span style="font-size:11px;color:var(--light);align-self:center">今日から：</span>
+      <button class="preset" onclick="setDaysFromToday(3)">＋3日</button>
+      <button class="preset" onclick="setDaysFromToday(5)">＋5日</button>
+      <button class="preset" onclick="setDaysFromToday(7)">＋7日</button>
+      <button class="preset" onclick="setDaysFromToday(14)">＋2週</button>
+      <button class="preset" onclick="setDaysFromToday(30)">＋1ヶ月</button>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <button class="f-btn active" id="fbtn-all"     onclick="setFilter('all',this)">すべて</button>
+    <button class="f-btn" id="fbtn-expired"  onclick="setFilter('expired',this)">🔴 期限切れ</button>
+    <button class="f-btn" id="fbtn-urgent"   onclick="setFilter('urgent',this)">🔥 3日以内</button>
+    <button class="f-btn" id="fbtn-warning"  onclick="setFilter('warning',this)">⚠ 7日以内</button>
+    <button class="f-btn" id="fbtn-fresh"    onclick="setFilter('fresh',this)">✅ 余裕あり</button>
+    <button class="sort-btn" onclick="toggleSort()">↕ <span id="sort-label">期限順</span></button>
+  </div>
+
+  <!-- List -->
+  <div class="item-list" id="item-list"></div>
+
+</div>
+
+<script>
+const KEY = 'expiry-items-v1';
+let items    = load();
+let filter   = 'all';
+let sortAsc  = true;  // true=期限近い順
+let nextId   = items.length ? Math.max(...items.map(i=>i.id))+1 : 1;
+
+/* ── Persistence ── */
+function load(){ try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]} }
+function save(){ localStorage.setItem(KEY,JSON.stringify(items)) }
+
+/* ── Today helpers ── */
+function todayStr(){
+  const d=new Date(); return d.toISOString().slice(0,10);
+}
+function daysLeft(dateStr){
+  const diff = new Date(dateStr) - new Date(todayStr());
+  return Math.ceil(diff / 86400000);
+}
+function statusOf(days){
+  if(days < 0)  return 'expired';
+  if(days <= 3) return 'urgent';
+  if(days <= 7) return 'warning';
+  return 'fresh';
+}
+
+/* ── Date preset ── */
+function setDaysFromToday(n){
+  const d = new Date();
+  d.setDate(d.getDate()+n);
+  document.getElementById('f-date').value = d.toISOString().slice(0,10);
+}
+
+/* ── Add ── */
+function addItem(){
+  const name = document.getElementById('f-name').value.trim();
+  const date = document.getElementById('f-date').value;
+  const cat  = document.getElementById('f-cat').value;
+  if(!name){ document.getElementById('f-name').focus(); return; }
+  if(!date){ document.getElementById('f-date').focus(); return; }
+
+  items.push({id:nextId++, name, date, cat, added:todayStr()});
+  save();
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-date').value = '';
+  document.getElementById('f-name').focus();
+  render();
+}
+
+/* ── Delete ── */
+function deleteItem(id){
+  items = items.filter(i=>i.id!==id);
+  save(); render();
+}
+
+/* ── Filter ── */
+function setFilter(f, btn){
+  filter = f;
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  const target = btn || document.getElementById('fbtn-'+f);
+  if(target) target.classList.add('active');
+  render();
+}
+
+/* ── Sort ── */
+function toggleSort(){
+  sortAsc = !sortAsc;
+  document.getElementById('sort-label').textContent = sortAsc ? '期限順' : '登録順';
+  render();
+}
+
+/* ── Render ── */
+function render(){
+  let list = items.map(item=>({...item, days:daysLeft(item.date)}));
+
+  // Sort
+  if(sortAsc) list.sort((a,b)=>a.days-b.days);
+  else list.sort((a,b)=>b.id-a.id);
+
+  // Stats
+  const cExp  = list.filter(i=>i.days<0).length;
+  const cUrg  = list.filter(i=>i.days>=0&&i.days<=3).length;
+  const cWarn = list.filter(i=>i.days>3&&i.days<=7).length;
+  document.getElementById('cnt-expired').textContent = cExp;
+  document.getElementById('cnt-urgent').textContent  = cUrg;
+  document.getElementById('cnt-warning').textContent = cWarn;
+  document.getElementById('cnt-total').textContent   = list.length;
+
+  // Alert banner
+  showAlert(cExp, cUrg, cWarn);
+
+  // Filter
+  if(filter==='expired') list=list.filter(i=>i.days<0);
+  else if(filter==='urgent')  list=list.filter(i=>i.days>=0&&i.days<=3);
+  else if(filter==='warning') list=list.filter(i=>i.days>3&&i.days<=7);
+  else if(filter==='fresh')   list=list.filter(i=>i.days>7);
+
+  const el = document.getElementById('item-list');
+  if(!list.length){
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🥗</span>${filter==='all'?'食品を追加してください':'該当する食品はありません'}</div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(item=>{
+    const st   = statusOf(item.days);
+    const icon = item.cat.split(' ')[0];
+    const dateLabel = item.date.replace(/-/g,'/');
+    const daysLabel =
+      item.days < 0  ? `${Math.abs(item.days)}日超過` :
+      item.days === 0 ? '今日まで！' :
+      item.days === 1 ? '明日まで' :
+      `あと${item.days}日`;
+    const badgeCls =
+      item.days < 0  ? 'badge-expired' :
+      item.days <= 3 ? 'badge-urgent'  :
+      item.days <= 7 ? 'badge-warning' : 'badge-fresh';
+    const dotCls =
+      item.days < 0  ? 'expired-dot' :
+      item.days <= 3 ? 'urgent-dot'  :
+      item.days <= 7 ? 'warning-dot' : 'fresh-dot';
+    return `
+    <div class="item-card ${st}">
+      <div class="item-status ${dotCls}"></div>
+      <div class="item-icon">${icon}</div>
+      <div class="item-info">
+        <div class="item-name">${escHtml(item.name)}</div>
+        <div class="item-date-row">
+          <span class="item-date">${dateLabel}</span>
+          <span style="color:var(--border)">|</span>
+          <span>${item.cat.slice(item.cat.indexOf(' ')+1)}</span>
+        </div>
+      </div>
+      <span class="days-badge ${badgeCls}">${daysLabel}</span>
+      <button class="del-btn" onclick="deleteItem(${item.id})" title="削除">✕</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── Alert banner ── */
+function showAlert(exp, urg, warn){
+  const banner = document.getElementById('alert-banner');
+  if(exp > 0){
+    banner.className='alert-banner show urgent';
+    document.getElementById('alert-icon').textContent='🚨';
+    document.getElementById('alert-title').textContent=`期限切れが${exp}件あります！`;
+    document.getElementById('alert-detail').textContent=
+      `早めに確認してください。${urg>0?`他に${urg}件が3日以内です。`:''}`;
+  } else if(urg > 0){
+    banner.className='alert-banner show urgent';
+    document.getElementById('alert-icon').textContent='⚠️';
+    document.getElementById('alert-title').textContent=`3日以内に期限が切れるものが${urg}件あります`;
+    document.getElementById('alert-detail').textContent=
+      warn>0?`さらに${warn}件が7日以内です。早めに消費しましょう。`:'今日中に確認してください。';
+  } else if(warn > 0){
+    banner.className='alert-banner show warning';
+    document.getElementById('alert-icon').textContent='💡';
+    document.getElementById('alert-title').textContent=`7日以内に期限が切れるものが${warn}件あります`;
+    document.getElementById('alert-detail').textContent='今週中に消費する計画を立てましょう。';
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+/* ── Browser notification ── */
+function checkNotifPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    document.getElementById('notif-card').classList.add('show');
+  }
+}
+function requestNotif(){
+  Notification.requestPermission().then(p=>{
+    document.getElementById('notif-card').classList.remove('show');
+    if(p==='granted') sendNotif();
+  });
+}
+function sendNotif(){
+  const list = items.map(i=>({...i, days:daysLeft(i.date)}));
+  const exp  = list.filter(i=>i.days<0);
+  const urg  = list.filter(i=>i.days>=0&&i.days<=3);
+  if(exp.length){
+    new Notification('🚨 期限切れ食品あり',{
+      body:`${exp.map(i=>i.name).slice(0,3).join('・')}が期限切れです！`,
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🥗</text></svg>'
+    });
+  } else if(urg.length){
+    new Notification('⚠️ まもなく期限切れ',{
+      body:`${urg.map(i=>i.name).slice(0,3).join('・')}が3日以内に期限切れです`,
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🥗</text></svg>'
+    });
+  }
+}
+
+/* ── Default date to today+7 ── */
+function initDefaultDate(){
+  const d = new Date();
+  d.setDate(d.getDate()+7);
+  document.getElementById('f-date').value = d.toISOString().slice(0,10);
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+/* ── Seed sample ── */
+function seed(){
+  if(items.length) return;
+  const today = new Date();
+  const dt = (n)=>{ const d=new Date(today); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+  [
+    {name:'牛乳',        cat:'🥛 乳製品', date:dt(2)},
+    {name:'鶏むね肉',    cat:'🥩 肉・魚', date:dt(-1)},
+    {name:'ほうれん草',  cat:'🥦 野菜',   date:dt(4)},
+    {name:'豆腐',        cat:'🍱 惣菜',   date:dt(6)},
+    {name:'食パン',      cat:'🍞 パン・穀物', date:dt(3)},
+    {name:'オレンジジュース', cat:'🧃 飲み物', date:dt(14)},
+  ].forEach(s=>{ items.push({id:nextId++, added:todayStr(), ...s}); });
+  save();
+}
+
+seed();
+initDefaultDate();
+checkNotifPermission();
+if(Notification.permission==='granted') sendNotif();
+render();
+</script>
+</body>
+</html>
