@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>並行世界シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07070f;
+  --surface:#0e0e1a;
+  --surface2:#13131f;
+  --border:#1e1e30;
+  --text:#e8e0f0;
+  --muted:#9090b0;
+  --light:#404060;
+  --accent:#8060ff;
+  --accent-l:rgba(128,96,255,.10);
+  --gold:#c8a040;
+  --gold-l:rgba(200,160,64,.08);
+  --cyan:#40c0ff;
+  --shadow-lg:0 16px 60px rgba(0,0,0,.7);
+}
+
+html,body{min-height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  padding:48px 16px 120px;
+  overflow-x:hidden;
+}
+
+/* star field */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(1px 1px at 12% 8%, rgba(200,160,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 15%,rgba(128,200,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 40%,rgba(200,160,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 55%,rgba(128,200,255,.35)0%,transparent 100%),
+    radial-gradient(1px 1px at 22% 72%,rgba(200,160,255,.25)0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 82%,rgba(200,160,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5%  50%,rgba(128,200,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 95% 30%,rgba(200,160,255,.4) 0%,transparent 100%),
+    radial-gradient(600px 400px at 0% 0%,    rgba(80,40,160,.08) 0%,transparent 60%),
+    radial-gradient(600px 400px at 100% 100%,rgba(40,80,160,.08) 0%,transparent 60%);
+}
+
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:40px}
+.header-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1;text-shadow:0 0 12px rgba(200,160,64,.5)}}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:clamp(22px,5vw,32px);font-weight:900;
+  letter-spacing:-.02em;line-height:1.2;margin-bottom:8px;
+  background:linear-gradient(135deg,#c8a0ff,#80c0ff,#c8a040);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.8}
+
+/* ── Setup card ── */
+.setup-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:26px 22px;
+  box-shadow:var(--shadow-lg);margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.setup-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:.5;
+}
+
+.section-label{
+  font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Scenario chips */
+.scenario-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:18px;
+}
+@media(max-width:380px){.scenario-grid{grid-template-columns:1fr}}
+
+.scenario-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 13px;border-radius:11px;
+  border:1.5px solid var(--border);background:rgba(255,255,255,.02);
+  cursor:pointer;transition:all .15s;text-align:left;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.scenario-btn:hover{border-color:rgba(128,96,255,.4);background:var(--accent-l)}
+.scenario-btn.active{
+  border-color:rgba(128,96,255,.5);
+  background:linear-gradient(135deg,rgba(128,96,255,.12),rgba(64,192,255,.06));
+}
+.sc-icon{font-size:18px;flex-shrink:0;line-height:1}
+.sc-info{}
+.sc-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.sc-desc{font-size:10px;color:var(--muted)}
+
+/* Textarea */
+.input-wrap{position:relative;margin-bottom:16px}
+textarea#situation{
+  width:100%;background:rgba(255,255,255,.03);border:1.5px solid var(--border);
+  border-radius:12px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:400;
+  padding:13px 16px;outline:none;resize:none;line-height:1.8;min-height:90px;
+  transition:border-color .2s,box-shadow .2s;
+}
+textarea#situation:focus{
+  border-color:rgba(128,96,255,.5);
+  box-shadow:0 0 0 3px rgba(128,96,255,.08);
+  background:rgba(255,255,255,.04);
+}
+textarea#situation::placeholder{color:var(--light)}
+
+/* Tone selector */
+.tone-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.tone-btn{
+  font-size:11px;font-weight:500;padding:5px 13px;border-radius:100px;
+  border:1.5px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Outfit',sans-serif;
+}
+.tone-btn:hover{border-color:var(--accent);color:var(--text)}
+.tone-btn.active{background:rgba(128,96,255,.18);border-color:rgba(128,96,255,.5);color:#c8a0ff}
+
+/* Simulate button */
+.btn-sim{
+  width:100%;
+  background:linear-gradient(135deg,#5030c0,#8060ff,#4080ff);
+  color:#fff;border:none;border-radius:12px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;
+  padding:15px;cursor:pointer;letter-spacing:.04em;
+  box-shadow:0 4px 24px rgba(128,96,255,.35);
+  transition:opacity .13s,transform .1s,box-shadow .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-sim:hover{opacity:.92;box-shadow:0 8px 36px rgba(128,96,255,.5)}
+.btn-sim:active{transform:scale(.99)}
+.btn-sim:disabled{opacity:.35;cursor:default;transform:none}
+
+/* ── Loading ── */
+.loading-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:52px 24px;text-align:center;
+  box-shadow:var(--shadow-lg);margin-bottom:20px;
+  display:none;
+}
+.loading-card.show{display:block}
+.loading-portal{
+  width:60px;height:60px;border-radius:50%;
+  border:3px solid rgba(128,96,255,.2);
+  border-top-color:var(--accent);
+  animation:portalSpin 1.4s cubic-bezier(.68,-.55,.27,1.55) infinite;
+  margin:0 auto 16px;
+  box-shadow:0 0 20px rgba(128,96,255,.3);
+}
+@keyframes portalSpin{to{transform:rotate(360deg)}}
+.loading-text{
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--muted);
+  letter-spacing:.08em;line-height:1.9;
+}
+.loading-sub{font-size:11px;color:var(--light);margin-top:4px}
+
+/* ── World cards ── */
+.worlds-wrap{display:flex;flex-direction:column;gap:20px}
+
+.world-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;overflow:hidden;
+  box-shadow:var(--shadow-lg);
+  animation:worldIn .6s cubic-bezier(.34,1.15,.64,1) both;
+}
+.world-card:nth-child(1){animation-delay:.0s}
+.world-card:nth-child(2){animation-delay:.12s}
+.world-card:nth-child(3){animation-delay:.24s}
+@keyframes worldIn{
+  from{opacity:0;transform:translateY(20px) scale(.97)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* World header */
+.world-header{
+  padding:16px 20px 12px;
+  position:relative;overflow:hidden;
+}
+.world-header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--c,var(--accent)),transparent);
+  opacity:.5;
+}
+.world-type{
+  font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--c,var(--accent));margin-bottom:6px;
+  display:flex;align-items:center;gap:7px;font-family:'Outfit',sans-serif;
+}
+.world-dot{width:8px;height:8px;border-radius:50%;background:var(--c);
+  box-shadow:0 0 8px var(--c);animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.world-title{
+  font-family:'Noto Serif JP',serif;font-size:clamp(17px,4vw,22px);
+  font-weight:600;color:var(--text);line-height:1.35;letter-spacing:.04em;
+}
+.world-subtitle{
+  font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.04em;
+  font-family:'Noto Serif JP',serif;font-weight:300;
+}
+
+/* Timeline strip */
+.world-timeline{
+  display:flex;overflow-x:auto;gap:0;
+  border-bottom:1px solid var(--border);
+  scrollbar-width:none;
+}
+.world-timeline::-webkit-scrollbar{display:none}
+.tl-item{
+  flex:1;min-width:80px;padding:10px 14px;
+  border-right:1px solid var(--border);
+  text-align:center;
+}
+.tl-item:last-child{border-right:none}
+.tl-year{
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;
+  color:var(--c,var(--accent));margin-bottom:3px;letter-spacing:.06em;
+}
+.tl-event{font-size:10px;color:var(--muted);line-height:1.4;letter-spacing:.02em}
+
+/* Story body */
+.world-body{padding:20px 22px}
+.world-story{
+  font-family:'Noto Serif JP',serif;font-size:15px;font-weight:400;
+  color:var(--muted);line-height:2.1;letter-spacing:.04em;
+  margin-bottom:18px;text-align:justify;
+}
+.world-story .highlight{color:var(--text);font-weight:500}
+.world-story .key{color:var(--c,var(--accent));font-weight:600}
+
+/* Outcome bar */
+.outcome-bar{
+  display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px;
+  background:rgba(255,255,255,.02);border-radius:10px;
+  border:1px solid var(--border);margin-bottom:14px;
+}
+.outcome-item{
+  display:flex;align-items:center;gap:6px;font-size:12px;
+  flex:1;min-width:130px;
+}
+.outcome-label{color:var(--muted)}
+.outcome-val{font-family:'Outfit',sans-serif;font-weight:700;color:var(--text)}
+
+/* Emotion tags */
+.emotion-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.emotion-tag{
+  font-size:10px;font-weight:600;letter-spacing:.06em;
+  padding:3px 9px;border-radius:100px;
+  border:1px solid var(--c,var(--border));
+  color:var(--c,var(--muted));
+  background:rgba(255,255,255,.03);
+}
+
+/* Last line */
+.world-last{
+  font-family:'Noto Serif JP',serif;font-size:14px;
+  color:var(--c,var(--accent));font-weight:500;
+  font-style:italic;letter-spacing:.04em;line-height:1.7;
+  border-left:2px solid var(--c,var(--accent));
+  padding-left:12px;margin-top:4px;
+}
+
+/* Footer */
+.world-footer{
+  padding:12px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.015);
+}
+.world-footer-left{font-size:10px;color:var(--light);letter-spacing:.06em;font-family:'Outfit',sans-serif}
+.world-copy{
+  font-size:11px;font-weight:600;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:4px 10px;border-radius:6px;
+  border:1px solid var(--border);transition:all .12s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.world-copy:hover{color:var(--text);border-color:var(--muted)}
+.world-copy.done{color:var(--accent);border-color:var(--accent)}
+
+/* ── Try again bar ── */
+.retry-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:14px 18px;
+  display:flex;gap:8px;align-items:center;justify-content:center;
+  flex-wrap:wrap;margin-top:4px;
+}
+.btn-retry{
+  flex:1;max-width:220px;background:rgba(128,96,255,.15);color:#c8a0ff;
+  border:1.5px solid rgba(128,96,255,.35);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;
+  padding:10px;cursor:pointer;transition:all .13s;text-align:center;
+}
+.btn-retry:hover{background:rgba(128,96,255,.25);border-color:rgba(128,96,255,.6)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-tag">✦ Multiverse Simulator ✦</div>
+    <h1>🌏並行世界<br>シミュレーター</h1>
+    <p>「もしあの時…」という選択の先に<br>広がっていたかもしれない世界を、AIが描き出します。</p>
+  </div>
+
+  <div class="setup-card">
+    <div class="section-label">分岐のシナリオ</div>
+
+    <div class="scenario-grid" id="scenario-grid">
+      <button class="scenario-btn active" id="sc-0" onclick="setScenario(0,this)"><span class="sc-icon">🚀</span><div class="sc-info"><div class="sc-name">起業しなかったら</div><div class="sc-desc">会社員のまま続けた世界</div></div></button>
+      <button class="scenario-btn" id="sc-1" onclick="setScenario(1,this)"><span class="sc-icon">💔</span><div class="sc-info"><div class="sc-name">別れなかったら</div><div class="sc-desc">あの関係が続いた世界</div></div></button>
+      <button class="scenario-btn" id="sc-2" onclick="setScenario(2,this)"><span class="sc-icon">🎓</span><div class="sc-info"><div class="sc-name">別の学校に進んでいたら</div><div class="sc-desc">違う環境で育った世界</div></div></button>
+      <button class="scenario-btn" id="sc-3" onclick="setScenario(3,this)"><span class="sc-icon">🌏</span><div class="sc-info"><div class="sc-name">海外に移住していたら</div><div class="sc-desc">異国で生きた世界</div></div></button>
+      <button class="scenario-btn" id="sc-4" onclick="setScenario(4,this)"><span class="sc-icon">🎨</span><div class="sc-info"><div class="sc-name">夢の職業を選んでいたら</div><div class="sc-desc">情熱を追いかけた世界</div></div></button>
+      <button class="scenario-btn" id="sc-5" onclick="setScenario(5,this)"><span class="sc-icon">✍️</span><div class="sc-info"><div class="sc-name">カスタム（自由入力）</div><div class="sc-desc">自分だけの分岐点</div></div></button>
+    </div>
+
+    <div class="section-label">あなたの状況（任意）</div>
+    <textarea id="situation"
+      placeholder="例：27歳の時に副業で始めたWebデザインが軌道に乗り始め、会社を辞めて起業しました。もし起業せずそのまま会社員を続けていたら…"></textarea>
+
+    <div class="section-label">物語のトーン</div>
+    <div class="tone-row" id="tone-row">
+      <button class="tone-btn active" id="tone-0" onclick="setTone(0,this)">🎭 ドラマチック</button>
+      <button class="tone-btn" id="tone-1" onclick="setTone(1,this)">😊 ほっこり系</button>
+      <button class="tone-btn" id="tone-2" onclick="setTone(2,this)">🌧 切なく深く</button>
+      <button class="tone-btn" id="tone-3" onclick="setTone(3,this)">😂 シュールに</button>
+      <button class="tone-btn" id="tone-4" onclick="setTone(4,this)">🔮 SF・幻想的</button>
+    </div>
+
+    <button class="btn-sim" id="btn-sim" onclick="simulate()">
+      🌀 並行世界を開く
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <div class="loading-portal"></div>
+    <div class="loading-text">時空の扉を開いています…<br>並行世界の観測中</div>
+    <div class="loading-sub">あなたが歩まなかった道を、AIが覗いています</div>
+  </div>
+
+  <!-- Worlds -->
+  <div class="worlds-wrap" id="worlds-wrap"></div>
+
+</div>
+
+<script>
+const SCENARIOS = [
+  {label:'起業しなかったら',     icon:'🚀', default_situation:'起業した経験を持つ人が、もし会社員のままでいたら…'},
+  {label:'別れなかったら',       icon:'💔', default_situation:'大切な人と別れた経験を持つ人が、もし関係を続けていたら…'},
+  {label:'別の学校に進んでいたら',icon:'🎓', default_situation:'現在の進路を選んだ人が、もし別の学校・学部を選んでいたら…'},
+  {label:'海外に移住していたら', icon:'🌏', default_situation:'日本で生活する人が、もしあの時海外に移住していたら…'},
+  {label:'夢の職業を選んでいたら',icon:'🎨', default_situation:'別の道に進んだ人が、もし夢の職業（芸術家・スポーツ選手など）を追いかけていたら…'},
+  {label:'カスタム',             icon:'✍️', default_situation:'あなた自身の「もしもあの時…」を入力してください。'},
+];
+
+const TONES = [
+  'ドラマチックで感動的なストーリー。人生の深みを表現する。',
+  '温かくほっこりした読後感。小さな幸せにフォーカス。',
+  '切なく深く、失ったものと得たものを繊細に描く。',
+  'シュールなユーモアを交えた、クスッと笑えるストーリー。',
+  'SF・幻想的な演出を入れた、時空を超えた世界観。',
+];
+
+// World color themes
+const WORLD_THEMES = [
+  {name:'✦ 世界線A',  c:'#8060ff', label:'もし続けていたら'},
+  {name:'✧ 世界線B',  c:'#40c0ff', label:'5年後の分岐点'},
+  {name:'◈ 世界線C',  c:'#c8a040', label:'もう一つの結末'},
+];
+
+let scenario = 0;
+let tone     = 0;
+
+function setScenario(i, btn){
+  scenario = i;
+  document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(i===5) document.getElementById('situation').focus();
+}
+function setTone(i, btn){
+  tone = i;
+  document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Simulate ──
+async function simulate(){
+  const situation = document.getElementById('situation').value.trim()
+    || SCENARIOS[scenario].default_situation;
+
+  const btn = document.getElementById('btn-sim');
+  btn.disabled = true;
+  document.getElementById('worlds-wrap').innerHTML = '';
+  document.getElementById('loading-card').classList.add('show');
+
+  try{
+    const data = await callClaude(situation, scenario, tone);
+    renderWorlds(data);
+  }catch(e){
+    alert('エラーが発生しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-card').classList.remove('show');
+  }
+}
+
+async function callClaude(situation, scenarioIdx, toneIdx){
+  const sc = SCENARIOS[scenarioIdx];
+  const tn = TONES[toneIdx];
+
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:2400,
+      system:`あなたは並行世界を観測するストーリーテラーです。「もしもあの時…」という分岐点から生まれる、もう一つの人生を短編小説のように描きます。リアリティがありながらも詩的な表現を大切にしてください。`,
+      messages:[{role:'user', content:`シナリオ：「${sc.label}」
+状況：${situation}
+トーン：${tn}
+
+この「もしもの選択」から生まれる3つの並行世界を生成してください。
+それぞれ異なる展開・結末にしてください（楽観・現実的・意外な展開）。
+
+以下のJSON形式のみで返答してください：
+{
+  "worlds": [
+    {
+      "title": "世界のタイトル（詩的に・15文字以内）",
+      "subtitle": "サブタイトル（20文字以内）",
+      "timeline": [
+        {"year": "1年後", "event": "出来事（20文字以内）"},
+        {"year": "3年後", "event": "出来事（20文字以内）"},
+        {"year": "10年後", "event": "出来事（20文字以内）"}
+      ],
+      "story": "ショートストーリー（180〜240文字）。情景描写を大切に、読者が映像を思い浮かべられる文体で。",
+      "outcomes": [
+        {"label": "仕事", "val": "一言で状況"},
+        {"label": "人間関係", "val": "一言で状況"},
+        {"label": "内面", "val": "一言で状況"}
+      ],
+      "emotions": ["感情キーワード1", "感情キーワード2", "感情キーワード3"],
+      "last_line": "この世界線を象徴する一文（詩的に・40文字以内）"
+    }
+  ]
+}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+function renderWorlds(data){
+  const wrap = document.getElementById('worlds-wrap');
+  const worlds = data.worlds || [];
+  wrap.innerHTML = '';
+
+  worlds.forEach((w, i)=>{
+    const theme = WORLD_THEMES[i] || WORLD_THEMES[0];
+    const c     = theme.c;
+    const card  = document.createElement('div');
+    card.className = 'world-card';
+    card.style.setProperty('--c', c);
+
+    const tlHtml = (w.timeline||[]).map(t=>`
+      <div class="tl-item">
+        <div class="tl-year">${escHtml(t.year)}</div>
+        <div class="tl-event">${escHtml(t.event)}</div>
+      </div>`).join('');
+
+    const outcomeHtml = (w.outcomes||[]).map(o=>`
+      <div class="outcome-item">
+        <span class="outcome-label">${escHtml(o.label)}：</span>
+        <span class="outcome-val">${escHtml(o.val)}</span>
+      </div>`).join('');
+
+    const emotionHtml = (w.emotions||[]).map(e=>`
+      <span class="emotion-tag">${escHtml(e)}</span>`).join('');
+
+    // Highlight key parts of story (wrap 「」quoted text)
+    const storyHtml = escHtml(w.story||'')
+      .replace(/「([^」]+)」/g,'「<span class="key">$1</span>」');
+
+    card.innerHTML = `
+      <div class="world-header">
+        <div class="world-type">
+          <span class="world-dot"></span>
+          ${theme.name} &nbsp;/&nbsp; ${theme.label}
+        </div>
+        <div class="world-title">${escHtml(w.title||'')}</div>
+        <div class="world-subtitle">${escHtml(w.subtitle||'')}</div>
+      </div>
+      <div class="world-timeline">${tlHtml}</div>
+      <div class="world-body">
+        <div class="world-story">${storyHtml}</div>
+        <div class="outcome-bar">${outcomeHtml}</div>
+        <div class="emotion-tags">${emotionHtml}</div>
+        <div class="world-last">${escHtml(w.last_line||'')}</div>
+      </div>
+      <div class="world-footer">
+        <span class="world-footer-left">Parallel World ${String.fromCharCode(65+i)}</span>
+        <button class="world-copy" onclick="copyWorld(this,${i})">📋 コピー</button>
+      </div>`;
+    wrap.appendChild(card);
+  });
+
+  // Retry bar
+  const bar = document.createElement('div');
+  bar.className = 'retry-bar';
+  bar.innerHTML = `
+    <button class="btn-retry" onclick="simulate()">🔄 別の世界を開く</button>
+    <button class="btn-retry" onclick="document.getElementById('setup-card')?.scrollIntoView({behavior:'smooth'});document.querySelector('.setup-card').scrollIntoView({behavior:'smooth'})">✦ シナリオを変える</button>`;
+  wrap.appendChild(bar);
+
+  wrap.scrollIntoView({behavior:'smooth', block:'start'});
+
+  // Store worlds for copy
+  window._worlds = data.worlds;
+}
+
+function copyWorld(btn, i){
+  const w = (window._worlds||[])[i];
+  if(!w) return;
+  const text = [
+    `【${w.title}】`,
+    w.subtitle,
+    '',
+    w.story,
+    '',
+    '— ' + w.last_line,
+    '',
+    (w.timeline||[]).map(t=>`${t.year}：${t.event}`).join('\n'),
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent='✓ コピー済み';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('done');},1600);
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
