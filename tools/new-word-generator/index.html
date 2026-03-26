@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新熟語ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#faf8f2;
+  --ink:#1a140a;
+  --ink2:#3d2f1a;
+  --faded:#7a6a52;
+  --rule:#d8ceb8;
+  --red:#8b1a1a;
+  --gold:#7a5a10;
+  --paper:#f5f0e4;
+  --shadow:0 4px 24px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Serif JP',serif;font-weight:400;
+  background:var(--bg);color:var(--ink);
+  min-height:100vh;
+  padding:48px 16px 120px;
+}
+
+/* noise texture */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+
+.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:40px}
+.header-kana{
+  font-size:11px;letter-spacing:.3em;color:var(--faded);
+  margin-bottom:10px;display:block;font-family:'Noto Sans JP',sans-serif;font-weight:400;
+}
+.header h1{
+  font-family:'Noto Serif JP',serif;font-size:clamp(26px,6vw,38px);font-weight:700;
+  letter-spacing:.12em;color:var(--ink);margin-bottom:8px;line-height:1.2;
+}
+.header-sub{
+  font-size:12px;color:var(--faded);letter-spacing:.06em;line-height:1.8;
+  font-family:'Noto Sans JP',sans-serif;
+}
+
+/* ── Control panel ── */
+.control{
+  background:var(--paper);border:1px solid var(--rule);
+  border-radius:3px;padding:24px;margin-bottom:24px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.control::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0,var(--ink) 6px,transparent 6px,transparent 10px);
+  opacity:.15;
+}
+
+.input-section{margin-bottom:18px}
+.input-label{
+  font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faded);margin-bottom:8px;display:flex;align-items:center;gap:8px;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.input-label::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+.kanji-row{display:flex;gap:8px;align-items:center}
+.kanji-input{
+  background:rgba(255,255,255,.7);border:1px solid var(--rule);
+  border-radius:2px;color:var(--ink);
+  font-family:'Noto Serif JP',serif;font-size:28px;font-weight:500;
+  text-align:center;width:62px;height:62px;outline:none;letter-spacing:0;
+  transition:border-color .18s,background .18s;
+  -webkit-ime-mode:active;
+}
+.kanji-input:focus{
+  border-color:var(--ink2);background:#fff;
+  box-shadow:0 0 0 2px rgba(26,20,10,.08);
+}
+.kanji-plus{font-size:20px;color:var(--rule);font-weight:300;padding:0 4px}
+.kanji-eq{font-size:14px;color:var(--faded);padding:0 6px;
+  font-family:'Noto Sans JP',sans-serif;}
+
+.kanji-preview{
+  flex:1;background:rgba(255,255,255,.5);border:1px solid var(--rule);
+  border-radius:2px;height:62px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-size:28px;font-weight:700;
+  color:var(--ink);letter-spacing:.05em;
+}
+
+/* Theme selector */
+.theme-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.theme-chip{
+  font-size:11px;font-weight:500;padding:4px 11px;border-radius:100px;
+  border:1px solid var(--rule);background:transparent;
+  color:var(--faded);cursor:pointer;transition:all .12s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.theme-chip:hover{border-color:var(--ink2);color:var(--ink)}
+.theme-chip.active{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* Dice button */
+.btn-dice{
+  background:none;border:1.5px solid var(--rule);border-radius:2px;
+  color:var(--faded);font-size:16px;width:38px;height:38px;cursor:pointer;
+  transition:all .12s;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-dice:hover{border-color:var(--ink);color:var(--ink)}
+
+/* Generate button */
+.btn-gen{
+  width:100%;background:var(--ink);color:var(--bg);border:none;
+  border-radius:2px;font-family:'Noto Serif JP',serif;
+  font-size:16px;font-weight:600;padding:15px;cursor:pointer;
+  letter-spacing:.16em;transition:opacity .13s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-gen:hover{opacity:.87}
+.btn-gen:active{transform:scale(.99)}
+.btn-gen:disabled{opacity:.35;cursor:default}
+
+/* ── Main card ── */
+.card-outer{
+  perspective:1000px;margin-bottom:20px;
+}
+.word-card{
+  background:var(--paper);border:1px solid var(--rule);
+  border-radius:3px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  display:none;animation:cardReveal .5s ease both;
+}
+.word-card.show{display:block}
+@keyframes cardReveal{
+  from{opacity:0;transform:translateY(12px) scale(.98)}
+  to  {opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Decorative lines */
+.card-lines{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(transparent,transparent 30px,var(--rule) 30px,var(--rule) 31px);
+  background-position:0 52px;opacity:.3;
+}
+
+.card-inner{position:relative;z-index:1;padding:32px 36px 28px}
+
+/* Word section */
+.word-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;margin-bottom:6px;
+}
+.word-kanji{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(52px,14vw,80px);
+  font-weight:700;color:var(--ink);line-height:1;
+  letter-spacing:.04em;
+}
+.word-stamp{
+  width:58px;height:58px;border-radius:50%;
+  border:2px solid var(--red);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-size:9px;font-weight:600;
+  color:var(--red);letter-spacing:.06em;text-align:center;line-height:1.4;
+  transform:rotate(14deg);opacity:.55;flex-shrink:0;margin-top:6px;
+}
+
+.word-reading{
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;
+  color:var(--faded);letter-spacing:.18em;margin-bottom:16px;
+}
+
+/* Divider */
+.word-divider{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.word-divider::before,.word-divider::after{content:'';flex:1;height:1px;background:var(--rule)}
+.word-class{
+  font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);font-family:'Noto Sans JP',sans-serif;white-space:nowrap;
+}
+
+/* Definition */
+.word-def{
+  font-family:'Noto Serif JP',serif;font-size:16px;
+  color:var(--ink2);line-height:2.1;letter-spacing:.04em;
+  margin-bottom:20px;text-align:justify;
+}
+
+/* Example sentence */
+.word-example-label{
+  font-size:10px;font-weight:500;letter-spacing:.16em;color:var(--gold);
+  margin-bottom:6px;display:block;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.word-example{
+  background:rgba(0,0,0,.025);border-left:2px solid var(--rule);
+  padding:10px 14px;border-radius:0 3px 3px 0;
+  font-family:'Noto Serif JP',serif;font-size:14px;
+  color:var(--faded);line-height:1.9;letter-spacing:.04em;font-style:italic;
+  margin-bottom:20px;
+}
+
+/* Tags */
+.word-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px}
+.word-tag{
+  font-size:10px;font-weight:500;letter-spacing:.08em;
+  padding:2px 9px;border-radius:2px;
+  background:rgba(0,0,0,.05);color:var(--faded);
+  font-family:'Noto Sans JP',sans-serif;
+}
+
+/* Card footer */
+.card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid var(--rule);
+}
+.card-footer-left{
+  font-size:10px;color:var(--faded);letter-spacing:.06em;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.card-footer-acts{display:flex;gap:6px}
+.card-btn{
+  font-size:11px;font-weight:500;padding:5px 13px;border-radius:2px;
+  border:1px solid var(--rule);background:transparent;
+  color:var(--faded);cursor:pointer;transition:all .12s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.card-btn:hover{border-color:var(--ink);color:var(--ink)}
+.card-btn.done{border-color:var(--green,#059669);color:var(--green,#059669)}
+.card-btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* ── History ── */
+.history-section{
+  border-top:1px solid var(--rule);padding-top:20px;
+}
+.history-label{
+  font-size:11px;font-weight:500;letter-spacing:.16em;
+  color:var(--faded);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+  font-family:'Noto Sans JP',sans-serif;text-transform:uppercase;
+}
+.history-label::after{content:'';flex:1;height:1px;background:var(--rule)}
+.history-grid{display:flex;flex-wrap:wrap;gap:6px}
+.hist-chip{
+  display:flex;align-items:center;gap:6px;
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  padding:6px 12px;border-radius:2px;
+  border:1px solid var(--rule);background:var(--paper);
+  color:var(--ink);cursor:pointer;transition:all .12s;
+}
+.hist-chip:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.hist-chip-reading{font-size:10px;color:var(--faded);font-family:'Noto Sans JP',sans-serif}
+
+/* Loading */
+.loading-card{
+  background:var(--paper);border:1px solid var(--rule);
+  border-radius:3px;padding:52px 24px;text-align:center;
+  box-shadow:var(--shadow);display:none;margin-bottom:20px;
+}
+.loading-card.show{display:block}
+.loading-brush{
+  font-size:40px;animation:brush 1.2s ease-in-out infinite;
+  display:block;margin-bottom:12px;
+}
+@keyframes brush{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg) translateY(-4px)}}
+.loading-text{
+  font-family:'Noto Serif JP',serif;font-size:13px;color:var(--faded);
+  letter-spacing:.1em;line-height:1.9;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="header-kana">しんじゅくごじぇねれーたー</span>
+    <h1>📖新熟語<br>ジェネレーター</h1>
+    <div class="header-sub">存在しない「新しい熟語」を<br>AIがそれっぽく創出します</div>
+  </div>
+
+  <div class="control">
+    <div class="input-section">
+      <div class="input-label">漢字を入力（または自動生成）</div>
+      <div class="kanji-row" style="margin-bottom:8px">
+        <input type="text" class="kanji-input" id="k1" maxlength="2" placeholder="煩" oninput="updatePreview()">
+        <span class="kanji-plus">＋</span>
+        <input type="text" class="kanji-input" id="k2" maxlength="2" placeholder="惰" oninput="updatePreview()">
+        <span class="kanji-eq">＝</span>
+        <div class="kanji-preview" id="kanji-preview">—</div>
+        <button class="btn-dice" onclick="randomKanji()" title="ランダム生成">🎲</button>
+      </div>
+    </div>
+
+    <div class="input-label">テーマ（任意）</div>
+    <div class="theme-row" id="theme-row">
+      <button class="theme-chip active" onclick="setTheme('',this)">おまかせ</button>
+      <button class="theme-chip" onclick="setTheme('現代社会',this)">現代社会</button>
+      <button class="theme-chip" onclick="setTheme('テクノロジー',this)">テクノロジー</button>
+      <button class="theme-chip" onclick="setTheme('感情・心理',this)">感情・心理</button>
+      <button class="theme-chip" onclick="setTheme('人間関係',this)">人間関係</button>
+      <button class="theme-chip" onclick="setTheme('仕事・労働',this)">仕事・労働</button>
+      <button class="theme-chip" onclick="setTheme('哲学・人生',this)">哲学・人生</button>
+    </div>
+
+    <button class="btn-gen" id="btn-gen" onclick="generate()">
+      墨 新熟語を創出する
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <span class="loading-brush">🖌</span>
+    <div class="loading-text">漢籍を紐解き<br>言霊を宿しています…</div>
+  </div>
+
+  <!-- Word card -->
+  <div class="card-outer">
+    <div class="word-card" id="word-card">
+      <div class="card-lines"></div>
+      <div class="card-inner" id="card-inner"></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section" id="history-section" style="display:none">
+    <div class="history-label">生成履歴</div>
+    <div class="history-grid" id="history-grid"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Kanji pools ──
+const K_COMMON = '愁悦憂怠煩惰閑寂漠渇暁霧宵嵐暮暗煙霞雅雄麗峻凛幽玄奥深遠縁縛綻離逝没沈浮渦湧揺揺震轟響鳴哭泣笑嘆喜怒哀楽怖恋慕憧嫉妒慢傲侮謙敬仰崇賛讃憎恨怨恐慄怯勇猛剛烈激昂憤慨憤嘆悼惜懺悔慚恥誇矜自我他余孤独衆群離脱逃避帰返還滅絶尽果無虚空実充満溢余剰欠乏貧窮豊穣幸禍福吉凶善悪正邪聖俗雅俗高低古新真偽虚実明暗白黒紅蒼碧翠金銀玉珠光影闇夢幻現実時空刻瞬永遠瞬息生死滅創壊変革進退得失勝敗栄枯盛衰起伏波乱穏静動停流停縁理法則則道徳義仁礼智信希望絶望迷悟覚醒眠夢眼耳口舌鼻心肝魂霊体肉知恵智慧力弱剛柔';
+const K_PARTS  = K_COMMON.split('');
+
+let theme    = '';
+let history  = [];
+let current  = null;
+
+function randomKanji(){
+  const pick = () => K_PARTS[Math.floor(Math.random()*K_PARTS.length)];
+  document.getElementById('k1').value = pick();
+  document.getElementById('k2').value = pick();
+  updatePreview();
+}
+
+function updatePreview(){
+  const k1 = document.getElementById('k1').value.trim()||'—';
+  const k2 = document.getElementById('k2').value.trim()||'—';
+  document.getElementById('kanji-preview').textContent = (k1==='—'||k2==='—') ? '—' : k1+k2;
+}
+
+function setTheme(t, btn){
+  theme = t;
+  document.querySelectorAll('.theme-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Generate ──
+async function generate(){
+  let k1 = document.getElementById('k1').value.trim();
+  let k2 = document.getElementById('k2').value.trim();
+
+  // Auto random if empty
+  if(!k1 || !k2){
+    randomKanji();
+    k1 = document.getElementById('k1').value.trim();
+    k2 = document.getElementById('k2').value.trim();
+  }
+
+  const word = k1 + k2;
+  const btn  = document.getElementById('btn-gen');
+  btn.disabled = true;
+  document.getElementById('word-card').classList.remove('show');
+  document.getElementById('loading-card').classList.add('show');
+
+  try{
+    const data = await callClaude(word, k1, k2, theme);
+    current = {...data, word};
+    renderCard(data, word);
+    addHistory(data, word);
+  }catch(e){
+    alert('生成に失敗しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-card').classList.remove('show');
+  }
+}
+
+async function callClaude(word, k1, k2, theme){
+  const themeStr = theme ? `テーマのヒント：「${theme}」。` : '';
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:800,
+      system:`あなたは新語・造語の辞典編者です。漢字2文字からなる「存在しない熟語」を創作し、本物の辞典項目のように記述します。定義は詩的かつ現代的で、「あるある感」のある概念を表現してください。ユーモアは品よく、文語体で記述します。`,
+      messages:[{role:'user', content:`「${word}」（${k1}＋${k2}）という熟語を創作してください。${themeStr}
+
+この熟語は実在しません。今まさに生み出してください。
+
+以下のJSON形式のみで返答してください：
+{
+  "reading": "よみがな（ひらがな）",
+  "word_class": "名詞｜動詞｜形容詞｜副詞 のいずれか",
+  "definition": "定義（50〜80文字）。文語体・辞典スタイルで。現代の感覚に響く概念を。",
+  "example": "用例文（30〜50文字）。熟語を使った自然な文章。「」内に熟語を含める。",
+  "etymology": "漢字の意味の組み合わせ説明（20〜35文字）",
+  "tags": ["関連キーワード1","関連キーワード2","関連キーワード3"],
+  "stamp_text": "この語を一言で言えば（4文字以内）"
+}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+let copyTimer;
+
+function renderCard(data, word){
+  const inner = document.getElementById('card-inner');
+  inner.innerHTML = `
+    <div class="word-head">
+      <div class="word-kanji">${escHtml(word)}</div>
+      <div class="word-stamp">${escHtml(data.stamp_text||'新語')}<br>認定</div>
+    </div>
+    <div class="word-reading">【${escHtml(data.reading||'—')}】</div>
+    <div class="word-divider">
+      <span class="word-class">${escHtml(data.word_class||'名詞')}　／　造語</span>
+    </div>
+    <div class="word-def">${escHtml(data.definition||'')}</div>
+    <span class="word-example-label">◆ 用例</span>
+    <div class="word-example">${escHtml(data.example||'')}</div>
+    <div class="word-tags">
+      <span class="word-tag">語源</span>
+      <span class="word-tag" style="color:var(--ink2)">${escHtml(data.etymology||'')}</span>
+      ${(data.tags||[]).map(t=>`<span class="word-tag">#${escHtml(t)}</span>`).join('')}
+    </div>
+    <div class="card-footer">
+      <div class="card-footer-left">新熟語辞典 第壱版　${new Date().getFullYear()}年</div>
+      <div class="card-footer-acts">
+        <button class="card-btn" onclick="copyCard()">📋 コピー</button>
+        <button class="card-btn" onclick="shareCard()">🔗 シェア</button>
+        <button class="card-btn primary" onclick="generate()">次の熟語 →</button>
+      </div>
+    </div>`;
+
+  const card = document.getElementById('word-card');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── History ──
+function addHistory(data, word){
+  history.unshift({word, reading:data.reading});
+  history = history.slice(0,12);
+  renderHistory();
+}
+
+function renderHistory(){
+  const section = document.getElementById('history-section');
+  const grid    = document.getElementById('history-grid');
+  if(!history.length){ section.style.display='none'; return; }
+  section.style.display='block';
+  grid.innerHTML = history.map(h=>`
+    <div class="hist-chip" onclick="clickHistory('${escAttr(h.word)}')">
+      ${escHtml(h.word)}
+      <span class="hist-chip-reading">${escHtml(h.reading||'')}</span>
+    </div>`).join('');
+}
+
+function clickHistory(word){
+  document.getElementById('k1').value = word[0]||'';
+  document.getElementById('k2').value = word.slice(1)||'';
+  updatePreview();
+  generate();
+}
+
+// ── Copy / Share ──
+function copyCard(){
+  if(!current) return;
+  const w = current.word;
+  const d = current;
+  const text = [
+    `【${w}】（${d.reading}）　${d.word_class}`,
+    ``,
+    d.definition,
+    ``,
+    `◆ 用例`,
+    d.example,
+    ``,
+    `語源：${d.etymology}`,
+    ``,
+    `#新熟語ジェネレーター`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btns = document.querySelectorAll('.card-btn');
+    btns.forEach(b=>{ if(b.textContent.includes('コピー')){ b.textContent='✓ コピー済み'; b.classList.add('done'); setTimeout(()=>{b.textContent='📋 コピー';b.classList.remove('done');},1600); } });
+  });
+}
+
+function shareCard(){
+  if(!current) return;
+  const text = `【${current.word}】（${current.reading}）\n${current.definition}\n#新熟語ジェネレーター`;
+  if(navigator.share) navigator.share({text}).catch(()=>{});
+  else { navigator.clipboard.writeText(text); }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function escAttr(s){ return String(s).replace(/'/g,"\\'") }
+
+// ── Init: auto-fill placeholder ──
+randomKanji();
+</script>
+</body>
+</html>
