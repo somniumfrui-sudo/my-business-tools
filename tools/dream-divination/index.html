@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>夢占い</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600&family=Outfit:wght@400;700;800&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#06040f;
+  --surface:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.10);
+  --text:#ede8f8;
+  --muted:rgba(237,232,248,.55);
+  --light:rgba(237,232,248,.25);
+  --gold:#c8a840;
+  --gold-l:rgba(200,168,64,.12);
+  --purple:#9060ff;
+  --teal:#40c8b8;
+  --shadow-lg:0 20px 60px rgba(0,0,0,.6);
+}
+
+html,body{min-height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:48px 16px 100px;
+  overflow-x:hidden;
+}
+
+/* ── Star field ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(1px 1px at  8% 12%,rgba(200,168,64,.55) 0%,transparent 100%),
+    radial-gradient(1px 1px at 78%  8%,rgba(144,96,255,.4)  0%,transparent 100%),
+    radial-gradient(1px 1px at 42% 35%,rgba(200,168,64,.3)  0%,transparent 100%),
+    radial-gradient(1px 1px at 91% 42%,rgba(64,200,184,.45) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 68%,rgba(200,168,64,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 62% 78%,rgba(144,96,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 15% 90%,rgba(64,200,184,.3)  0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 85%,rgba(200,168,64,.4)  0%,transparent 100%),
+    radial-gradient(1px 1px at 50% 55%,rgba(200,168,64,.2)  0%,transparent 100%),
+    radial-gradient(1px 1px at 33% 20%,rgba(64,200,184,.3)  0%,transparent 100%),
+    radial-gradient(600px 400px at 20% 10%,rgba(90,40,160,.12) 0%,transparent 60%),
+    radial-gradient(500px 600px at 80% 80%,rgba(40,80,160,.10) 0%,transparent 60%);
+}
+
+/* Moon glow */
+body::after{
+  content:'';position:fixed;top:-80px;right:-80px;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(rgba(200,168,64,.08),transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:40px}
+.moon{
+  font-size:52px;display:block;margin-bottom:14px;
+  animation:moonFloat 6s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(200,168,64,.4));
+}
+@keyframes moonFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.header h1{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(26px,6vw,38px);font-weight:600;
+  letter-spacing:.12em;line-height:1.2;margin-bottom:8px;
+  background:linear-gradient(135deg,#c8a840,#e8d080,#c8a840);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header-sub{font-size:12px;color:var(--muted);letter-spacing:.1em;line-height:1.8}
+
+/* ── Input card ── */
+.input-card{
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:20px;padding:24px 22px;
+  box-shadow:var(--shadow-lg);margin-bottom:16px;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(8px);
+}
+.input-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,168,64,.4),transparent);
+}
+
+.input-label{
+  font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.input-label::after{content:'';flex:1;height:1px;background:rgba(200,168,64,.2)}
+
+textarea#dream-input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  color:var(--text);font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;font-weight:400;
+  padding:14px 16px;outline:none;resize:none;line-height:1.85;
+  min-height:130px;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+  caret-color:var(--gold);
+}
+textarea#dream-input:focus{
+  border-color:rgba(200,168,64,.3);
+  background:rgba(255,255,255,.05);
+  box-shadow:0 0 0 3px rgba(200,168,64,.06);
+}
+textarea#dream-input::placeholder{color:rgba(237,232,248,.2)}
+
+/* Presets */
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0}
+.preset{
+  font-size:11px;padding:4px 12px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  color:var(--muted);cursor:pointer;transition:all .13s;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.preset:hover{border-color:rgba(200,168,64,.4);color:var(--gold)}
+
+/* Mood selector */
+.mood-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.mood-btn{
+  flex:1;min-width:70px;font-size:11px;font-weight:500;
+  padding:7px 8px;border-radius:9px;
+  border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);
+  color:var(--muted);cursor:pointer;transition:all .14s;text-align:center;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.mood-btn:hover{border-color:rgba(200,168,64,.35);color:var(--text)}
+.mood-btn.active{background:rgba(200,168,64,.12);border-color:rgba(200,168,64,.45);color:var(--gold)}
+
+/* Divination button */
+.btn-divine{
+  width:100%;
+  background:linear-gradient(135deg,rgba(144,96,255,.7),rgba(200,168,64,.6));
+  color:#fff;border:none;border-radius:14px;
+  font-family:'Noto Serif JP',serif;
+  font-size:16px;font-weight:600;padding:16px;cursor:pointer;
+  letter-spacing:.14em;
+  box-shadow:0 4px 24px rgba(144,96,255,.25);
+  transition:opacity .13s,transform .1s,box-shadow .2s;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+}
+.btn-divine:hover{opacity:.92;box-shadow:0 8px 36px rgba(144,96,255,.35);transform:translateY(-1px)}
+.btn-divine:active{transform:scale(.99)}
+.btn-divine:disabled{opacity:.3;cursor:default;transform:none}
+
+/* ── Loading ── */
+.loading-card{
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+  border-radius:20px;padding:52px 24px;text-align:center;
+  box-shadow:var(--shadow-lg);margin-bottom:16px;
+  display:none;backdrop-filter:blur(8px);
+}
+.loading-card.show{display:block}
+.crystal{
+  font-size:48px;display:block;margin-bottom:16px;
+  animation:crystalSpin 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 16px rgba(144,96,255,.5));
+}
+@keyframes crystalSpin{
+  0%,100%{transform:rotate(-5deg) scale(1)}
+  50%{transform:rotate(5deg) scale(1.08)}
+}
+.loading-text{
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--muted);
+  letter-spacing:.1em;line-height:1.9;
+}
+
+/* ── Result card ── */
+.result-card{
+  background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+  border-radius:20px;overflow:hidden;
+  box-shadow:var(--shadow-lg);margin-bottom:16px;
+  display:none;backdrop-filter:blur(8px);
+  animation:resultIn .5s ease both;
+}
+.result-card.show{display:block}
+@keyframes resultIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* Result header */
+.result-header{
+  padding:20px 22px 16px;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.result-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,168,64,.5),transparent);
+}
+.result-tag{
+  font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+.result-title{
+  font-family:'Noto Serif JP',serif;font-size:clamp(18px,4vw,24px);
+  font-weight:600;color:var(--text);line-height:1.4;letter-spacing:.06em;
+}
+
+/* Lucky meter */
+.luck-bar-wrap{
+  padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.luck-label{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;
+}
+.luck-score{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  color:var(--gold);
+}
+.luck-track{
+  height:6px;background:rgba(255,255,255,.06);
+  border-radius:3px;overflow:hidden;
+}
+.luck-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--purple),var(--gold));
+  transition:width .8s cubic-bezier(.4,0,.2,1);
+}
+
+/* Symbol tags */
+.symbol-row{
+  display:flex;flex-wrap:wrap;gap:6px;padding:14px 22px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.symbol-tag{
+  display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+  padding:4px 12px;border-radius:100px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:var(--muted);
+}
+.symbol-tag .sym-icon{font-size:14px}
+
+/* Reading sections */
+.reading-body{padding:20px 22px}
+.reading-section{margin-bottom:20px}
+.reading-section:last-child{margin-bottom:0}
+.rs-label{
+  font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:9px;display:flex;align-items:center;gap:7px;
+}
+.rs-label::after{content:'';flex:1;height:1px;background:rgba(200,168,64,.15)}
+.rs-text{
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--muted);
+  line-height:2.0;letter-spacing:.04em;
+}
+.rs-text strong{color:var(--text);font-weight:500}
+
+/* Lucky items */
+.lucky-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+}
+.lucky-item{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;padding:10px 12px;
+}
+.lucky-item-label{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--light);margin-bottom:4px}
+.lucky-item-val{
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--text);font-weight:500;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* Today's advice */
+.advice-box{
+  background:rgba(200,168,64,.06);border:1px solid rgba(200,168,64,.15);
+  border-radius:12px;padding:14px 16px;margin-top:16px;
+}
+.advice-text{
+  font-family:'Noto Serif JP',serif;font-size:14px;color:var(--text);
+  line-height:1.9;letter-spacing:.04em;font-weight:400;
+}
+
+/* Result footer */
+.result-footer{
+  padding:12px 20px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;gap:7px;
+}
+.rf-btn{
+  flex:1;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  border-radius:9px;font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:600;padding:10px;cursor:pointer;
+  color:var(--muted);transition:all .13s;text-align:center;
+}
+.rf-btn:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.rf-btn.primary{
+  background:rgba(144,96,255,.15);border-color:rgba(144,96,255,.3);color:#c8a0ff;
+}
+.rf-btn.primary:hover{background:rgba(144,96,255,.22)}
+.rf-btn.done{border-color:rgba(64,200,184,.3);color:var(--teal)}
+
+/* ── History ── */
+.history-card{
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;overflow:hidden;margin-bottom:16px;
+  display:none;
+}
+.history-card.show{display:block}
+.history-head{
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--light);display:flex;align-items:center;justify-content:space-between;
+}
+.history-list{max-height:180px;overflow-y:auto}
+.hist-item{
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background .12s;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:rgba(255,255,255,.03)}
+.hist-tag{
+  font-size:10px;font-weight:600;letter-spacing:.06em;
+  color:var(--gold);flex-shrink:0;margin-top:2px;
+}
+.hist-title{font-family:'Noto Serif JP',serif;font-size:13px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <span class="moon">🔮</span>
+    <h1>夢　占　い</h1>
+    <div class="header-sub">見た夢を入力すると、星と月があなたの眠りのメッセージを読み解きます</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-card">
+    <div class="input-label">夢の内容を教えてください</div>
+
+    <textarea id="dream-input"
+      placeholder="例：空を飛んでいた。青い海の上を気持ちよく飛んでいたが、だんだん高度が下がり始めた…"></textarea>
+
+    <div class="presets">
+      <span style="font-size:11px;color:var(--light);align-self:center">よくある夢：</span>
+      <button class="preset" onclick="setPreset('空を飛んでいた')">空を飛ぶ</button>
+      <button class="preset" onclick="setPreset('歯が抜けた')">歯が抜ける</button>
+      <button class="preset" onclick="setPreset('追いかけられていた')">追いかけられる</button>
+      <button class="preset" onclick="setPreset('試験に遅刻した')">試験に遅刻</button>
+      <button class="preset" onclick="setPreset('故人が出てきた')">故人が出てくる</button>
+      <button class="preset" onclick="setPreset('水の中にいた')">水の中</button>
+      <button class="preset" onclick="setPreset('迷子になった')">迷子になる</button>
+    </div>
+
+    <div class="input-label" style="margin-top:4px">夢の雰囲気</div>
+    <div class="mood-row">
+      <button class="mood-btn active" id="mood-0" onclick="setMood(0,this)">😌 穏やか</button>
+      <button class="mood-btn" id="mood-1" onclick="setMood(1,this)">😨 不安・怖い</button>
+      <button class="mood-btn" id="mood-2" onclick="setMood(2,this)">✨ 幻想的</button>
+      <button class="mood-btn" id="mood-3" onclick="setMood(3,this)">😢 悲しい</button>
+      <button class="mood-btn" id="mood-4" onclick="setMood(4,this)">🌀 混乱</button>
+    </div>
+
+    <button class="btn-divine" id="btn-divine" onclick="divine()">
+      🔮 夢を占う
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-card" id="loading-card">
+    <span class="crystal">🔮</span>
+    <div class="loading-text">夢の象徴を読み解いています…<br>星と月があなたの眠りを巡っています</div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+
+    <div class="result-header">
+      <div class="result-tag">✦ 夢占いの結果</div>
+      <div class="result-title" id="r-title">—</div>
+    </div>
+
+    <div class="luck-bar-wrap">
+      <div class="luck-label">
+        <span>運気スコア</span>
+        <span class="luck-score" id="r-score">—</span>
+      </div>
+      <div class="luck-track">
+        <div class="luck-fill" id="r-luck-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="symbol-row" id="r-symbols"></div>
+
+    <div class="reading-body">
+      <div class="reading-section">
+        <div class="rs-label">🌙 夢が示すもの</div>
+        <div class="rs-text" id="r-meaning"></div>
+      </div>
+      <div class="reading-section">
+        <div class="rs-label">💫 深層心理のメッセージ</div>
+        <div class="rs-text" id="r-psychology"></div>
+      </div>
+      <div class="reading-section">
+        <div class="rs-label">✨ ラッキーアイテム</div>
+        <div class="lucky-grid" id="r-lucky"></div>
+      </div>
+      <div class="advice-box">
+        <div class="rs-label" style="margin-bottom:8px">🌟 今日のアドバイス</div>
+        <div class="advice-text" id="r-advice"></div>
+      </div>
+    </div>
+
+    <div class="result-footer">
+      <button class="rf-btn primary" onclick="divine()">🔮 もう一度占う</button>
+      <button class="rf-btn" id="btn-copy-result" onclick="copyResult()">📋 コピー</button>
+      <button class="rf-btn" onclick="document.getElementById('dream-input').value='';document.getElementById('dream-input').focus()">✏ 別の夢を入力</button>
+    </div>
+
+  </div>
+
+  <!-- History -->
+  <div class="history-card" id="history-card">
+    <div class="history-head">
+      <span>過去の夢占い</span>
+      <button style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--light)" onclick="clearHistory()">クリア</button>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+</div>
+
+<script>
+let mood    = '穏やか';
+let history = JSON.parse(localStorage.getItem('dream-history')||'[]');
+let lastResult = null;
+
+const MOODS = ['穏やか','不安・怖い','幻想的','悲しい','混乱'];
+function setMood(i, btn){
+  mood = MOODS[i];
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setPreset(text){
+  document.getElementById('dream-input').value = text;
+  document.getElementById('dream-input').focus();
+}
+
+// ── Divine ──
+async function divine(){
+  const dream = document.getElementById('dream-input').value.trim();
+  if(!dream){ alert('夢の内容を入力してください'); return; }
+
+  const btn = document.getElementById('btn-divine');
+  btn.disabled = true;
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('loading-card').classList.add('show');
+
+  try{
+    const data = await callClaude(dream, mood);
+    renderResult(data, dream);
+    addHistory(data, dream);
+  }catch(e){
+    alert('占いに失敗しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-card').classList.remove('show');
+  }
+}
+
+async function callClaude(dream, mood){
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1200,
+      system:`あなたは東洋と西洋の夢占いを融合させた神秘的な占い師です。夢の象徴・ユング心理学・古代の夢診断を組み合わせて、詩的かつ具体的に夢を解釈します。温かく前向きでありながら、深みのある分析をしてください。すべて日本語で答えます。`,
+      messages:[{role:'user', content:`夢の内容：${dream}\n夢の雰囲気：${mood}\n\n以下のJSON形式のみで返答してください：\n{\n  "title": "この夢を一言で表すタイトル（15文字以内）",\n  "luck_score": 1〜100の整数（運気の強さ）,\n  "symbols": [\n    {"icon": "絵文字1つ", "label": "夢の象徴（6文字以内）"},\n    {"icon": "絵文字1つ", "label": "夢の象徴（6文字以内）"},\n    {"icon": "絵文字1つ", "label": "夢の象徴（6文字以内）"}\n  ],\n  "meaning": "夢が示す意味（80〜120文字）。詩的かつ具体的に。",\n  "psychology": "深層心理のメッセージ（80〜120文字）。ユング的視点を交えて。",\n  "lucky": {\n    "color": "ラッキーカラー（絵文字＋名前）",\n    "item": "ラッキーアイテム（絵文字＋名前）",\n    "direction": "吉方位（絵文字＋方角）",\n    "action": "今日すべきこと（絵文字＋一言）"\n  },\n  "advice": "今日のアドバイス（60〜90文字）。夢のメッセージを活かした具体的な行動指針。"\n}`}]
+    })
+  });
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+function renderResult(data, dream){
+  lastResult = {data, dream};
+
+  document.getElementById('r-title').textContent = data.title||'—';
+
+  // Luck score
+  const score = Math.max(1,Math.min(100,data.luck_score||50));
+  document.getElementById('r-score').textContent = score + ' / 100';
+  setTimeout(()=>{ document.getElementById('r-luck-fill').style.width = score+'%'; },100);
+
+  // Symbols
+  document.getElementById('r-symbols').innerHTML = (data.symbols||[]).map(s=>`
+    <span class="symbol-tag"><span class="sym-icon">${s.icon}</span>${escHtml(s.label)}</span>`).join('');
+
+  // Text sections
+  document.getElementById('r-meaning').innerHTML    = escHtml(data.meaning||'').replace(/「([^」]+)」/g,'「<strong>$1</strong>」');
+  document.getElementById('r-psychology').innerHTML = escHtml(data.psychology||'').replace(/「([^」]+)」/g,'「<strong>$1</strong>」');
+
+  // Lucky grid
+  const lk = data.lucky||{};
+  document.getElementById('r-lucky').innerHTML = [
+    {label:'カラー',val:lk.color||'—'},
+    {label:'アイテム',val:lk.item||'—'},
+    {label:'吉方位',val:lk.direction||'—'},
+    {label:'今日の行動',val:lk.action||'—'},
+  ].map(i=>`
+    <div class="lucky-item">
+      <div class="lucky-item-label">${i.label}</div>
+      <div class="lucky-item-val">${escHtml(i.val)}</div>
+    </div>`).join('');
+
+  document.getElementById('r-advice').textContent = data.advice||'';
+
+  const card = document.getElementById('result-card');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── History ──
+function addHistory(data, dream){
+  history.unshift({title:data.title, dream:dream.slice(0,40), score:data.luck_score, data, ts:new Date().toLocaleDateString('ja-JP')});
+  history = history.slice(0,10);
+  localStorage.setItem('dream-history', JSON.stringify(history));
+  renderHistory();
+}
+function renderHistory(){
+  const card = document.getElementById('history-card');
+  const list = document.getElementById('history-list');
+  if(!history.length){ card.classList.remove('show'); return; }
+  card.classList.add('show');
+  list.innerHTML = history.map((h,i)=>`
+    <div class="hist-item" onclick="recallHistory(${i})">
+      <span class="hist-tag">✦</span>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:2px">${escHtml(h.title||'—')}</div>
+        <div class="hist-title">${escHtml(h.dream)}${h.dream.length>=40?'…':''}</div>
+        <div style="font-size:10px;color:var(--light);margin-top:2px">${h.ts} · 運気 ${h.score}/100</div>
+      </div>
+    </div>`).join('');
+}
+function recallHistory(i){
+  if(history[i]){
+    document.getElementById('dream-input').value = history[i].dream;
+    renderResult(history[i].data, history[i].dream);
+  }
+}
+function clearHistory(){
+  history=[];localStorage.removeItem('dream-history');renderHistory();
+}
+
+// ── Copy ──
+function copyResult(){
+  if(!lastResult) return;
+  const d = lastResult.data;
+  const text = [
+    `🌙 夢占いの結果`,``,
+    `【${d.title}】`,``,
+    `▶ 夢が示すもの`,d.meaning,``,
+    `▶ 深層心理のメッセージ`,d.psychology,``,
+    `▶ 今日のアドバイス`,d.advice,``,
+    `運気スコア：${d.luck_score}/100`,
+    `ラッキーカラー：${d.lucky?.color||'—'}`,
+    `ラッキーアイテム：${d.lucky?.item||'—'}`,
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('btn-copy-result');
+    btn.textContent='✓ コピー済み';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='📋 コピー';btn.classList.remove('done');},1600);
+  });
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// Init
+renderHistory();
+</script>
+</body>
+</html>
