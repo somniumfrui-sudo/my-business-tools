@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偽ニュース見出しメーカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Outfit:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;500&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --paper:#f9f4e8;
+  --paper2:#f3ead6;
+  --ink:#1a1208;
+  --ink2:#2d2010;
+  --faded:#7a6a50;
+  --rule:#c8b890;
+  --red:#cc1a1a;
+  --blue:#1a3a8a;
+  --shadow:0 4px 20px rgba(0,0,0,.12);
+}
+
+body{
+  font-family:'Noto Serif JP',serif;
+  background:#d4c8a8;
+  min-height:100vh;
+  padding:28px 16px 80px;
+}
+
+/* aged paper texture */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity:.8;
+}
+
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto}
+
+/* ── Newspaper masthead ── */
+.masthead{
+  background:var(--paper);
+  border:1px solid var(--rule);
+  box-shadow:var(--shadow);
+  padding:14px 20px 12px;
+  text-align:center;
+  margin-bottom:0;
+  position:relative;
+}
+.masthead::after{
+  content:'';display:block;
+  height:4px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0,var(--ink) 8px,transparent 8px,transparent 12px);
+  margin-top:10px;
+}
+
+.paper-name{
+  font-family:'UnifrakturMaguntia',cursive;
+  font-size:clamp(28px,7vw,52px);
+  color:var(--ink);letter-spacing:.04em;
+  line-height:1;margin-bottom:6px;
+}
+.paper-sub{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:9px;color:var(--faded);letter-spacing:.12em;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  padding:3px 0;font-family:'Outfit',sans-serif;font-weight:600;
+  text-transform:uppercase;
+}
+
+/* ── Control bar ── */
+.control-bar{
+  background:var(--ink);
+  padding:10px 16px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.ctrl-label{
+  font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);font-family:'Outfit',sans-serif;white-space:nowrap;
+}
+.divider-v{width:1px;height:18px;background:rgba(255,255,255,.15)}
+
+/* Category chips */
+.cat-chip{
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:2px;
+  border:1px solid rgba(255,255,255,.2);background:transparent;
+  color:rgba(255,255,255,.5);cursor:pointer;transition:all .13s;
+  font-family:'Outfit',sans-serif;letter-spacing:.04em;
+}
+.cat-chip:hover{border-color:rgba(255,255,255,.6);color:#fff}
+.cat-chip.active{background:#fff;color:var(--ink);border-color:#fff}
+
+/* Tone select */
+.tone-sel{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  border-radius:2px;color:rgba(255,255,255,.7);
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;
+  padding:5px 10px;outline:none;cursor:pointer;
+  appearance:none;margin-left:auto;
+}
+.tone-sel option{background:var(--ink);color:#fff}
+
+/* Generate button */
+.btn-gen{
+  background:var(--red);color:#fff;border:none;border-radius:2px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:900;
+  padding:7px 20px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;
+  transition:opacity .12s,transform .1s;white-space:nowrap;flex-shrink:0;
+}
+.btn-gen:hover{opacity:.88}
+.btn-gen:active{transform:scale(.98)}
+.btn-gen:disabled{opacity:.4;cursor:default}
+
+/* ── Newspaper grid ── */
+.paper-body{
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-top:none;
+  box-shadow:var(--shadow);
+  padding:16px 18px 18px;
+  position:relative;
+}
+
+/* Column separators */
+.col-rule{
+  position:absolute;top:16px;bottom:18px;width:1px;
+  background:var(--rule);
+}
+
+/* Breaking news banner */
+.breaking-banner{
+  background:var(--red);color:#fff;
+  padding:6px 14px;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;
+  border-radius:2px;
+  display:none;
+}
+.breaking-banner.show{display:flex}
+.breaking-label{
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:900;
+  letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;
+}
+.breaking-ticker{
+  font-family:'Noto Serif JP',serif;font-size:13px;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* Section divider */
+.section-head{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+.section-head::before,.section-head::after{content:'';flex:1;height:2px;background:var(--ink)}
+.section-head-label{
+  font-family:'Outfit',sans-serif;font-size:9px;font-weight:900;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ink);
+  white-space:nowrap;padding:0 4px;
+}
+
+/* Headline cards grid */
+.headlines-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:0;
+}
+
+/* Individual headline card */
+.hl-card{
+  padding:14px 16px;
+  border-bottom:1px solid var(--rule);
+  border-right:1px solid var(--rule);
+  position:relative;
+  animation:cardIn .3s ease both;
+  cursor:default;transition:background .15s;
+}
+.hl-card:hover{background:rgba(0,0,0,.02)}
+.hl-card:nth-child(3n){border-right:none}
+@media(max-width:600px){
+  .hl-card{border-right:none}
+  .hl-card:nth-child(3n){border-right:none}
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Urgency badge */
+.urgency{
+  font-family:'Outfit',sans-serif;font-size:8px;font-weight:900;
+  letter-spacing:.16em;text-transform:uppercase;
+  padding:2px 7px;border-radius:1px;margin-bottom:7px;display:inline-block;
+}
+.u-breaking{background:var(--red);color:#fff}
+.u-exclusive{background:var(--ink);color:#fff}
+.u-developing{background:var(--blue);color:#fff}
+.u-normal{background:var(--paper2);color:var(--faded);border:1px solid var(--rule)}
+.u-satire{background:var(--faded);color:#fff}
+
+/* Category label */
+.cat-label{
+  font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--faded);
+  margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;
+}
+.cat-label-num{color:var(--rule)}
+
+/* Headline text */
+.hl-text{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(15px,3vw,19px);
+  font-weight:700;line-height:1.45;
+  color:var(--ink);margin-bottom:7px;
+  letter-spacing:.02em;
+}
+.hl-text.big{font-size:clamp(18px,4vw,24px);font-weight:900}
+.hl-text.small{font-size:13px;font-weight:400}
+
+/* Lead text */
+.hl-lead{
+  font-size:11px;color:var(--faded);line-height:1.6;
+  margin-bottom:10px;display:none;
+}
+.hl-lead.show{display:block}
+
+/* Card footer */
+.hl-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;
+}
+.hl-time{font-size:9px;color:var(--rule);font-family:'Outfit',sans-serif;font-weight:600;letter-spacing:.06em}
+.hl-actions{display:flex;gap:4px}
+.hl-btn{
+  font-size:9px;font-weight:600;padding:3px 8px;border-radius:1px;
+  border:1px solid var(--rule);background:transparent;
+  color:var(--faded);cursor:pointer;transition:all .12s;
+  font-family:'Outfit',sans-serif;letter-spacing:.04em;
+}
+.hl-btn:hover{border-color:var(--ink);color:var(--ink)}
+.hl-btn.copied{border-color:var(--faded);color:var(--faded)}
+
+/* ── Loading state ── */
+.loading-row{
+  display:flex;align-items:center;gap:10px;padding:18px 16px;
+  font-family:'Noto Serif JP',serif;font-size:13px;color:var(--faded);
+  border-bottom:1px solid var(--rule);
+  display:none;
+}
+.loading-row.show{display:flex}
+.loading-dots span{
+  display:inline-block;animation:ldot 1.2s ease-in-out infinite;
+  font-size:16px;
+}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes ldot{0%,100%{opacity:.2}50%{opacity:1}}
+
+/* ── Footer ── */
+.paper-footer{
+  background:var(--paper);border:1px solid var(--rule);border-top:none;
+  padding:8px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:9px;color:var(--faded);font-family:'Outfit',sans-serif;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  box-shadow:var(--shadow);
+  flex-wrap:wrap;gap:6px;
+}
+.paper-footer a{color:var(--faded);text-decoration:none}
+.gen-count{
+  font-family:'UnifrakturMaguntia',cursive;font-size:14px;
+  color:var(--ink);letter-spacing:.04em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--paper2)}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="paper-name">偽日報 FAKE DAILY</div>
+    <div class="paper-sub">
+      <span>AIが作った架空ニュース</span>
+      <span>第 <span id="edition-num">1</span> 版</span>
+      <span id="today-date">—</span>
+      <span>定価：0円（非実在）</span>
+    </div>
+  </div>
+
+  <!-- Control bar -->
+  <div class="control-bar">
+    <span class="ctrl-label">カテゴリ</span>
+    <div class="divider-v"></div>
+    <button class="cat-chip active" id="cat-all" onclick="setCat('おまかせ',this)">おまかせ</button>
+    <button class="cat-chip" onclick="setCat('テクノロジー',this)">🤖 テック</button>
+    <button class="cat-chip" onclick="setCat('政治・社会',this)">🏛 政治</button>
+    <button class="cat-chip" onclick="setCat('宇宙・未来',this)">🚀 宇宙</button>
+    <button class="cat-chip" onclick="setCat('経済・ビジネス',this)">💼 経済</button>
+    <button class="cat-chip" onclick="setCat('生活・トレンド',this)">🌱 生活</button>
+    <button class="cat-chip" onclick="setCat('スポーツ・エンタメ',this)">🎭 エンタメ</button>
+    <div class="divider-v"></div>
+    <select class="tone-sel" id="tone-sel">
+      <option value="funny">ユーモア系</option>
+      <option value="serious" selected>真面目風</option>
+      <option value="absurd">シュール系</option>
+      <option value="clickbait">クリックベイト</option>
+    </select>
+    <button class="btn-gen" id="btn-gen" onclick="generate()">
+      ▶ 号外を発行
+    </button>
+  </div>
+
+  <!-- Paper body -->
+  <div class="paper-body">
+
+    <!-- Breaking news -->
+    <div class="breaking-banner" id="breaking-banner">
+      <span class="breaking-label">🚨 速報</span>
+      <span class="breaking-ticker" id="breaking-text">—</span>
+    </div>
+
+    <!-- Section head -->
+    <div class="section-head">
+      <span class="section-head-label">本日の主要ニュース</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-row" id="loading-row">
+      <div class="loading-dots"><span>●</span><span>●</span><span>●</span></div>
+      <span>特派員がデタラメを入稿中…</span>
+    </div>
+
+    <!-- Headlines grid -->
+    <div class="headlines-grid" id="headlines-grid">
+      <!-- placeholder -->
+      <div class="hl-card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--faded)">
+        <div style="font-size:32px;margin-bottom:10px;opacity:.3">📰</div>
+        「号外を発行」ボタンを押すと<br>存在しないニュースが飛び出します
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="paper-footer">
+    <span class="gen-count">発行部数 <span id="gen-count">0</span> 部</span>
+    <span>すべての記事はAIによる架空のニュースです。実在の人物・団体とは一切関係ありません。</span>
+    <span>© 偽日報 FAKE DAILY — 非実在メディア</span>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+let category  = 'おまかせ';
+let genCount  = 0;
+let edition   = 1;
+let allHeads  = [];
+
+// ── Init ──
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+// ── Category ──
+function setCat(c, btn){
+  category = c;
+  document.querySelectorAll('.cat-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Generate ──
+async function generate(){
+  const tone = document.getElementById('tone-sel').value;
+  const btn  = document.getElementById('btn-gen');
+  btn.disabled = true;
+  document.getElementById('loading-row').classList.add('show');
+  document.getElementById('breaking-banner').classList.remove('show');
+
+  try{
+    const data = await callClaude(category, tone);
+    renderHeadlines(data);
+    genCount++;
+    edition++;
+    document.getElementById('gen-count').textContent = genCount * 8;
+    document.getElementById('edition-num').textContent = edition;
+  }catch(e){
+    alert('生成に失敗しました：' + e.message);
+  }finally{
+    btn.disabled = false;
+    document.getElementById('loading-row').classList.remove('show');
+  }
+}
+
+async function callClaude(cat, tone){
+  const toneDesc = {
+    funny:     'ユーモアがあり、くすっと笑える。ありえない設定でも読んで楽しいもの。',
+    serious:   'いかにも本物のニュースのような真面目で具体的な文体。でも内容はデタラメ。',
+    absurd:    '意味不明だがなぜか深刻そうな、シュールな見出し。',
+    clickbait: '「〇〇だと判明」「衝撃」「驚愕」など、クリックしたくなる煽り文句を使う。',
+  };
+
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1600,
+      system:`あなたは架空ニュースを量産するユーモアのある編集長です。実在しないニュース見出しを8本生成します。すべて完全なフィクションで、実在の人物・企業・出来事とは無関係です。日本語で書いてください。`,
+      messages:[{role:'user', content:`カテゴリ：${cat}\nトーン：${toneDesc[tone]}\n\n架空のニュース見出しを8本生成してください。\n未来・近未来・SF・日常の誇張など多様なネタを混ぜてください。\n\nJSON形式のみで返答（前置き不要）:\n{\n  "breaking": "速報見出し1本（特に衝撃的なもの）",\n  "headlines": [\n    {\n      "urgency": "breaking|exclusive|developing|normal|satire",\n      "category": "カテゴリ名（8文字以内）",\n      "headline": "見出し（20〜45文字）",\n      "lead": "リード文（30〜50文字）。記事の第1段落風に。",\n      "size": "big|normal|small"\n    }\n  ]\n}`}]
+    })
+  });
+
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+const URGENCY_LABEL = {breaking:'速 報',exclusive:'独 自',developing:'続 報',normal:'一般',satire:'風 刺'};
+const URGENCY_CLASS = {breaking:'u-breaking',exclusive:'u-exclusive',developing:'u-developing',normal:'u-normal',satire:'u-satire'};
+const TIMES = ['1分前','3分前','8分前','15分前','23分前','41分前','1時間前','2時間前'];
+
+function renderHeadlines(data){
+  // Breaking banner
+  if(data.breaking){
+    document.getElementById('breaking-text').textContent = data.breaking;
+    document.getElementById('breaking-banner').classList.add('show');
+  }
+
+  const grid = document.getElementById('headlines-grid');
+  grid.innerHTML = '';
+
+  (data.headlines||[]).forEach((h,i)=>{
+    const card  = document.createElement('div');
+    card.className = 'hl-card';
+    card.style.animationDelay = (i*.04)+'s';
+
+    const urgClass = URGENCY_CLASS[h.urgency]||'u-normal';
+    const urgLabel = URGENCY_LABEL[h.urgency]||'一般';
+    const hlClass  = h.size==='big'?'hl-text big':h.size==='small'?'hl-text small':'hl-text';
+    const time     = TIMES[i%TIMES.length];
+    const id       = `hl-${i}`;
+
+    card.innerHTML = `
+      <span class="urgency ${urgClass}">${urgLabel}</span>
+      <div class="cat-label">
+        <span>${escHtml(h.category||'')}</span>
+        <span class="cat-label-num">No.${String(i+1).padStart(2,'0')}</span>
+      </div>
+      <div class="${hlClass}" id="${id}-text">${escHtml(h.headline||'')}</div>
+      <div class="hl-lead show" id="${id}-lead">${escHtml(h.lead||'')}</div>
+      <div class="hl-footer">
+        <span class="hl-time">${time}</span>
+        <div class="hl-actions">
+          <button class="hl-btn" onclick="copyHl(${i},'${id}')">コピー</button>
+          <button class="hl-btn" onclick="toggleLead('${id}')">詳細</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  // Store for copy
+  window._headlines = data.headlines || [];
+  window._breaking  = data.breaking  || '';
+}
+
+function toggleLead(id){
+  document.getElementById(id+'-lead')?.classList.toggle('show');
+}
+
+function copyHl(i, id){
+  const h = (window._headlines||[])[i];
+  if(!h) return;
+  const text = `【${h.category}】${h.headline}\n\n${h.lead}\n\n#架空ニュース #偽日報`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector(`#${id}-text`)?.closest('.hl-card')?.querySelector('.hl-btn');
+    if(btn){ btn.textContent='✓'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='コピー'; btn.classList.remove('copied'); },1500); }
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+</script>
+</body>
+</html>
