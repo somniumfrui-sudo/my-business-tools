@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偽・インフルエンサー投稿プレビュー</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f0f2f5;
+  --white:#fff;
+  --border:#e4e8ef;
+  --text:#111318;
+  --muted:#374151;
+  --light:#6b7280;
+  --accent:#0057ff;
+  --accent-l:rgba(0,87,255,.07);
+  --shadow:0 1px 3px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:36px 16px 100px;
+}
+.wrap{max-width:960px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:22px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-.02em;margin-bottom:4px;
+}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Layout ── */
+.layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+
+/* ── Input card ── */
+.input-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  box-shadow:var(--shadow-md);
+  position:sticky;top:20px;
+}
+.card-label{
+  font-size:10px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--light);margin-bottom:10px;display:block;
+}
+
+.field{margin-bottom:12px}
+.field label{font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:5px}
+.field input,.field textarea,.field select{
+  width:100%;background:#f5f7fa;border:1.5px solid var(--border);
+  border-radius:9px;color:var(--text);
+  font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:400;
+  padding:9px 12px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:var(--accent);background:var(--white);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--light)}
+.field textarea{resize:vertical;line-height:1.75}
+.field select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;padding-right:28px;
+}
+
+/* Avatar upload area */
+.avatar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar-preview{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;cursor:pointer;overflow:hidden;flex-shrink:0;
+  border:2px solid var(--border);transition:opacity .12s;
+}
+.avatar-preview:hover{opacity:.85}
+.avatar-preview img{width:100%;height:100%;object-fit:cover}
+.avatar-info{flex:1;min-width:0}
+.avatar-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar-handle{font-size:11px;color:var(--light)}
+#avatar-file{display:none}
+
+/* Slider */
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.slider-label{font-size:12px;color:var(--muted);min-width:70px}
+.slider-val{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;
+  color:var(--text);min-width:60px;text-align:right;
+}
+input[type=range]{
+  flex:1;height:3px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:var(--border);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--text);border:2px solid #fff;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Platform tabs */
+.platform-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.ptab{
+  flex:1;font-size:11px;font-weight:600;padding:6px 8px;border-radius:8px;
+  border:1.5px solid var(--border);background:#f5f7fa;
+  color:var(--muted);cursor:pointer;transition:all .13s;text-align:center;
+}
+.ptab:hover{border-color:var(--text);color:var(--text)}
+.ptab.active{background:var(--text);border-color:var(--text);color:#fff}
+
+/* Image area */
+.img-upload{
+  width:100%;aspect-ratio:16/9;background:#f0f2f5;
+  border:2px dashed var(--border);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .13s;font-size:12px;color:var(--light);gap:6px;
+  overflow:hidden;position:relative;
+}
+.img-upload:hover{border-color:var(--accent);background:var(--accent-l)}
+.img-upload img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.img-upload-label{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+#post-img-file{display:none}
+
+.btn-preview{
+  width:100%;background:#111318;color:#fff;border:none;
+  border-radius:10px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:800;padding:13px;cursor:pointer;
+  transition:opacity .13s,transform .1s;margin-top:4px;
+}
+.btn-preview:hover{opacity:.88}
+.btn-preview:active{transform:scale(.99)}
+
+/* ── Preview area ── */
+.preview-area{display:flex;flex-direction:column;gap:16px}
+
+/* Phone frame */
+.phone-frame{
+  background:var(--white);border-radius:16px;
+  box-shadow:var(--shadow-md);overflow:hidden;
+  max-width:420px;margin:0 auto;width:100%;
+}
+.platform-badge{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--light);padding:8px 16px 6px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.screenshot-hint{
+  font-size:10px;color:var(--light);cursor:pointer;
+  transition:color .12s;display:flex;align-items:center;gap:4px;
+}
+.screenshot-hint:hover{color:var(--accent)}
+
+/* ══════════════════════════════
+   X (Twitter) mockup
+══════════════════════════════ */
+.x-mock{
+  background:#000;font-family:-apple-system,'Segoe UI',sans-serif;
+}
+.x-post{padding:14px 16px 0}
+.x-header{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.x-av{width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden}
+.x-av img,.x-av-default{width:100%;height:100%;object-fit:cover;
+  display:flex;align-items:center;justify-content:center;font-size:18px}
+.x-meta{flex:1;min-width:0}
+.x-name{font-size:15px;font-weight:700;color:#e7e9ea;display:flex;align-items:center;gap:4px}
+.x-verified{color:#1d9bf0;font-size:14px}
+.x-handle{font-size:13px;color:#71767b}
+.x-body{font-size:15px;color:#e7e9ea;line-height:1.6;margin-bottom:10px;word-break:break-all}
+.x-img{width:100%;border-radius:14px;overflow:hidden;margin-bottom:10px;display:none}
+.x-img img{width:100%;display:block;max-height:280px;object-fit:cover}
+.x-stats{
+  display:flex;justify-content:space-between;
+  padding:10px 0 12px;border-top:1px solid #2f3336;
+  margin-top:2px;
+}
+.x-stat{display:flex;align-items:center;gap:5px;font-size:13px;color:#71767b;cursor:default}
+.x-stat-ico{font-size:16px}
+.x-stat-num{font-family:'Outfit',sans-serif;font-weight:600}
+.x-stat-num.hot{color:#f91880}
+.x-footer{
+  border-top:1px solid #2f3336;padding:10px 16px;
+  display:flex;gap:12px;justify-content:space-around;
+}
+.x-footer-btn{font-size:12px;color:#71767b;background:none;border:none;cursor:default;
+  display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:100px;}
+
+/* ══════════════════════════════
+   Instagram mockup
+══════════════════════════════ */
+.ig-mock{background:#fff;font-family:-apple-system,sans-serif}
+.ig-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid #dbdbdb;
+}
+.ig-header{display:flex;align-items:center;gap:10px}
+.ig-av{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  padding:2px;flex-shrink:0;
+}
+.ig-av-inner{
+  width:100%;height:100%;border-radius:50%;overflow:hidden;
+  border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:#fff;
+}
+.ig-av-inner img{width:100%;height:100%;object-fit:cover}
+.ig-name{font-size:13px;font-weight:600;color:#000}
+.ig-verified{color:#0095f6;font-size:12px;margin-left:3px}
+.ig-more{font-size:20px;color:#000;cursor:default}
+.ig-img{
+  width:100%;aspect-ratio:1/1;background:#f0f0f0;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  font-size:40px;
+}
+.ig-img img{width:100%;height:100%;object-fit:cover}
+.ig-actions{padding:10px 14px 4px;display:flex;align-items:center;gap:14px}
+.ig-act{font-size:24px;cursor:default;line-height:1}
+.ig-act.save{margin-left:auto}
+.ig-likes{
+  padding:0 14px 6px;
+  font-size:14px;font-weight:700;color:#000;
+}
+.ig-likes span{font-family:'Outfit',sans-serif}
+.ig-caption{padding:0 14px 8px;font-size:14px;color:#000;line-height:1.5}
+.ig-caption b{font-weight:700}
+.ig-caption-text{font-weight:400}
+.ig-time{padding:0 14px 8px;font-size:11px;color:#8e8e8e;text-transform:uppercase;letter-spacing:.04em}
+.ig-comment-bar{
+  border-top:1px solid #dbdbdb;padding:8px 14px;
+  display:flex;align-items:center;gap:8px;
+}
+.ig-comment-bar input{
+  flex:1;border:none;outline:none;font-size:14px;
+  color:#8e8e8e;background:none;font-family:inherit;
+}
+.ig-comment-bar .ig-post-btn{
+  font-size:14px;font-weight:600;color:#0095f6;
+  background:none;border:none;cursor:default;
+}
+
+/* ══════════════════════════════
+   TikTok mockup
+══════════════════════════════ */
+.tt-mock{
+  background:#000;
+  font-family:-apple-system,sans-serif;
+  position:relative;min-height:380px;
+}
+.tt-video{
+  width:100%;background:#111;min-height:280px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;position:relative;overflow:hidden;
+}
+.tt-video img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.tt-video-icon{position:relative;z-index:1;opacity:.6}
+.tt-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:14px;
+  background:linear-gradient(transparent,rgba(0,0,0,.7));
+  display:flex;align-items:flex-end;gap:10px;
+}
+.tt-info{flex:1;min-width:0}
+.tt-user{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.tt-desc{font-size:13px;color:rgba(255,255,255,.85);line-height:1.5;word-break:break-all}
+.tt-music{font-size:11px;color:rgba(255,255,255,.65);margin-top:5px}
+.tt-right{display:flex;flex-direction:column;align-items:center;gap:14px;flex-shrink:0}
+.tt-stat{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:default}
+.tt-stat-ico{font-size:26px}
+.tt-stat-num{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;color:#fff}
+.tt-av{
+  width:40px;height:40px;border-radius:50%;overflow:hidden;
+  border:2px solid #fff;flex-shrink:0;margin-bottom:2px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.tt-av img{width:100%;height:100%;object-fit:cover}
+.tt-follow-dot{
+  width:18px;height:18px;border-radius:50%;background:#ff3b5c;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;font-weight:700;line-height:1;
+  margin-top:-10px;
+}
+.tt-footer{
+  display:flex;justify-content:space-around;padding:10px 14px;
+  border-top:1px solid #222;
+}
+.tt-footer-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:9px;color:#aaa;cursor:default}
+.tt-footer-ico{font-size:22px}
+
+/* ══════════════════════════════
+   Note mockup
+══════════════════════════════ */
+.note-mock{background:#fff;font-family:-apple-system,sans-serif}
+.note-header{
+  background:#fff;border-bottom:2px solid #41c9b4;
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.note-logo{font-size:18px;font-weight:800;color:#000;letter-spacing:-.02em}
+.note-article-title{
+  font-size:22px;font-weight:700;color:#333;
+  padding:20px 20px 8px;line-height:1.4;
+}
+.note-article-meta{
+  padding:0 20px 16px;font-size:12px;color:#999;
+  display:flex;align-items:center;gap:8px;
+}
+.note-av{width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-block}
+.note-av img,.note-av-default{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:12px}
+.note-article-img{width:100%;aspect-ratio:16/9;background:#f0f0f0;overflow:hidden;margin-bottom:14px}
+.note-article-img img{width:100%;height:100%;object-fit:cover}
+.note-article-body{
+  padding:0 20px;font-size:15px;color:#333;line-height:1.9;
+  margin-bottom:16px;
+}
+.note-actions{
+  border-top:1px solid #e8e8e8;padding:12px 20px;
+  display:flex;gap:12px;align-items:center;
+}
+.note-act{display:flex;align-items:center;gap:4px;font-size:13px;color:#999;cursor:default}
+.note-act-num{font-family:'Outfit',sans-serif;font-weight:600;color:#555}
+
+/* ── Number counter animation ── */
+@keyframes countUp{
+  0%{transform:translateY(6px);opacity:0}
+  100%{transform:translateY(0);opacity:1}
+}
+.count-anim{animation:countUp .4s ease both}
+
+/* ── Screenshot area ── */
+.capture-area{position:relative}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>🎇 偽・インフルエンサー投稿プレビュー</h1>
+    <p>投稿文・プロフィールを入力して「プレビュー生成」を押すだけ。<br>バズった状態のスクリーンショットをフェイク生成します。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Input panel -->
+    <div class="input-card">
+      <span class="card-label">① プロフィール</span>
+
+      <div class="avatar-row" onclick="document.getElementById('avatar-file').click()">
+        <div class="avatar-preview" id="avatar-preview">🙂</div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="av-name-display">あなたの名前</div>
+          <div class="avatar-handle" id="av-handle-display">@yourhandle</div>
+        </div>
+        <input type="file" id="avatar-file" accept="image/*" onchange="loadAvatar(this)">
+      </div>
+
+      <div class="field">
+        <label>表示名</label>
+        <input type="text" id="f-name" value="田中 太郎🔥" oninput="update()" placeholder="表示名">
+      </div>
+      <div class="field">
+        <label>ハンドル / アカウント名</label>
+        <input type="text" id="f-handle" value="taro_official" oninput="update()" placeholder="handle_name">
+      </div>
+
+      <span class="card-label" style="margin-top:4px">② 投稿内容</span>
+      <div class="field">
+        <label>投稿文</label>
+        <textarea id="f-text" rows="4"
+          placeholder="ここに投稿文を入力してください"
+          oninput="update()">年収を3倍にした方法、全部話します。
+
+・朝5時起き
+・副業より本業に集中
+・読書より行動
+
+これだけ。難しく考えすぎてた。
+
+#働き方改革 #副業 #自己啓発</textarea>
+      </div>
+
+      <div class="field">
+        <label>投稿画像（任意）</label>
+        <div class="img-upload" id="img-upload" onclick="document.getElementById('post-img-file').click()">
+          <div class="img-upload-label">
+            <span style="font-size:24px">📷</span>
+            <span>画像を追加（任意）</span>
+          </div>
+        </div>
+        <input type="file" id="post-img-file" accept="image/*" onchange="loadPostImg(this)">
+      </div>
+
+      <span class="card-label" style="margin-top:4px">③ エンゲージメント設定</span>
+      <div class="slider-row">
+        <span class="slider-label">いいね数</span>
+        <input type="range" id="sl-likes" min="1000" max="500000" value="142800" step="100" oninput="update()">
+        <span class="slider-val" id="sv-likes">142.8K</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">RT・シェア</span>
+        <input type="range" id="sl-rt" min="100" max="100000" value="28400" step="100" oninput="update()">
+        <span class="slider-val" id="sv-rt">28.4K</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">コメント</span>
+        <input type="range" id="sl-comments" min="50" max="50000" value="4200" step="50" oninput="update()">
+        <span class="slider-val" id="sv-comments">4.2K</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">閲覧数</span>
+        <input type="range" id="sl-views" min="10000" max="5000000" value="1820000" step="1000" oninput="update()">
+        <span class="slider-val" id="sv-views">1.82M</span>
+      </div>
+
+      <div class="platform-tabs" style="margin-top:12px">
+        <button class="ptab active" id="pt-x"    onclick="setPlatform('x',this)">𝕏 Twitter</button>
+        <button class="ptab" id="pt-ig"  onclick="setPlatform('ig',this)">📸 Instagram</button>
+        <button class="ptab" id="pt-tt"  onclick="setPlatform('tt',this)">🎵 TikTok</button>
+        <button class="ptab" id="pt-note" onclick="setPlatform('note',this)">📝 note</button>
+      </div>
+
+      <button class="btn-preview" onclick="update()">✨ プレビュー更新</button>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-area" id="preview-area">
+      <!-- rendered by JS -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+let platform    = 'x';
+let avatarSrc   = null;
+let postImgSrc  = null;
+
+function fmtNum(n){
+  if(n>=1000000) return (n/1000000).toFixed(2).replace(/\.?0+$/,'')+'M';
+  if(n>=1000)    return (n/1000).toFixed(1).replace(/\.0$/,'')+'K';
+  return n.toLocaleString();
+}
+
+function setPlatform(p, btn){
+  platform = p;
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function loadAvatar(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    avatarSrc = e.target.result;
+    document.getElementById('avatar-preview').innerHTML = `<img src="${e.target.result}" alt="">`;
+    update();
+  };
+  r.readAsDataURL(f);
+}
+
+function loadPostImg(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e=>{
+    postImgSrc = e.target.result;
+    const up = document.getElementById('img-upload');
+    up.innerHTML = `<img src="${e.target.result}" alt=""><div class="img-upload-label" style="position:relative;z-index:1;color:#fff;text-shadow:0 1px 4px #000">📷 変更</div>`;
+    update();
+  };
+  r.readAsDataURL(f);
+}
+
+function update(){
+  const name     = document.getElementById('f-name').value || 'あなたの名前';
+  const handle   = document.getElementById('f-handle').value || 'yourhandle';
+  const text     = document.getElementById('f-text').value;
+  const likes    = parseInt(document.getElementById('sl-likes').value);
+  const rt       = parseInt(document.getElementById('sl-rt').value);
+  const comments = parseInt(document.getElementById('sl-comments').value);
+  const views    = parseInt(document.getElementById('sl-views').value);
+
+  // Update sliders display
+  document.getElementById('sv-likes').textContent    = fmtNum(likes);
+  document.getElementById('sv-rt').textContent       = fmtNum(rt);
+  document.getElementById('sv-comments').textContent = fmtNum(comments);
+  document.getElementById('sv-views').textContent    = fmtNum(views);
+
+  // Update avatar display
+  document.getElementById('av-name-display').textContent   = name;
+  document.getElementById('av-handle-display').textContent = '@'+handle.replace('@','');
+
+  // Render mock
+  const area = document.getElementById('preview-area');
+  if(platform==='x')    area.innerHTML = buildX(name,handle,text,likes,rt,comments,views);
+  if(platform==='ig')   area.innerHTML = buildIG(name,handle,text,likes,comments);
+  if(platform==='tt')   area.innerHTML = buildTT(name,handle,text,likes,rt,comments,views);
+  if(platform==='note') area.innerHTML = buildNote(name,handle,text,likes,comments);
+}
+
+function avatarHtml(cls,size=40,defaultEmoji='🙂'){
+  if(avatarSrc) return `<div class="${cls}" style="width:${size}px;height:${size}px;overflow:hidden;border-radius:50%"><img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover"></div>`;
+  return `<div class="${cls}" style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*.45)}px;flex-shrink:0">${defaultEmoji}</div>`;
+}
+
+function postImgHtml(style=''){
+  if(!postImgSrc) return '';
+  return `<div style="width:100%;border-radius:14px;overflow:hidden;margin-bottom:10px;${style}"><img src="${postImgSrc}" style="width:100%;display:block;max-height:280px;object-fit:cover"></div>`;
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') }
+
+/* ── X mockup ── */
+function buildX(name,handle,text,likes,rt,comments,views){
+  const h = handle.replace('@','');
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} · ${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  return `
+  <div class="phone-frame">
+    <div class="platform-badge">𝕏 Twitter / X &nbsp;·&nbsp; プレビュー
+      <span class="screenshot-hint" onclick="hint()">📸 スクショ用</span>
+    </div>
+    <div class="x-mock">
+      <div class="x-post">
+        <div class="x-header">
+          ${avatarHtml('x-av',40,'🙂')}
+          <div class="x-meta">
+            <div class="x-name">${escHtml(name)} <span class="x-verified">✓</span></div>
+            <div class="x-handle">@${escHtml(h)} · いま</div>
+          </div>
+          <div style="color:#71767b;font-size:18px;margin-left:auto;cursor:default">···</div>
+        </div>
+        <div class="x-body">${escHtml(text)}</div>
+        ${postImgSrc?`<div class="x-img" style="display:block">${postImgHtml()}</div>`:''}
+        <div style="font-size:12px;color:#71767b;padding:6px 0 10px;border-top:1px solid #2f3336;border-bottom:1px solid #2f3336;margin-bottom:2px">${timeStr} · <span style="color:#e7e9ea;font-weight:600">${fmtNum(views)}</span> 件の表示</div>
+        <div class="x-stats">
+          <div class="x-stat"><span class="x-stat-ico">💬</span><span class="x-stat-num count-anim">${fmtNum(comments)}</span></div>
+          <div class="x-stat"><span class="x-stat-ico">🔁</span><span class="x-stat-num count-anim">${fmtNum(rt)}</span></div>
+          <div class="x-stat"><span class="x-stat-ico" style="color:#f91880">♥</span><span class="x-stat-num hot count-anim">${fmtNum(likes)}</span></div>
+          <div class="x-stat"><span class="x-stat-ico">📊</span></div>
+          <div class="x-stat"><span class="x-stat-ico">↗</span></div>
+        </div>
+      </div>
+      <div class="x-footer">
+        <div class="x-footer-btn">💬 返信</div>
+        <div class="x-footer-btn">🔁 リツイート</div>
+        <div class="x-footer-btn">♥ いいね</div>
+        <div class="x-footer-btn">📊 分析</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Instagram mockup ── */
+function buildIG(name,handle,text,likes,comments){
+  const h = handle.replace('@','');
+  const firstLine = text.split('\n')[0];
+  const rest      = text.split('\n').slice(1).join(' ');
+  return `
+  <div class="phone-frame">
+    <div class="platform-badge">📸 Instagram &nbsp;·&nbsp; プレビュー
+      <span class="screenshot-hint" onclick="hint()">📸 スクショ用</span>
+    </div>
+    <div class="ig-mock">
+      <div class="ig-topbar">
+        <div class="ig-header">
+          <div class="ig-av">
+            <div class="ig-av-inner">
+              ${avatarSrc?`<img src="${avatarSrc}">`:'🙂'}
+            </div>
+          </div>
+          <div>
+            <div class="ig-name">${escHtml(name)}<span class="ig-verified">✓</span></div>
+            <div style="font-size:11px;color:#999">フォロー中</div>
+          </div>
+        </div>
+        <div class="ig-more">···</div>
+      </div>
+      <div class="ig-img">
+        ${postImgSrc?`<img src="${postImgSrc}" style="width:100%;height:100%;object-fit:cover">`:'<span style="font-size:48px;opacity:.3">🖼</span>'}
+      </div>
+      <div class="ig-actions">
+        <span class="ig-act" style="color:#e0245e">❤️</span>
+        <span class="ig-act">💬</span>
+        <span class="ig-act">↗</span>
+        <span class="ig-act save">🔖</span>
+      </div>
+      <div class="ig-likes">いいね！<span class="count-anim">${fmtNum(likes)}</span>件</div>
+      <div class="ig-caption"><b>${escHtml(name)}</b> <span class="ig-caption-text">${escHtml(firstLine)}${rest?` <span style="color:#999">もっと見る</span>`:''}
+      </span></div>
+      <div style="padding:0 14px 5px;font-size:13px;color:#8e8e8e">コメント${fmtNum(comments)}件をすべて見る</div>
+      <div class="ig-time">3時間前</div>
+      <div class="ig-comment-bar">
+        <div class="ig-av" style="width:24px;height:24px">
+          <div class="ig-av-inner" style="border:none">🙂</div>
+        </div>
+        <input type="text" placeholder="コメントを追加..." readonly>
+        <button class="ig-post-btn">投稿</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── TikTok mockup ── */
+function buildTT(name,handle,text,likes,rt,comments,views){
+  const h = handle.replace('@','');
+  const shortText = text.length > 80 ? text.slice(0,80)+'...' : text;
+  return `
+  <div class="phone-frame">
+    <div class="platform-badge">🎵 TikTok &nbsp;·&nbsp; プレビュー
+      <span class="screenshot-hint" onclick="hint()">📸 スクショ用</span>
+    </div>
+    <div class="tt-mock">
+      <div class="tt-video" style="min-height:300px">
+        ${postImgSrc?`<img src="${postImgSrc}" style="width:100%;height:100%;position:absolute;inset:0;object-fit:cover">`:''}
+        ${!postImgSrc?`<span class="tt-video-icon">▶</span>`:''}
+        <div class="tt-overlay">
+          <div class="tt-info">
+            <div class="tt-user">@${escHtml(h)}</div>
+            <div class="tt-desc">${escHtml(shortText)}</div>
+            <div class="tt-music">🎵 オリジナルサウンド - ${escHtml(name)}</div>
+          </div>
+          <div class="tt-right">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div class="tt-av">
+                ${avatarSrc?`<img src="${avatarSrc}">`:'🙂'}
+              </div>
+              <div class="tt-follow-dot">+</div>
+            </div>
+            <div class="tt-stat"><span class="tt-stat-ico">❤️</span><span class="tt-stat-num count-anim">${fmtNum(likes)}</span></div>
+            <div class="tt-stat"><span class="tt-stat-ico">💬</span><span class="tt-stat-num count-anim">${fmtNum(comments)}</span></div>
+            <div class="tt-stat"><span class="tt-stat-ico">🔖</span><span class="tt-stat-num count-anim">${fmtNum(rt)}</span></div>
+            <div class="tt-stat"><span class="tt-stat-ico">↗</span><span class="tt-stat-num">${fmtNum(views)}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tt-footer">
+        <div class="tt-footer-btn"><span class="tt-footer-ico">🏠</span>ホーム</div>
+        <div class="tt-footer-btn"><span class="tt-footer-ico">🔍</span>検索</div>
+        <div class="tt-footer-btn"><span style="font-size:28px;background:linear-gradient(90deg,#25f4ee,#fe2c55);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:block">＋</span></div>
+        <div class="tt-footer-btn"><span class="tt-footer-ico">📨</span>受信Box</div>
+        <div class="tt-footer-btn"><span class="tt-footer-ico">👤</span>マイページ</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── note mockup ── */
+function buildNote(name,handle,text,likes,comments){
+  const title   = text.split('\n')[0] || 'タイトル';
+  const body    = text.split('\n').slice(1).filter(l=>l.trim()).join(' ') || text;
+  const bodyShort = body.length > 120 ? body.slice(0,120)+'…' : body;
+  return `
+  <div class="phone-frame">
+    <div class="platform-badge">📝 note &nbsp;·&nbsp; プレビュー
+      <span class="screenshot-hint" onclick="hint()">📸 スクショ用</span>
+    </div>
+    <div class="note-mock">
+      <div class="note-header">
+        <div class="note-logo">note</div>
+        <div style="font-size:12px;color:#41c9b4;font-weight:600">フォロー</div>
+      </div>
+      <div class="note-article-title">${escHtml(title)}</div>
+      <div class="note-article-meta">
+        <div class="note-av" style="width:24px;height:24px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#eee">
+          ${avatarSrc?`<img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover">`:'🙂'}
+        </div>
+        <span>${escHtml(name)}</span>
+        <span>·</span>
+        <span>3時間前</span>
+      </div>
+      <div class="note-article-img">
+        ${postImgSrc?`<img src="${postImgSrc}" style="width:100%;height:100%;object-fit:cover">`:'<div style="width:100%;height:100%;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.4">📝</div>'}
+      </div>
+      <div class="note-article-body">${escHtml(bodyShort)}</div>
+      <div style="text-align:center;padding:0 20px 16px">
+        <div style="background:#41c9b4;color:#fff;border-radius:100px;padding:10px 24px;font-size:13px;font-weight:700;display:inline-block;cursor:default">続きをみる</div>
+      </div>
+      <div class="note-actions">
+        <div class="note-act"><span style="font-size:18px">♥</span><span class="note-act-num count-anim">${fmtNum(likes)}</span></div>
+        <div class="note-act"><span style="font-size:18px">💬</span><span class="note-act-num count-anim">${fmtNum(comments)}</span></div>
+        <div style="margin-left:auto;font-size:18px;color:#aaa;cursor:default">···</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function hint(){
+  alert('ブラウザの「共有」または「スクリーンショット」機能でキャプチャしてください。\n\nPC：Cmd+Shift+4（Mac）/ Win+Shift+S（Windows）\nスマホ：電源＋音量ボタン同時押し');
+}
+
+// init
+update();
+</script>
+</body>
+</html>
