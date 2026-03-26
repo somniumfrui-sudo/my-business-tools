@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>架空の格言ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:#000;color:#fff;
+  display:flex;flex-direction:column;
+  min-height:100vh;position:relative;
+}
+
+/* ── Cinematic background ── */
+#bg-canvas{
+  position:fixed;inset:0;z-index:0;
+  transition:opacity .6s ease;
+}
+
+/* Gradient overlay */
+.bg-overlay{
+  position:fixed;inset:0;z-index:1;
+  background:
+    linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.3) 50%, rgba(0,0,0,.55) 100%),
+    linear-gradient(to right, rgba(0,0,0,.4) 0%, transparent 40%, transparent 60%, rgba(0,0,0,.4) 100%);
+}
+
+/* Grain texture */
+.grain{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.04'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+
+/* ── Main layout ── */
+.main{
+  position:relative;z-index:3;
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 20px;
+  min-height:100vh;
+}
+
+/* ── Quote card ── */
+.quote-card{
+  max-width:680px;width:100%;
+  text-align:center;
+  position:relative;
+}
+
+/* Ornamental lines */
+.ornament{
+  display:flex;align-items:center;gap:12px;justify-content:center;
+  margin-bottom:28px;opacity:.5;
+}
+.ornament-line{width:60px;height:1px;background:rgba(255,255,255,.4)}
+.ornament-star{font-size:12px;letter-spacing:6px;color:rgba(255,255,255,.6)}
+
+/* Category tag */
+.category-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);margin-bottom:24px;
+  font-family:'Outfit',sans-serif;
+}
+
+/* Opening quotation mark */
+.quote-mark{
+  font-family:'Noto Serif JP',serif;font-size:80px;font-weight:300;
+  color:rgba(255,255,255,.12);line-height:.6;display:block;
+  margin-bottom:-10px;user-select:none;
+}
+
+/* Main quote */
+.quote-text{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(18px,4vw,28px);
+  font-weight:400;line-height:1.75;
+  letter-spacing:.06em;
+  color:#fff;
+  text-shadow:0 2px 24px rgba(0,0,0,.8);
+  margin-bottom:28px;
+  animation:fadeUp .6s ease both;
+  min-height:80px;
+  display:flex;align-items:center;justify-content:center;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+
+/* Author */
+.quote-author{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);margin-bottom:6px;
+  animation:fadeUp .6s .1s ease both;
+}
+.quote-author-sub{
+  font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.1em;
+  margin-bottom:36px;
+  animation:fadeUp .6s .15s ease both;
+}
+
+/* Keywords */
+.keywords{
+  display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+  margin-bottom:36px;
+  animation:fadeUp .6s .2s ease both;
+}
+.kw{
+  font-size:11px;font-weight:500;
+  padding:4px 12px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.5);
+  font-family:'Noto Sans JP',sans-serif;
+}
+
+/* ── Action buttons ── */
+.actions{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .6s .25s ease both;
+}
+
+.btn-gen{
+  background:rgba(255,255,255,.95);color:#000;border:none;
+  border-radius:100px;font-family:'Outfit',sans-serif;
+  font-size:14px;font-weight:800;padding:14px 32px;cursor:pointer;
+  letter-spacing:.04em;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+  transition:transform .12s,box-shadow .15s,opacity .1s;
+  display:flex;align-items:center;gap:8px;
+}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(0,0,0,.5)}
+.btn-gen:active{transform:scale(.97)}
+.btn-gen:disabled{opacity:.5;cursor:default;transform:none}
+
+.btn-sub{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);
+  border:1.5px solid rgba(255,255,255,.2);border-radius:100px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  padding:13px 20px;cursor:pointer;transition:all .13s;backdrop-filter:blur(8px);
+  display:flex;align-items:center;gap:6px;
+}
+.btn-sub:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}
+.btn-sub.done{border-color:rgba(255,255,255,.5);color:#fff}
+
+/* ── Category selector ── */
+.cat-row{
+  display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+  margin-bottom:22px;
+  animation:fadeUp .4s ease both;
+}
+.cat-btn{
+  font-size:11px;font-weight:500;padding:4px 13px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.55);cursor:pointer;transition:all .13s;
+  font-family:'Noto Sans JP',sans-serif;backdrop-filter:blur(6px);
+}
+.cat-btn:hover{border-color:rgba(255,255,255,.5);color:#fff;background:rgba(255,255,255,.12)}
+.cat-btn.active{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);color:#fff}
+
+/* ── Bottom bar ── */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:10;
+  padding:12px 20px;
+  background:linear-gradient(transparent,rgba(0,0,0,.6));
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  font-size:10px;color:rgba(255,255,255,.2);
+  letter-spacing:.12em;font-family:'Outfit',sans-serif;
+}
+.bottom-bar span{display:flex;align-items:center;gap:5px}
+.counter{
+  font-family:'Outfit',sans-serif;font-weight:700;
+  color:rgba(255,255,255,.35);
+}
+
+/* ── History dots ── */
+.history-dots{
+  display:flex;gap:6px;justify-content:center;margin-top:20px;
+  animation:fadeUp .4s ease both;
+}
+.hist-dot{
+  width:7px;height:7px;border-radius:50%;border:1px solid rgba(255,255,255,.3);
+  background:transparent;cursor:pointer;transition:all .13s;
+  flex-shrink:0;
+}
+.hist-dot.active{background:rgba(255,255,255,.7);border-color:rgba(255,255,255,.7)}
+.hist-dot:hover{background:rgba(255,255,255,.4)}
+
+/* Loading state */
+.loading-text{
+  font-family:'Noto Serif JP',serif;font-size:18px;font-weight:300;
+  color:rgba(255,255,255,.5);letter-spacing:.1em;
+  animation:blink 1.2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* BG transition */
+#bg-canvas{animation:bgFade .8s ease}
+@keyframes bgFade{from{opacity:.3}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-overlay"></div>
+<div class="grain"></div>
+
+<div class="main">
+  <div class="quote-card" id="quote-card">
+
+    <!-- Category selector -->
+    <div class="cat-row">
+      <button class="cat-btn active" id="cat-all" onclick="setCat('おまかせ',this)">おまかせ</button>
+      <button class="cat-btn" onclick="setCat('人生',this)">🌿 人生</button>
+      <button class="cat-btn" onclick="setCat('愛と孤独',this)">🌙 愛と孤独</button>
+      <button class="cat-btn" onclick="setCat('時間と記憶',this)">⌛ 時間と記憶</button>
+      <button class="cat-btn" onclick="setCat('沈黙と言葉',this)">🔇 沈黙と言葉</button>
+      <button class="cat-btn" onclick="setCat('光と影',this)">🌓 光と影</button>
+      <button class="cat-btn" onclick="setCat('意味不明系',this)">🌀 迷言</button>
+    </div>
+
+    <!-- Ornament -->
+    <div class="ornament">
+      <div class="ornament-line"></div>
+      <div class="ornament-star">✦ ✦ ✦</div>
+      <div class="ornament-line"></div>
+    </div>
+
+    <div class="category-tag" id="category-tag">✦ WISDOM ✦</div>
+
+    <div class="quote-mark">"</div>
+
+    <!-- Quote text area -->
+    <div class="quote-text" id="quote-text">
+      <span class="loading-text" style="display:none" id="loading-txt">格言を召喚中…</span>
+      <span id="main-quote">ボタンを押すと<br>この世に存在しない格言が<br>生まれます。</span>
+    </div>
+
+    <!-- Author -->
+    <div class="quote-author" id="quote-author">— UNKNOWN —</div>
+    <div class="quote-author-sub" id="quote-author-sub">架空の哲学者</div>
+
+    <!-- Keywords -->
+    <div class="keywords" id="keywords">
+      <span class="kw">#架空の格言</span>
+      <span class="kw">#存在しない名言</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-gen" id="btn-gen" onclick="generate()">
+        ✦ 格言を召喚する
+      </button>
+      <button class="btn-sub" id="btn-copy" onclick="copyQuote()">
+        📋 コピー
+      </button>
+      <button class="btn-sub" onclick="changeBg()">
+        🎨 背景を変える
+      </button>
+    </div>
+
+    <!-- History -->
+    <div class="history-dots" id="history-dots"></div>
+
+  </div>
+</div>
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <span>召喚数 <span class="counter" id="gen-count">0</span></span>
+  <span>·</span>
+  <span>この格言は実在しません</span>
+</div>
+
+<script>
+// ── Cinematic background ──
+const BG_PALETTES = [
+  // Dark moody
+  {stops:['#0a0015','#1a0533','#2d0845']},
+  // Ocean night
+  {stops:['#000a18','#001833','#003060']},
+  // Forest dusk
+  {stops:['#030a03','#0a1a08','#152510']},
+  // Desert sunset
+  {stops:['#180800','#3d1400','#6b2800']},
+  // Arctic
+  {stops:['#03080f','#061525','#0a2040']},
+  // Twilight
+  {stops:['#08001a','#1a0535','#30086a']},
+  // Sepia
+  {stops:['#100a00','#251800','#3d2a08']},
+  // Deep crimson
+  {stops:['#100002','#280008','#400015']},
+];
+
+let currentPalette = 0;
+let genCount = 0;
+let history  = [];
+let category = 'おまかせ';
+
+function drawBg(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width  = window.innerWidth;
+  const H = canvas.height = window.innerHeight;
+
+  const pal = BG_PALETTES[currentPalette % BG_PALETTES.length];
+
+  // Base gradient
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,   pal.stops[0]);
+  grad.addColorStop(0.5, pal.stops[1]);
+  grad.addColorStop(1,   pal.stops[2]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  // Abstract light orbs
+  const orbs = [
+    {x:W*.15, y:H*.2,  r:W*.3,  alpha:.08, colorA:pal.stops[2], colorB:'transparent'},
+    {x:W*.85, y:H*.7,  r:W*.25, alpha:.07, colorA:pal.stops[1], colorB:'transparent'},
+    {x:W*.5,  y:H*.85, r:W*.35, alpha:.05, colorA:pal.stops[2], colorB:'transparent'},
+  ];
+  orbs.forEach(o=>{
+    const g = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,   colorWithAlpha(o.colorA, o.alpha));
+    g.addColorStop(1,   'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  });
+
+  // Stars / particles
+  for(let i=0;i<120;i++){
+    const x = Math.random()*W;
+    const y = Math.random()*H;
+    const r = Math.random()*1.2;
+    const a = Math.random()*.35;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fill();
+  }
+
+  // Subtle horizontal light beam
+  const beam = ctx.createLinearGradient(0,H*.4,0,H*.6);
+  beam.addColorStop(0,'transparent');
+  beam.addColorStop(0.5,`rgba(255,255,255,0.015)`);
+  beam.addColorStop(1,'transparent');
+  ctx.fillStyle = beam;
+  ctx.fillRect(0,0,W,H);
+}
+
+function colorWithAlpha(hex, alpha){
+  const r=parseInt(hex.slice(1,3)||'ff',16);
+  const g=parseInt(hex.slice(3,5)||'ff',16);
+  const b=parseInt(hex.slice(5,7)||'ff',16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function changeBg(){
+  currentPalette = (currentPalette+1) % BG_PALETTES.length;
+  drawBg();
+}
+
+// ── Category ──
+function setCat(c, btn){
+  category = c;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Generate ──
+async function generate(){
+  const btn = document.getElementById('btn-gen');
+  btn.disabled = true;
+
+  // Loading state
+  document.getElementById('main-quote').style.display = 'none';
+  document.getElementById('loading-txt').style.display = 'block';
+  document.getElementById('quote-author').style.opacity = '0.2';
+  document.getElementById('quote-author-sub').style.opacity = '0.2';
+
+  // Cycle bg
+  currentPalette = (currentPalette + 1) % BG_PALETTES.length;
+  drawBg();
+
+  try{
+    const data = await callClaude(category);
+    renderQuote(data);
+    addHistory(data);
+    genCount++;
+    document.getElementById('gen-count').textContent = genCount;
+  }catch(e){
+    renderQuote({
+      quote:'エラーが発生しました。再度お試しください。',
+      author:'Unknown',
+      role:'架空の哲学者',
+      category:'エラー',
+      keywords:['#エラー'],
+    });
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function callClaude(cat){
+  const catPrompts = {
+    'おまかせ':  'テーマは自由。哲学・人生・孤独・時間・宇宙・言語・愛・沈黙・光・影など何でも可。',
+    '人生':     '人生・生きること・存在・選択・道・旅についての格言。',
+    '愛と孤独': '愛・孤独・別れ・つながり・距離についての格言。',
+    '時間と記憶':'時間・記憶・過去・未来・瞬間・永遠についての格言。',
+    '沈黙と言葉':'沈黙・言葉・声・言語・名付けられないものについての格言。',
+    '光と影':   '光・影・明暗・対比・境界についての格言。',
+    '意味不明系':'一見意味があるようで実はよく分からないが、なんか深そうな迷言。ユーモアを少し忍ばせる。',
+  };
+
+  const prompt = catPrompts[cat] || catPrompts['おまかせ'];
+
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:500,
+      system:`あなたは架空の格言・名言を創作する詩的なAIです。実在しない偉人・哲学者・詩人が残したように見える格言を作ります。格言は以下の特徴を持ちます：
+- 日本語で書かれた詩的・哲学的な1〜3文
+- 読んだ後に「なるほど…」または「？？？」と思わせる絶妙なライン
+- SNSでシェアしたくなるような余韻がある
+- 実在の人物は絶対に使わない（架空の人物のみ）`,
+      messages:[{role:'user', content:`${prompt}\n\n架空の格言を1つ生成してください。\n\n以下のJSON形式のみで返答（前置き不要）：\n{\n  "quote": "格言本文（20〜60文字）",\n  "author": "架空の人物名（漢字の名前 or 外国風の名前）",\n  "role": "架空の肩書き（例：17世紀の観察者、存在しない哲学者）",\n  "category": "カテゴリ名（10文字以内）",\n  "keywords": ["#キーワード1","#キーワード2","#キーワード3"]\n}`}]
+    })
+  });
+
+  if(!res.ok) throw new Error(`API Error: ${res.status}`);
+  const d = await res.json();
+  const t = d.content?.[0]?.text||'';
+  return JSON.parse(t.replace(/```json|```/g,'').trim());
+}
+
+// ── Render ──
+function renderQuote(data){
+  document.getElementById('loading-txt').style.display = 'none';
+  const qEl = document.getElementById('main-quote');
+  qEl.style.display = 'block';
+
+  // Animate
+  qEl.style.animation = 'none';
+  void qEl.offsetWidth;
+  qEl.style.animation = 'fadeUp .6s ease both';
+  qEl.innerHTML = escHtml(data.quote||'').replace(/\n/g,'<br>');
+
+  document.getElementById('quote-author').textContent    = `— ${data.author||'UNKNOWN'} —`;
+  document.getElementById('quote-author-sub').textContent= data.role||'架空の哲学者';
+  document.getElementById('quote-author').style.opacity  = '';
+  document.getElementById('quote-author-sub').style.opacity = '';
+  document.getElementById('category-tag').textContent    = `✦ ${(data.category||'WISDOM').toUpperCase()} ✦`;
+
+  document.getElementById('keywords').innerHTML =
+    (data.keywords||['#架空の格言']).map(k=>`<span class="kw">${escHtml(k)}</span>`).join('');
+}
+
+// ── History dots ──
+function addHistory(data){
+  history.unshift(data);
+  if(history.length > 8) history.pop();
+  renderDots();
+}
+
+function renderDots(){
+  const el = document.getElementById('history-dots');
+  el.innerHTML = history.map((h,i)=>`
+    <div class="hist-dot ${i===0?'active':''}" title="${escHtml(h.quote||'').slice(0,30)}…"
+      onclick="showHistory(${i})"></div>`).join('');
+}
+
+function showHistory(i){
+  if(history[i]) renderQuote(history[i]);
+  document.querySelectorAll('.hist-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+}
+
+// ── Copy ──
+function copyQuote(){
+  const q = document.getElementById('main-quote').textContent;
+  const a = document.getElementById('quote-author').textContent;
+  const s = document.getElementById('quote-author-sub').textContent;
+  const text = `"${q}"\n\n${a}\n${s}\n\n#架空の格言 #存在しない名言`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('btn-copy');
+    btn.textContent='✓ コピー済み'; btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('done'); },1800);
+  });
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+// Init
+window.addEventListener('resize', drawBg);
+drawBg();
+</script>
+</body>
+</html>
