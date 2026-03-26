@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glassmorphism Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0a0a14;
+  --surface:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.12);
+  --text:#f0eeff;
+  --muted:rgba(240,238,255,.55);
+  --light:rgba(240,238,255,.25);
+  --accent:#a080ff;
+  --shadow-md:0 4px 20px rgba(0,0,0,.4);
+}
+
+html,body{height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:32px 16px 80px;
+  overflow-x:hidden;
+}
+
+/* ── Animated gradient bg ── */
+.bg-wrap{
+  position:fixed;inset:0;z-index:0;
+  background:#0a0a14;overflow:hidden;
+}
+.bg-orb{
+  position:absolute;border-radius:50%;filter:blur(80px);
+  animation:floatOrb 12s ease-in-out infinite;
+}
+.orb1{width:500px;height:500px;background:radial-gradient(#7040ff80,transparent 70%);top:-100px;left:-100px}
+.orb2{width:400px;height:400px;background:radial-gradient(#ff408080,transparent 70%);top:20%;right:-80px;animation-delay:-4s}
+.orb3{width:350px;height:350px;background:radial-gradient(#40c0ff80,transparent 70%);bottom:-50px;left:30%;animation-delay:-8s}
+.orb4{width:280px;height:280px;background:radial-gradient(#40ff8080,transparent 70%);bottom:20%;right:20%;animation-delay:-6s}
+@keyframes floatOrb{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%     {transform:translate(30px,-20px) scale(1.05)}
+  66%     {transform:translate(-20px,30px) scale(.95)}
+}
+
+/* ── Page layout ── */
+.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto}
+
+/* ── Header ── */
+.header{text-align:center;margin-bottom:28px}
+.header h1{
+  font-family:'Outfit',sans-serif;font-size:clamp(20px,4vw,28px);font-weight:800;
+  letter-spacing:-.02em;margin-bottom:5px;
+}
+.header h1 em{color:var(--accent);font-style:normal}
+.header p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* ── Two-column layout ── */
+.layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+
+/* ── Control panel ── */
+.controls{
+  background:rgba(255,255,255,.05);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;
+  padding:20px 18px;box-shadow:var(--shadow-md);
+  position:sticky;top:20px;
+}
+
+.ctrl-section{margin-bottom:18px}
+.ctrl-section:last-child{margin-bottom:0}
+.ctrl-section-label{
+  font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.ctrl-section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+
+/* Slider row */
+.slider-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.slider-row:last-child{margin-bottom:0}
+.sl-label{font-size:12px;color:var(--muted);min-width:80px;font-weight:500}
+input[type=range]{
+  flex:1;height:3px;border-radius:2px;
+  appearance:none;-webkit-appearance:none;
+  background:rgba(255,255,255,.15);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:2px solid rgba(255,255,255,.3);
+  cursor:pointer;box-shadow:0 0 8px var(--accent);
+  transition:box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 14px var(--accent)}
+.sl-val{
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+  color:var(--text);min-width:42px;text-align:right;
+}
+
+/* Color pickers */
+.color-row{display:flex;gap:7px;flex-wrap:wrap}
+.color-item{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.color-item label{font-size:10px;color:var(--muted);text-align:center}
+.color-item input[type=color]{
+  width:100%;height:36px;border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;background:none;cursor:pointer;padding:2px;
+}
+
+/* Preset themes */
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.preset-btn{
+  padding:8px 10px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  cursor:pointer;transition:all .14s;text-align:left;
+  font-family:'Noto Sans JP',sans-serif;
+}
+.preset-btn:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08)}
+.preset-btn.active{border-color:var(--accent);background:rgba(160,128,255,.12)}
+.preset-icon{font-size:16px;display:block;margin-bottom:3px}
+.preset-name{font-size:11px;font-weight:600;color:var(--text)}
+.preset-desc{font-size:10px;color:var(--muted)}
+
+/* Background chooser */
+.bg-choice-row{display:flex;gap:6px;flex-wrap:wrap}
+.bg-btn{
+  flex:1;min-width:60px;height:32px;border-radius:8px;border:2px solid transparent;
+  cursor:pointer;transition:border-color .14s,transform .12s;
+  font-size:0;
+}
+.bg-btn.active{border-color:var(--accent)}
+.bg-btn:hover{transform:scale(1.04)}
+
+/* Shape chooser */
+.shape-row{display:flex;gap:6px}
+.shape-btn{
+  flex:1;padding:7px 6px;border-radius:8px;
+  border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;
+  text-align:center;transition:all .13s;font-family:'Outfit',sans-serif;
+}
+.shape-btn:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+.shape-btn.active{background:rgba(160,128,255,.15);border-color:var(--accent);color:var(--text)}
+
+/* ── Preview area ── */
+.preview-col{display:flex;flex-direction:column;gap:14px}
+
+.preview-card{
+  background:rgba(255,255,255,.04);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;
+  overflow:hidden;box-shadow:var(--shadow-md);
+}
+.preview-head{
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+}
+
+/* The actual glass preview */
+.preview-scene{
+  min-height:300px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  padding:28px;overflow:hidden;
+}
+
+/* Background image options */
+.scene-bg{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  transition:background .5s ease;
+}
+.scene-bg.bg-gradient{
+  background:linear-gradient(135deg,#7040ff,#ff4080,#40c0ff,#40ff80);
+}
+.scene-bg.bg-mesh{
+  background:conic-gradient(from 0deg at 30% 30%,#7040ff,#ff4080,#40c0ff,#7040ff),
+             radial-gradient(ellipse at 70% 70%,#ff408060,transparent 60%);
+}
+.scene-bg.bg-dark{
+  background:linear-gradient(135deg,#1a0533,#0a1a44,#0a2a1a);
+}
+.scene-bg.bg-photo{
+  background:linear-gradient(135deg,#ff6b35,#f7c948,#65d46e,#3a86ff,#8338ec);
+  filter:hue-rotate(0deg);animation:hueShift 8s linear infinite;
+}
+@keyframes hueShift{to{filter:hue-rotate(360deg)}}
+.scene-bg.bg-aurora{
+  background:radial-gradient(ellipse at top left,#a8edea,transparent 50%),
+             radial-gradient(ellipse at bottom right,#fed6e3,transparent 50%),
+             radial-gradient(ellipse at center,#a1c4fd,transparent 70%),
+             linear-gradient(135deg,#e0c3fc,#8ec5fc);
+}
+
+/* The glass card being generated */
+.glass-card{
+  position:relative;z-index:1;
+  width:100%;max-width:340px;
+  transition:all .2s ease;
+}
+/* Shape variants */
+.glass-card.shape-rounded{border-radius:20px}
+.glass-card.shape-sharp{border-radius:4px}
+.glass-card.shape-pill{border-radius:100px}
+.glass-card.shape-circle{border-radius:50%;aspect-ratio:1}
+
+.glass-inner{
+  padding:28px 24px;
+}
+.glass-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,255,255,.3),rgba(255,255,255,.1));
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  margin-bottom:14px;
+}
+.glass-title{
+  font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;
+  margin-bottom:5px;letter-spacing:-.01em;
+}
+.glass-sub{font-size:13px;opacity:.7;line-height:1.5;margin-bottom:16px}
+.glass-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:100px;
+  background:rgba(255,255,255,.15);
+  font-size:11px;font-weight:600;letter-spacing:.04em;
+  margin-bottom:12px;
+}
+.glass-btn{
+  display:inline-block;padding:9px 20px;border-radius:100px;
+  background:rgba(255,255,255,.2);font-size:13px;font-weight:600;
+  cursor:default;letter-spacing:.03em;
+  border:1px solid rgba(255,255,255,.25);
+  font-family:'Outfit',sans-serif;
+}
+.glass-dots{
+  position:absolute;top:12px;right:14px;
+  display:flex;gap:5px;
+}
+.glass-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.35);
+}
+
+/* ── Code card ── */
+.code-card{
+  background:rgba(10,10,20,.8);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;
+  overflow:hidden;box-shadow:var(--shadow-md);
+}
+.code-head{
+  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.code-tabs{display:flex;gap:4px}
+.code-tab{
+  font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.1);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .12s;
+  font-family:'Outfit',sans-serif;
+}
+.code-tab.active{background:rgba(255,255,255,.08);color:var(--text);border-color:rgba(255,255,255,.2)}
+.code-acts{display:flex;gap:5px}
+.code-btn{
+  font-size:11px;font-weight:500;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:3px 9px;border-radius:5px;
+  transition:color .12s,background .12s;
+}
+.code-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
+.code-btn.done{color:#3fb950}
+
+pre#code-output{
+  padding:16px 18px;margin:0;
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:400;
+  line-height:1.8;color:rgba(230,237,243,.85);
+  overflow-x:auto;white-space:pre;
+  min-height:180px;max-height:320px;overflow-y:auto;
+}
+
+/* CSS syntax highlight colors */
+.c-sel{color:#ff9580}
+.c-prop{color:#79c0ff}
+.c-val{color:#a5d6ff}
+.c-str{color:#a8ff90}
+.c-num{color:#f2cc60}
+.c-comment{color:#8b949e;font-style:italic}
+.c-px{color:#ffa657}
+
+/* Score badges */
+.score-row{
+  padding:10px 16px;border-top:1px solid rgba(255,255,255,.07);
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.score-badge{
+  display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+  padding:4px 10px;border-radius:6px;color:var(--muted);
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+}
+.score-dot{width:7px;height:7px;border-radius:50%}
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+  <div class="bg-orb orb4"></div>
+</div>
+
+<div class="wrap">
+
+  <div class="header">
+    <h1>🪟 <em>Glassmorphism</em> CSS Generator</h1>
+    <p>スライダーを動かすだけでリアルタイムプレビュー。<code>backdrop-filter</code>を使ったガラス質感CSSをワンクリック生成。</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Controls -->
+    <div class="controls">
+
+      <!-- Presets -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">プリセット</div>
+        <div class="preset-grid" id="preset-grid">
+          <button class="preset-btn active" id="pr-classic" onclick="applyPreset('classic',this)">
+            <span class="preset-icon">🧊</span>
+            <span class="preset-name">クラシック</span>
+            <span class="preset-desc">定番の透明感</span>
+          </button>
+          <button class="preset-btn" id="pr-dark" onclick="applyPreset('dark',this)">
+            <span class="preset-icon">🌑</span>
+            <span class="preset-name">ダーク</span>
+            <span class="preset-desc">夜間UI向け</span>
+          </button>
+          <button class="preset-btn" id="pr-neon" onclick="applyPreset('neon',this)">
+            <span class="preset-icon">⚡</span>
+            <span class="preset-name">ネオン</span>
+            <span class="preset-desc">発光アクセント</span>
+          </button>
+          <button class="preset-btn" id="pr-pastel" onclick="applyPreset('pastel',this)">
+            <span class="preset-icon">🌸</span>
+            <span class="preset-name">パステル</span>
+            <span class="preset-desc">やさしい色調</span>
+          </button>
+          <button class="preset-btn" id="pr-gold" onclick="applyPreset('gold',this)">
+            <span class="preset-icon">👑</span>
+            <span class="preset-name">ゴールド</span>
+            <span class="preset-desc">リッチ・高級感</span>
+          </button>
+          <button class="preset-btn" id="pr-frost" onclick="applyPreset('frost',this)">
+            <span class="preset-icon">❄️</span>
+            <span class="preset-name">フロスト</span>
+            <span class="preset-desc">iOS風の白</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Blur & Transparency -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">ブラー・透明度</div>
+        <div class="slider-row">
+          <span class="sl-label">ブラー</span>
+          <input type="range" id="sl-blur" min="0" max="40" value="16" oninput="update()">
+          <span class="sl-val" id="sv-blur">16px</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">背景透明度</span>
+          <input type="range" id="sl-opacity" min="0" max="50" value="15" oninput="update()">
+          <span class="sl-val" id="sv-opacity">15%</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">彩度補正</span>
+          <input type="range" id="sl-saturate" min="100" max="300" value="180" oninput="update()">
+          <span class="sl-val" id="sv-saturate">180%</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">輝度補正</span>
+          <input type="range" id="sl-brightness" min="80" max="150" value="110" oninput="update()">
+          <span class="sl-val" id="sv-brightness">110%</span>
+        </div>
+      </div>
+
+      <!-- Border & Shadow -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">ボーダー・シャドウ</div>
+        <div class="slider-row">
+          <span class="sl-label">ボーダー不透明度</span>
+          <input type="range" id="sl-border" min="0" max="60" value="20" oninput="update()">
+          <span class="sl-val" id="sv-border">20%</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">ボーダー太さ</span>
+          <input type="range" id="sl-border-w" min="0" max="4" step="0.5" value="1" oninput="update()">
+          <span class="sl-val" id="sv-border-w">1px</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">シャドウ強度</span>
+          <input type="range" id="sl-shadow" min="0" max="60" value="30" oninput="update()">
+          <span class="sl-val" id="sv-shadow">30%</span>
+        </div>
+        <div class="slider-row">
+          <span class="sl-label">シャドウサイズ</span>
+          <input type="range" id="sl-shadow-s" min="0" max="80" value="24" oninput="update()">
+          <span class="sl-val" id="sv-shadow-s">24px</span>
+        </div>
+      </div>
+
+      <!-- Color tint -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">カラートーン</div>
+        <div class="color-row">
+          <div class="color-item">
+            <label>背景色</label>
+            <input type="color" id="col-bg" value="#ffffff" oninput="update()">
+          </div>
+          <div class="color-item">
+            <label>ボーダー色</label>
+            <input type="color" id="col-border" value="#ffffff" oninput="update()">
+          </div>
+          <div class="color-item">
+            <label>テキスト色</label>
+            <input type="color" id="col-text" value="#ffffff" oninput="update()">
+          </div>
+          <div class="color-item">
+            <label>シャドウ色</label>
+            <input type="color" id="col-shadow" value="#000000" oninput="update()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Shape -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">形状</div>
+        <div class="shape-row" id="shape-row">
+          <button class="shape-btn active" id="sh-rounded" onclick="setShape('rounded',this)">Rounded</button>
+          <button class="shape-btn" id="sh-sharp" onclick="setShape('sharp',this)">Sharp</button>
+          <button class="shape-btn" id="sh-pill" onclick="setShape('pill',this)">Pill</button>
+          <button class="shape-btn" id="sh-circle" onclick="setShape('circle',this)">Circle</button>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="ctrl-section">
+        <div class="ctrl-section-label">背景プレビュー</div>
+        <div class="bg-choice-row">
+          <button class="bg-btn active" id="bg-gradient" onclick="setBg('gradient',this)" style="background:linear-gradient(135deg,#7040ff,#ff4080,#40c0ff)"></button>
+          <button class="bg-btn" id="bg-mesh" onclick="setBg('mesh',this)" style="background:conic-gradient(#7040ff,#ff4080,#40c0ff,#7040ff)"></button>
+          <button class="bg-btn" id="bg-dark" onclick="setBg('dark',this)" style="background:linear-gradient(135deg,#1a0533,#0a1a44)"></button>
+          <button class="bg-btn" id="bg-photo" onclick="setBg('photo',this)" style="background:linear-gradient(135deg,#ff6b35,#f7c948,#65d46e)"></button>
+          <button class="bg-btn" id="bg-aurora" onclick="setBg('aurora',this)" style="background:linear-gradient(135deg,#a8edea,#fed6e3)"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Preview + Code -->
+    <div class="preview-col">
+
+      <!-- Live preview -->
+      <div class="preview-card">
+        <div class="preview-head">
+          <span>ライブプレビュー</span>
+          <span style="font-size:10px;color:var(--light)">スライダーを動かすとリアルタイム更新</span>
+        </div>
+        <div class="preview-scene" id="preview-scene">
+          <div class="scene-bg bg-gradient" id="scene-bg"></div>
+          <div class="glass-card shape-rounded" id="glass-card">
+            <div class="glass-dots">
+              <div class="glass-dot"></div>
+              <div class="glass-dot"></div>
+              <div class="glass-dot"></div>
+            </div>
+            <div class="glass-inner">
+              <div class="glass-avatar">✨</div>
+              <div class="glass-title" id="gc-title">Glassmorphism</div>
+              <div class="glass-sub" id="gc-sub">2026年のトレンドデザイン。<br>backdrop-filterで実現する<br>美しいガラス質感。</div>
+              <div class="glass-badge">🔮 New Trend</div><br>
+              <div class="glass-btn">Learn More →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code output -->
+      <div class="code-card">
+        <div class="code-head">
+          <div class="code-tabs">
+            <button class="code-tab active" id="ct-css" onclick="switchCode('css',this)">CSS</button>
+            <button class="code-tab" id="ct-html" onclick="switchCode('html',this)">HTML</button>
+            <button class="code-tab" id="ct-tailwind" onclick="switchCode('tailwind',this)">Tailwind</button>
+          </div>
+          <div class="code-acts">
+            <button class="code-btn" id="btn-copy-code" onclick="copyCode()">📋 コピー</button>
+            <button class="code-btn" onclick="downloadCss()">⬇ CSS保存</button>
+          </div>
+        </div>
+        <pre id="code-output"></pre>
+        <div class="score-row" id="score-row"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ──
+let shape    = 'rounded';
+let bgType   = 'gradient';
+let codeTab  = 'css';
+
+// ── Presets ──
+const PRESETS = {
+  classic:{ blur:16, opacity:15, saturate:180, brightness:110, border:20, borderW:1,  shadow:30, shadowS:24, bg:'#ffffff', bc:'#ffffff', tc:'#ffffff', sc:'#000000' },
+  dark:   { blur:20, opacity:8,  saturate:150, brightness:90,  border:15, borderW:1,  shadow:40, shadowS:32, bg:'#000000', bc:'#ffffff', tc:'#e0e0ff', sc:'#000000' },
+  neon:   { blur:24, opacity:10, saturate:200, brightness:115, border:30, borderW:1.5,shadow:50, shadowS:40, bg:'#8040ff', bc:'#c080ff', tc:'#ffffff', sc:'#6020ff' },
+  pastel: { blur:12, opacity:25, saturate:140, brightness:115, border:25, borderW:1,  shadow:20, shadowS:16, bg:'#ff80c0', bc:'#ffffff', tc:'#3a1a3a', sc:'#ff40a0' },
+  gold:   { blur:18, opacity:18, saturate:160, brightness:108, border:30, borderW:1.5,shadow:35, shadowS:28, bg:'#c0a000', bc:'#ffd040', tc:'#fff4c0', sc:'#806000' },
+  frost:  { blur:30, opacity:30, saturate:120, brightness:118, border:40, borderW:1,  shadow:20, shadowS:20, bg:'#ffffff', bc:'#ffffff', tc:'#1a1a3a', sc:'#8090b0' },
+};
+
+function applyPreset(key, btn){
+  const p = PRESETS[key];
+  document.getElementById('sl-blur').value       = p.blur;
+  document.getElementById('sl-opacity').value    = p.opacity;
+  document.getElementById('sl-saturate').value   = p.saturate;
+  document.getElementById('sl-brightness').value = p.brightness;
+  document.getElementById('sl-border').value     = p.border;
+  document.getElementById('sl-border-w').value   = p.borderW;
+  document.getElementById('sl-shadow').value     = p.shadow;
+  document.getElementById('sl-shadow-s').value   = p.shadowS;
+  document.getElementById('col-bg').value        = p.bg;
+  document.getElementById('col-border').value    = p.bc;
+  document.getElementById('col-text').value      = p.tc;
+  document.getElementById('col-shadow').value    = p.sc;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function setShape(s, btn){
+  shape = s;
+  document.querySelectorAll('.shape-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const card = document.getElementById('glass-card');
+  card.className = `glass-card shape-${s}`;
+  update();
+}
+
+function setBg(b, btn){
+  bgType = b;
+  document.querySelectorAll('.bg-btn').forEach(el=>el.classList.remove('active'));
+  btn.classList.add('active');
+  const bg = document.getElementById('scene-bg');
+  bg.className = `scene-bg bg-${b}`;
+}
+
+// ── Main update ──
+function update(){
+  const blur   = parseInt(document.getElementById('sl-blur').value);
+  const opac   = parseInt(document.getElementById('sl-opacity').value);
+  const sat    = parseInt(document.getElementById('sl-saturate').value);
+  const bright = parseInt(document.getElementById('sl-brightness').value);
+  const bord   = parseInt(document.getElementById('sl-border').value);
+  const bordW  = parseFloat(document.getElementById('sl-border-w').value);
+  const shad   = parseInt(document.getElementById('sl-shadow').value);
+  const shadS  = parseInt(document.getElementById('sl-shadow-s').value);
+  const colBg  = document.getElementById('col-bg').value;
+  const colBc  = document.getElementById('col-border').value;
+  const colTc  = document.getElementById('col-text').value;
+  const colSc  = document.getElementById('col-shadow').value;
+
+  // Update slider labels
+  document.getElementById('sv-blur').textContent       = blur+'px';
+  document.getElementById('sv-opacity').textContent    = opac+'%';
+  document.getElementById('sv-saturate').textContent   = sat+'%';
+  document.getElementById('sv-brightness').textContent = bright+'%';
+  document.getElementById('sv-border').textContent     = bord+'%';
+  document.getElementById('sv-border-w').textContent   = bordW+'px';
+  document.getElementById('sv-shadow').textContent     = shad+'%';
+  document.getElementById('sv-shadow-s').textContent   = shadS+'px';
+
+  // Convert hex to rgb
+  const bgRgb  = hexToRgb(colBg);
+  const bcRgb  = hexToRgb(colBc);
+  const scRgb  = hexToRgb(colSc);
+
+  const bgAlpha = opac/100;
+  const bcAlpha = bord/100;
+  const scAlpha = shad/100;
+
+  // Apply to preview card
+  const card = document.getElementById('glass-card');
+  card.style.background     = `rgba(${bgRgb},${bgAlpha})`;
+  card.style.backdropFilter = `blur(${blur}px) saturate(${sat}%) brightness(${bright}%)`;
+  card.style.webkitBackdropFilter = card.style.backdropFilter;
+  card.style.border         = `${bordW}px solid rgba(${bcRgb},${bcAlpha})`;
+  card.style.boxShadow      = `0 ${Math.round(shadS*.4)}px ${shadS}px rgba(${scRgb},${scAlpha}), inset 0 1px 0 rgba(255,255,255,${bcAlpha*.6})`;
+  card.style.color          = colTc;
+
+  // Border-radius
+  const radii = {rounded:'20px',sharp:'4px',pill:'100px',circle:'50%'};
+  card.style.borderRadius   = radii[shape]||'20px';
+
+  // Generate code
+  renderCode(blur, opac, sat, bright, bord, bordW, shad, shadS, colBg, colBc, colTc, colSc, bgRgb, bcRgb, scRgb, bgAlpha, bcAlpha, scAlpha);
+  renderScore(blur, opac, shad, bgAlpha);
+}
+
+// ── Code generation ──
+let codeCache = {css:'', html:'', tailwind:''};
+
+function renderCode(blur,opac,sat,bright,bord,bordW,shad,shadS,colBg,colBc,colTc,colSc,bgRgb,bcRgb,scRgb,bgAlpha,bcAlpha,scAlpha){
+  const radii     = {rounded:'20px',sharp:'4px',pill:'100px',circle:'50%'};
+  const borderRad = radii[shape]||'20px';
+
+  const css = `.glass {
+  /* Glassmorphism Core */
+  background: rgba(${bgRgb}, ${bgAlpha.toFixed(2)});
+  backdrop-filter:
+    blur(${blur}px)
+    saturate(${sat}%)
+    brightness(${bright}%);
+  -webkit-backdrop-filter:
+    blur(${blur}px)
+    saturate(${sat}%)
+    brightness(${bright}%);
+
+  /* Border */
+  border: ${bordW}px solid rgba(${bcRgb}, ${bcAlpha.toFixed(2)});
+  border-radius: ${borderRad};
+
+  /* Shadow */
+  box-shadow:
+    0 ${Math.round(shadS*.4)}px ${shadS}px rgba(${scRgb}, ${scAlpha.toFixed(2)}),
+    inset 0 1px 0 rgba(255, 255, 255, ${(bcAlpha*.6).toFixed(2)});
+
+  /* Text */
+  color: ${colTc};
+
+  /* Performance */
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+}`;
+
+  const html = `<!-- ⚠ 親要素に overflow: hidden が必要 -->
+<div class="glass-wrapper">
+  <!-- 背景画像や背景グラデーション -->
+  <div class="glass-bg"></div>
+
+  <!-- Glass カード -->
+  <div class="glass">
+    <h2>タイトル</h2>
+    <p>コンテンツ</p>
+  </div>
+</div>
+
+<style>
+.glass-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.glass-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg, #7040ff, #ff4080, #40c0ff
+  );
+}
+${css}
+</style>`;
+
+  // Tailwind approximation
+  const blurClass   = blur<=4?'backdrop-blur-sm':blur<=8?'backdrop-blur':blur<=16?'backdrop-blur-md':blur<=24?'backdrop-blur-lg':'backdrop-blur-xl';
+  const roundClass  = shape==='rounded'?'rounded-2xl':shape==='sharp'?'rounded':shape==='pill'?'rounded-full':'rounded-full';
+  const twBg        = `bg-white/${Math.round(opac)}`;
+  const twBorder    = `border border-white/${Math.round(bord)}`;
+  const twShadow    = shad>20?'shadow-lg':'shadow-md';
+
+  const tailwind = `<!-- Tailwind CSS v3.3+ (backdrop-filter 対応必須) -->
+<div class="${twBg} ${blurClass} ${twBorder} ${roundClass} ${twShadow}">
+  <!-- コンテンツ -->
+</div>
+
+<!--
+  カスタムTailwindが必要な場合:
+  tailwind.config.js に以下を追加:
+  theme: { extend: { backdropBlur: { '${blur}': '${blur}px' } } }
+-->
+
+<!-- vanilla CSS版は "CSS" タブを参照 -->`;
+
+  codeCache = {css, html, tailwind};
+  renderCodeTab();
+}
+
+function renderCodeTab(){
+  const raw = codeCache[codeTab]||'';
+  document.getElementById('code-output').innerHTML = syntaxHighlightCss(raw);
+}
+
+function switchCode(tab, btn){
+  codeTab = tab;
+  document.querySelectorAll('.code-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCodeTab();
+}
+
+function syntaxHighlightCss(code){
+  return escHtml(code)
+    .replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="c-comment">$1</span>')
+    .replace(/<!--[\s\S]*?-->/g, m=>`<span class="c-comment">${m}</span>`)
+    .replace(/([.#][\w-]+)(?=\s*\{)/g,'<span class="c-sel">$1</span>')
+    .replace(/([\w-]+)(?=\s*:)/g,'<span class="c-prop">$1</span>')
+    .replace(/"([^"]*)"/g,'"<span class="c-str">$1</span>"')
+    .replace(/\b(\d+\.?\d*)(px|em|rem|%|vh|vw)?\b/g,'<span class="c-num">$1</span><span class="c-px">$2</span>')
+    .replace(/rgba?\([^)]+\)/g,m=>`<span class="c-val">${m}</span>`);
+}
+
+// ── Score ──
+function renderScore(blur, opac, shad, bgAlpha){
+  const scores = [];
+  const perf   = blur > 30 ? 'warn' : 'ok';
+  const access = bgAlpha < 0.05 ? 'fail' : bgAlpha > 0.3 ? 'ok' : 'warn';
+  scores.push({dot:perf==='ok'?'#3fb950':'#e3b341',   label:`パフォーマンス：${perf==='ok'?'良好':'ブラー値が大きい'}`});
+  scores.push({dot:access==='ok'?'#3fb950':access==='warn'?'#e3b341':'#ff7b72', label:`アクセシビリティ：${access==='ok'?'良好':access==='warn'?'コントラスト確認を':'透明すぎ'}`});
+  scores.push({dot:'#58a6ff', label:`backdrop-filter：Edge/Chrome/Safari 対応`});
+  document.getElementById('score-row').innerHTML = scores.map(s=>`
+    <div class="score-badge">
+      <div class="score-dot" style="background:${s.dot}"></div>
+      ${s.label}
+    </div>`).join('');
+}
+
+// ── Copy / Download ──
+function copyCode(){
+  const text = codeCache[codeTab]||'';
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('btn-copy-code');
+    btn.textContent='✓ コピー済み'; btn.classList.add('done');
+    setTimeout(()=>{ btn.textContent='📋 コピー'; btn.classList.remove('done'); },1500);
+  });
+}
+
+function downloadCss(){
+  const css = codeCache.css||'';
+  if(!css) return;
+  const blob = new Blob([css],{type:'text/css'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'glassmorphism.css';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── Helpers ──
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `${r}, ${g}, ${b}`;
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+// Init
+update();
+</script>
+</body>
+</html>
