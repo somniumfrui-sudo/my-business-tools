@@ -35,7 +35,7 @@
 
     /* ── Divider ── */
     .divider {
-      max-width: 1040px;
+      max-width: 1200px;           /* grid の max-width に合わせて拡張 */
       margin: 28px auto 0;
       border: none;
       border-top: 1px solid #e8eaed;
@@ -43,18 +43,29 @@
 
     /* ── Grid ── */
     .grid {
-      max-width: 1040px;
+      max-width: 1200px;           /* 5列に広げるため 1040 → 1200 */
       margin: 0 auto;
       padding: 28px 20px 80px;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);   /* PC: 5列 */
       gap: 10px;
     }
 
-    @media (max-width: 860px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 600px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 380px)  {
-      .grid { grid-template-columns: 1fr; }
+    /* タブレット横（〜1024px）: 4列 */
+    @media (max-width: 1024px) {
+      .grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* タブレット縦（〜768px）: 3列 */
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* スマホ（〜480px）: auto-fill で最小140px → 自動的に2〜1列 */
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      }
       .site-header h1 { font-size: 26px; }
     }
 
@@ -248,321 +259,306 @@
     <div class="card-desc">数字だけが画面いっぱいに映るミニマルな全画面タイマー。</div>
   </a>
 
-    <a class="card" href="/tools/qr-generator/">
+  <a class="card" href="/tools/qr-generator/">
     <div class="card-icon">⬛</div>
     <div class="card-title">秒速！QRコード作成機</div>
     <div class="card-desc">URLやテキストを入力するだけでリアルタイムにQRコードを生成・保存できます。</div>
   </a>
 
-      <a class="card" href="/tools/text-converter/">
+  <a class="card" href="/tools/text-converter/">
     <div class="card-icon">🔄</div>
     <div class="card-title">大文字・小文字・全角半角・一括変換</div>
     <div class="card-desc">「すべて全角にしたい」「英語を大文字に揃えたい」という面倒な作業を秒で終わらせます。</div>
   </a>
 
-       <a class="card" href="/tools/ambient-sound/">
+  <a class="card" href="/tools/ambient-sound/">
     <div class="card-icon">🎵</div>
     <div class="card-title">安眠・環境音ジェネレーター</div>
     <div class="card-desc">ボタンを押すだけ。集中・リラックス・眠れない夜に。</div>
   </a>
 
-        <a class="card" href="/tools/yesno-coin/">
+  <a class="card" href="/tools/yesno-coin/">
     <div class="card-icon">🪙</div>
     <div class="card-title">YES/NO 迷い解消コイン</div>
     <div class="card-desc">「やるか、やらないか」で迷ったとき、最後に背中を押してくれます。</div>
   </a>
 
-          <a class="card" href="/tools/bullet-formatter/">
+  <a class="card" href="/tools/bullet-formatter/">
     <div class="card-icon">📋</div>
     <div class="card-title">箇条書き一括整形ツール</div>
     <div class="card-desc">雑なメモを貼るだけで、きれいな箇条書きに一瞬で整形します。</div>
   </a>
 
-           <a class="card" href="/tools/youtube-title-preview/">
+  <a class="card" href="/tools/youtube-title-preview/">
     <div class="card-icon">🏷️</div>
     <div class="card-title">YouTubeタイトル・クリック率攻略プレビュー</div>
     <div class="card-desc">Youtubeのタイトルを入力するとクリック率を計測してくれます。</div>
   </a>
 
-            <a class="card" href="/tools/shopping-budget/">
+  <a class="card" href="/tools/shopping-budget/">
     <div class="card-icon">🧮</div>
     <div class="card-title">お買い物・予算オーバー防止計算機</div>
     <div class="card-desc">商品を追加するだけで合計と予算残額をリアルタイム表示。買いすぎを防ぎます。</div>
   </a>
 
-              <a class="card" href="/tools/dummy-text/">
+  <a class="card" href="/tools/dummy-text/">
     <div class="card-icon">📝</div>
     <div class="card-title">ダミーテキスト生成器</div>
     <div class="card-desc">デザイン・開発で使うダミー文章を一瞬で生成。日本の名作文学も使えます。</div>
   </a>
 
-                <a class="card" href="/tools/habit-tracker/">
+  <a class="card" href="/tools/habit-tracker/">
     <div class="card-icon">🟢</div>
     <div class="card-title">30日習慣トラッカー</div>
     <div class="card-desc">達成した日にドットを塗る。色が埋まっていく達成感で習慣が続きます。</div>
   </a>
 
-                  <a class="card" href="/tools/mind-detox/">
+  <a class="card" href="/tools/mind-detox/">
     <div class="card-icon">🌿</div>
     <div class="card-title">マインド・デトックス・1分書き出し</div>
     <div class="card-desc">頭の中のモヤモヤを、1分間だけひたすら打ち込みます。</div>
   </a>
 
-                    <a class="card" href="/tools/life-countdown/">
+  <a class="card" href="/tools/life-countdown/">
     <div class="card-icon">⌛</div>
     <div class="card-title">残りの人生・カウントダウン時計</div>
     <div class="card-desc">生年月日を入力すると、平均余命までの残り時間をリアルタイムにカウントダウン。</div>
   </a>
 
-                      <a class="card" href="/tools/ogp-preview/">
+  <a class="card" href="/tools/ogp-preview/">
     <div class="card-icon">🔗</div>
     <div class="card-title">OGP・SNSシェア画像プレビュー</div>
     <div class="card-desc">自分のサイトのURLやタイトルを入れたとき、SNSでどう表示されるかをシミュレーションします。</div>
   </a>
 
-                        <a class="card" href="/tools/positive-reframe/">
+  <a class="card" href="/tools/positive-reframe/">
     <div class="card-icon">💎</div>
     <div class="card-title">ポジティブ変換辞典</div>
     <div class="card-desc">ネガティブな言葉を、一瞬でポジティブな表現に言い換える「リフレーミング」ツール。</div>
   </a>
 
-                          <a class="card" href="/tools/compound-simulator/">
+  <a class="card" href="/tools/compound-simulator/">
     <div class="card-icon">📈</div>
     <div class="card-title">複利の力・資産形成シミュレーター</div>
     <div class="card-desc">「月3万円を年利5%で運用したら30年後にいくらになるか」を一瞬でグラフ化します。</div>
   </a>
 
-                            <a class="card" href="/tools/ng-word-checker/">
+  <a class="card" href="/tools/ng-word-checker/">
     <div class="card-icon">⚠️</div>
     <div class="card-title">NGワード・公序良俗チェッカー</div>
     <div class="card-desc">ブログ・note・LP等のテキストを貼り付けると、問題になりやすい表現をリアルタイムで検出・ハイライトします。</div>
   </a>
 
-                             <a class="card" href="/tools/meeting-memo/">
+  <a class="card" href="/tools/meeting-memo/">
     <div class="card-icon">📑</div>
     <div class="card-title">AI会議メモ</div>
     <div class="card-desc">タグ挿入・タイムスタンプ付与・localStorage自動保存。最後にAI清書プロンプトをワンクリックコピー。</div>
   </a>
 
-                               <a class="card" href="/tools/html-entity-converter/">
+  <a class="card" href="/tools/html-entity-converter/">
     <div class="card-icon">🔤</div>
     <div class="card-title">文字コード・実体参照一括変換</div>
     <div class="card-desc">HTMLエンティティ・数値参照・URL エンコード・Unicode をワンクリックで相互変換します。</div>
   </a>
 
-                                 <a class="card" href="/tools/dedupe-lines/">
+  <a class="card" href="/tools/dedupe-lines/">
     <div class="card-icon">🧹</div>
     <div class="card-title">重複行・一括削除ツール</div>
     <div class="card-desc">リストを貼り付けてボタンを押すだけ。重複行の削除・ソート・空行除去を一瞬で処理します。</div>
   </a>
 
-                                 <a class="card" href="/tools/reading-mode/">
+  <a class="card" href="/tools/reading-mode/">
     <div class="card-icon">👓</div>
     <div class="card-title">ブルーライトカット・読書モード</div>
     <div class="card-desc">画面全体を目に優しいセピア色や暖色に変える、ブラウザ上の簡易フィルター</div>
   </a>
 
-                                  <a class="card" href="/tools/ai-token-cost/">
+  <a class="card" href="/tools/ai-token-cost/">
     <div class="card-icon">🤖</div>
     <div class="card-title">AIプロンプト・コスト試算</div>
     <div class="card-desc">テキストのトークン数を推定し、主要モデルのAPI料金をリアルタイムで計算します。</div>
   </a>
 
-                                   <a class="card" href="/tools/stock-factsheet/">
+  <a class="card" href="/tools/stock-factsheet/">
     <div class="card-icon">📰</div>
     <div class="card-title">上場企業・投資判断ファクトシート</div>
-    <div class="card-desc">ティッカーシンボルを入力すると、投資指標を一枚のシートにまとめます。AI分析プロンプトも自動生成。。</div>
+    <div class="card-desc">ティッカーシンボルを入力すると、投資指標を一枚のシートにまとめます。AI分析プロンプトも自動生成。</div>
   </a>
 
   <a class="card" href="/tools/ogp-image-preview/">
-  <div class="card-icon">🖼️</div>
-  <div class="card-title">画像URL・プレビュー & OGP変換</div>
-  <div class="card-desc">画像URLを貼るだけ。X・Facebook・LINEでの見え方を確認し、最適サイズにトリミング保存。</div>
-</a>
+    <div class="card-icon">🖼️</div>
+    <div class="card-title">画像URL・プレビュー & OGP変換</div>
+    <div class="card-desc">画像URLを貼るだけ。X・Facebook・LINEでの見え方を確認し、最適サイズにトリミング保存。</div>
+  </a>
 
-    <a class="card" href="/tools/flea-market-images/">
-  <div class="card-icon">📦</div>
-  <div class="card-title">フリマ画像一括整形ツール</div>
-  <div class="card-desc">メルカリ・ヤフオク向けに、複数の商品写真を正方形クロップ・明るさ補正・シャープ化を一括処理してダウンロードします。</div>
-</a>
+  <a class="card" href="/tools/flea-market-images/">
+    <div class="card-icon">📦</div>
+    <div class="card-title">フリマ画像一括整形ツール</div>
+    <div class="card-desc">メルカリ・ヤフオク向けに、複数の商品写真を正方形クロップ・明るさ補正・シャープ化を一括処理してダウンロードします。</div>
+  </a>
 
-      <a class="card" href="/tools/chatbot-builder/">
-  <div class="card-icon">🧰</div>
-  <div class="card-title">AIチャットボット・ビルダー</div>
-  <div class="card-desc">設定を入力して「生成」ボタンを押すだけ。自分専用のチャットボットHTMLが完成します。</div>
-</a>
+  <a class="card" href="/tools/chatbot-builder/">
+    <div class="card-icon">🧰</div>
+    <div class="card-title">AIチャットボット・ビルダー</div>
+    <div class="card-desc">設定を入力して「生成」ボタンを押すだけ。自分専用のチャットボットHTMLが完成します。</div>
+  </a>
 
-        <a class="card" href="/tools/sns-image-resizer/">
-  <div class="card-icon">📐</div>
-  <div class="card-title">SNS画像サイズ一括変換</div>
-  <div class="card-desc">1枚の画像をアップロードするだけ。X・Instagram・YouTube など主要SNSの全サイズを自動生成・一括ダウンロード。</div>
-</a>
+  <a class="card" href="/tools/sns-image-resizer/">
+    <div class="card-icon">📐</div>
+    <div class="card-title">SNS画像サイズ一括変換</div>
+    <div class="card-desc">1枚の画像をアップロードするだけ。X・Instagram・YouTube など主要SNSの全サイズを自動生成・一括ダウンロード。</div>
+  </a>
 
-          <a class="card" href="/tools/privacy-masker/">
-  <div class="card-icon">🛡️</div>
-  <div class="card-title">プライバシー保護・個人情報マスクツール</div>
-  <div class="card-desc">AIに渡す前にテキストから個人情報を自動検出して「[マスク]」に置換。
-処理はすべてブラウザ内で完結し、外部に一切送信されません。</div>
-</a>
+  <a class="card" href="/tools/privacy-masker/">
+    <div class="card-icon">🛡️</div>
+    <div class="card-title">プライバシー保護・個人情報マスクツール</div>
+    <div class="card-desc">AIに渡す前にテキストから個人情報を自動検出して「[マスク]」に置換。処理はすべてブラウザ内で完結し、外部に一切送信されません。</div>
+  </a>
 
-            <a class="card" href="/tools/agent-json-builder/">
-  <div class="card-icon">⚙️</div>
-  <div class="card-title">AIエージェント用・構造化指示ジェネレーター</div>
-  <div class="card-desc">自然文で「やりたいこと」を書くだけで、AIエージェントが確実に読み取れるJSON指示書を自動生成します。</div>
-</a>
+  <a class="card" href="/tools/agent-json-builder/">
+    <div class="card-icon">⚙️</div>
+    <div class="card-title">AIエージェント用・構造化指示ジェネレーター</div>
+    <div class="card-desc">自然文で「やりたいこと」を書くだけで、AIエージェントが確実に読み取れるJSON指示書を自動生成します。</div>
+  </a>
 
-              <a class="card" href="/tools/excuse-generator/">
-  <div class="card-icon">😅</div>
-  <div class="card-title">嘘みたいなホントの
-言い訳ジェネレーター</div>
-  <div class="card-desc">シチュエーションを選ぶだけで、AIが「クスッと笑えるのに許される」
-絶妙なラインの言い訳を5パターン生成します。</div>
-</a>
+  <a class="card" href="/tools/excuse-generator/">
+    <div class="card-icon">😅</div>
+    <div class="card-title">嘘みたいなホントの言い訳ジェネレーター</div>
+    <div class="card-desc">シチュエーションを選ぶだけで、AIが「クスッと笑えるのに許される」絶妙なラインの言い訳を5パターン生成します。</div>
+  </a>
 
-                <a class="card" href="/tools/code-optimizer/">
-  <div class="card-icon">📶</div>
-  <div class="card-title">コード軽量化チェッカー</div>
-  <div class="card-desc">コードを貼り付けてAIに解析させると、無駄な処理・重い記述・省エネ改善ポイントを一覧で指摘します。</div>
-</a>
+  <a class="card" href="/tools/code-optimizer/">
+    <div class="card-icon">📶</div>
+    <div class="card-title">コード軽量化チェッカー</div>
+    <div class="card-desc">コードを貼り付けてAIに解析させると、無駄な処理・重い記述・省エネ改善ポイントを一覧で指摘します。</div>
+  </a>
 
-                  <a class="card" href="/tools/future-self/">
-  <div class="card-icon">📡</div>
-  <div class="card-title">未来の自分から
-辛口フィードバック</div>
-  <div class="card-desc">今の目標を入力すると、2030年の自分から
-「ホントのこと」が届きます。</div>
-</a>
+  <a class="card" href="/tools/future-self/">
+    <div class="card-icon">📡</div>
+    <div class="card-title">未来の自分から辛口フィードバック</div>
+    <div class="card-desc">今の目標を入力すると、2030年の自分から「ホントのこと」が届きます。</div>
+  </a>
 
-                    <a class="card" href="/tools/tone-converter/">
-  <div class="card-icon">🎭</div>
-  <div class="card-title">AIトーン変換機</div>
-  <div class="card-desc">「性格」を選ぶだけで、AIの答え方が劇的に変わります。同じ質問でも、論理学者に聞くか熱血コーチに聞くかで全く別の答えが返ってきます。</div>
-</a>
+  <a class="card" href="/tools/tone-converter/">
+    <div class="card-icon">🎭</div>
+    <div class="card-title">AIトーン変換機</div>
+    <div class="card-desc">「性格」を選ぶだけで、AIの答え方が劇的に変わります。同じ質問でも、論理学者に聞くか熱血コーチに聞くかで全く別の答えが返ってきます。</div>
+  </a>
 
-                    <a class="card" href="/tools/history-textbook/">
-  <div class="card-icon">📜</div>
-  <div class="card-title">100年後の歴史教科書
-生成器</div>
-  <div class="card-desc">今の出来事を入力すると、100年後の教科書に
-「21世紀の重大事象」としてシュールに記されます。</div>
-</a>
+  <a class="card" href="/tools/history-textbook/">
+    <div class="card-icon">📜</div>
+    <div class="card-title">100年後の歴史教科書生成器</div>
+    <div class="card-desc">今の出来事を入力すると、100年後の教科書に「21世紀の重大事象」としてシュールに記されます。</div>
+  </a>
 
-                      <a class="card" href="/tools/digital-inventory/">
-  <div class="card-icon">💻</div>
-  <div class="card-title">デジタル資産整理シート</div>
-  <div class="card-desc">SNS・サブスク・ドメイン・クラウドなど増えすぎたデジタル資産を一元管理。ブラウザに自動保存。</div>
-</a>
+  <a class="card" href="/tools/digital-inventory/">
+    <div class="card-icon">💻</div>
+    <div class="card-title">デジタル資産整理シート</div>
+    <div class="card-desc">SNS・サブスク・ドメイン・クラウドなど増えすぎたデジタル資産を一元管理。ブラウザに自動保存。</div>
+  </a>
 
-                        <a class="card" href="/tools/contract-checker/">
-  <div class="card-icon">📄</div>
-  <div class="card-title">契約書・リスクワード・チェッカー</div>
-  <div class="card-desc">契約書のドラフトを貼り付けると、見落としがちな重要条項と危険な表現をハイライトします。</div>
-</a>
+  <a class="card" href="/tools/contract-checker/">
+    <div class="card-icon">📄</div>
+    <div class="card-title">契約書・リスクワード・チェッカー</div>
+    <div class="card-desc">契約書のドラフトを貼り付けると、見落としがちな重要条項と危険な表現をハイライトします。</div>
+  </a>
 
-                          <a class="card" href="/tools/responsive-preview/">
-  <div class="card-icon">🖥️</div>
-  <div class="card-title">レスポンシブ・プレビュー</div>
-  <div class="card-desc">「HTMLコード」を貼ると、スマホ・タブレット・PCの3つの枠でどう見えるか同時にプレビューします。</div>
-</a>
+  <a class="card" href="/tools/responsive-preview/">
+    <div class="card-icon">🖥️</div>
+    <div class="card-title">レスポンシブ・プレビュー</div>
+    <div class="card-desc">「HTMLコード」を貼ると、スマホ・タブレット・PCの3つの枠でどう見えるか同時にプレビューします。</div>
+  </a>
 
-                            <a class="card" href="/tools/qa-generator/">
-  <div class="card-icon">🔥</div>
-  <div class="card-title">想定Q&A・反論処理ジェネレーター</div>
-  <div class="card-desc">企画・アイデアを貼ると、意地悪な上司・投資家・懐疑論者が言いそうな
-「ツッコミ10問」と「模範回答」を自動生成。プレゼン前の最終対策に。</div>
-</a>
+  <a class="card" href="/tools/qa-generator/">
+    <div class="card-icon">🔥</div>
+    <div class="card-title">想定Q&A・反論処理ジェネレーター</div>
+    <div class="card-desc">企画・アイデアを貼ると、意地悪な上司・投資家・懐疑論者が言いそうな「ツッコミ10問」と「模範回答」を自動生成。プレゼン前の最終対策に。</div>
+  </a>
 
-                              <a class="card" href="/tools/expiry-tracker/">
-  <div class="card-icon">🥗</div>
-  <div class="card-title">賞味期限リマインダー</div>
-  <div class="card-desc">食品名と日付を登録するだけ。開くたびに期限チェック。</div>
-</a>
+  <a class="card" href="/tools/expiry-tracker/">
+    <div class="card-icon">🥗</div>
+    <div class="card-title">賞味期限リマインダー</div>
+    <div class="card-desc">食品名と日付を登録するだけ。開くたびに期限チェック。</div>
+  </a>
 
-                                <a class="card" href="/tools/new-word-generator/">
-  <div class="card-icon">📖</div>
-  <div class="card-title">新熟語
-ジェネレーター</div>
-  <div class="card-desc">存在しない「新しい熟語」を
-AIがそれっぽく創出します。</div>
-</a>
+  <a class="card" href="/tools/new-word-generator/">
+    <div class="card-icon">📖</div>
+    <div class="card-title">新熟語ジェネレーター</div>
+    <div class="card-desc">存在しない「新しい熟語」をAIがそれっぽく創出します。</div>
+  </a>
 
-                                  <a class="card" href="/tools/sandbag-editor/">
-  <div class="card-icon">💢</div>
-  <div class="card-title"> 怒りのサンドバッグ
-エディタ</div>
-  <div class="card-desc">思い切り打ち込んで、「粉砕」ボタンを押してください。
-入力した内容は一切保存されません。</div>
-</a>
+  <a class="card" href="/tools/sandbag-editor/">
+    <div class="card-icon">💢</div>
+    <div class="card-title">怒りのサンドバッグ・エディタ</div>
+    <div class="card-desc">思い切り打ち込んで、「粉砕」ボタンを押してください。入力した内容は一切保存されません。</div>
+  </a>
 
-                                    <a class="card" href="/tools/fake-influencer-preview/">
-  <div class="card-icon">🎇</div>
-  <div class="card-title">偽・インフルエンサー投稿プレビュー</div>
-  <div class="card-desc">投稿文・プロフィールを入力して「プレビュー生成」を押すだけ。
-バズった状態のスクリーンショットをフェイク生成します。</div>
-</a>
+  <a class="card" href="/tools/fake-influencer-preview/">
+    <div class="card-icon">🎇</div>
+    <div class="card-title">偽・インフルエンサー投稿プレビュー</div>
+    <div class="card-desc">投稿文・プロフィールを入力して「プレビュー生成」を押すだけ。バズった状態のスクリーンショットをフェイク生成します。</div>
+  </a>
 
-                                      <a class="card" href="/tools/parallel-world/">
-  <div class="card-icon">🌏</div>
-  <div class="card-title">並行世界
-シミュレーター</div>
-  <div class="card-desc">「もしあの時…」という選択の先に
-広がっていたかもしれない世界を、AIが描き出します。</div>
-</a>
+  <a class="card" href="/tools/parallel-world/">
+    <div class="card-icon">🌏</div>
+    <div class="card-title">並行世界シミュレーター</div>
+    <div class="card-desc">「もしあの時…」という選択の先に広がっていたかもしれない世界を、AIが描き出します。</div>
+  </a>
 
-                                        <a class="card" href="/tools/script-timer/">
-  <div class="card-icon">🎙️</div>
-  <div class="card-title">音声スクリプト・タイム計算機</div>
-  <div class="card-desc">台本を貼り付けるだけで、読み上げ時間を正確に算出。YouTube・TikTokの尺に合わせた調整もサポート。</div>
-</a>
+  <a class="card" href="/tools/script-timer/">
+    <div class="card-icon">🎙️</div>
+    <div class="card-title">音声スクリプト・タイム計算機</div>
+    <div class="card-desc">台本を貼り付けるだけで、読み上げ時間を正確に算出。YouTube・TikTokの尺に合わせた調整もサポート。</div>
+  </a>
 
-                                          <a class="card" href="/tools/svg-minifier/">
-  <div class="card-icon">⌨️</div>
-  <div class="card-title">SVG Minifier</div>
-  <div class="card-desc">SVGコードを貼るだけ。不要なメタデータ・空白・コメントを除去し、ファイルサイズを最小化します。</div>
-</a>
+  <a class="card" href="/tools/svg-minifier/">
+    <div class="card-icon">⌨️</div>
+    <div class="card-title">SVG Minifier</div>
+    <div class="card-desc">SVGコードを貼るだけ。不要なメタデータ・空白・コメントを除去し、ファイルサイズを最小化します。</div>
+  </a>
 
-                                            <a class="card" href="/tools/sitemap-generator/">
-  <div class="card-icon">🗺️</div>
-  <div class="card-title">Markdown サイトマップ 生成器</div>
-  <div class="card-desc">ページ名とURLを入力するだけ。AIエージェントが読み取りやすい階層構造のMarkdownを自動生成します。</div>
-</a>
+  <a class="card" href="/tools/sitemap-generator/">
+    <div class="card-icon">🗺️</div>
+    <div class="card-title">Markdown サイトマップ 生成器</div>
+    <div class="card-desc">ページ名とURLを入力するだけ。AIエージェントが読み取りやすい階層構造のMarkdownを自動生成します。</div>
+  </a>
 
-                                              <a class="card" href="/tools/glassmorphism-generator/">
-  <div class="card-icon">🪟</div>
-  <div class="card-title">CSS・Glassmorphism（ガラス質感）・ジェネレーター</div>
-  <div class="card-desc">スライダーを動かすだけでリアルタイムプレビュー。backdrop-filterを使ったガラス質感CSSをワンクリック生成。</div>
-</a>
+  <a class="card" href="/tools/glassmorphism-generator/">
+    <div class="card-icon">🪟</div>
+    <div class="card-title">CSS・Glassmorphism（ガラス質感）・ジェネレーター</div>
+    <div class="card-desc">スライダーを動かすだけでリアルタイムプレビュー。backdrop-filterを使ったガラス質感CSSをワンクリック生成。</div>
+  </a>
 
-                                                <a class="card" href="/tools/fake-wisdom-generator/">
-  <div class="card-icon">💬</div>
-  <div class="card-title">存在しない『架空の格言』ジェネレーター</div>
-  <div class="card-desc">ボタンを押すと、偉人が言いそうな文体で名言（迷言）を生成。</div>
-</a>
+  <a class="card" href="/tools/fake-wisdom-generator/">
+    <div class="card-icon">💬</div>
+    <div class="card-title">存在しない『架空の格言』ジェネレーター</div>
+    <div class="card-desc">ボタンを押すと、偉人が言いそうな文体で名言（迷言）を生成。</div>
+  </a>
 
-                                                <a class="card" href="/tools/fake-news-generator/">
-  <div class="card-icon">📰</div>
-  <div class="card-title">AIが書いた『偽のニュース見出し』メーカー</div>
-  <div class="card-desc">未来にありそうな、あり得ないニュースの見出しを1行生成します。</div>
-</a>
+  <a class="card" href="/tools/fake-news-generator/">
+    <div class="card-icon">📰</div>
+    <div class="card-title">AIが書いた『偽のニュース見出し』メーカー</div>
+    <div class="card-desc">未来にありそうな、あり得ないニュースの見出しを1行生成します。</div>
+  </a>
 
-                                                  <a class="card" href="/tools/dream-divination/">
-  <div class="card-icon">🔮</div>
-  <div class="card-title">夢占い</div>
-  <div class="card-desc">見た夢を入力すると、星と月があなたの眠りのメッセージを読み解きます。</div>
-</a>
+  <a class="card" href="/tools/dream-divination/">
+    <div class="card-icon">🔮</div>
+    <div class="card-title">夢占い</div>
+    <div class="card-desc">見た夢を入力すると、星と月があなたの眠りのメッセージを読み解きます。</div>
+  </a>
 
-                                                    <a class="card" href="/tools/face-mosaic/">
-  <div class="card-icon">🙈</div>
-  <div class="card-title">顔モザイクツール</div>
-  <div class="card-desc">写真をアップロードすると、顔を自動検出してモザイクをかけます。</div>
-</a>
+  <a class="card" href="/tools/face-mosaic/">
+    <div class="card-icon">🙈</div>
+    <div class="card-title">顔モザイクツール</div>
+    <div class="card-desc">写真をアップロードすると、顔を自動検出してモザイクをかけます。</div>
+  </a>
 
-                                                    <a class="card" href="/tools/meme-generator/">
-  <div class="card-icon">💥</div>
-  <div class="card-title">ミームジェネレーター</div>
-  <div class="card-desc">画像をアップして文字を入れるだけ。インパクト最強のミーム画像が一瞬で完成。</div>
-</a>
-  
+  <a class="card" href="/tools/meme-generator/">
+    <div class="card-icon">💥</div>
+    <div class="card-title">ミームジェネレーター</div>
+    <div class="card-desc">画像をアップして文字を入れるだけ。インパクト最強のミーム画像が一瞬で完成。</div>
+  </a>
+
   <!-- =====================================================
        次のカードをここに追加（テンプレート）
 
