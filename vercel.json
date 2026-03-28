@@ -21,6 +21,10 @@
       "destination": "https://sns-resize.vercel.app/:path*"
     },
     {
+      "source": "/visa-checker/agencies/:file",
+      "destination": "/visa-checker/agencies/:file"
+    },
+    {
       "source": "/visa-checker/:path*",
       "destination": "/visa-checker/index.html"
     }
