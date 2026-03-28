@@ -658,28 +658,13 @@
           <div class="chip-grid" id="chips-emp"></div>
         </div>
 
-        <div class="step-divider"></div>
-
-        <!-- STEP 4: 会社カテゴリー -->
-        <div class="step-block" style="margin-top:20px" id="step4">
+        <!-- STEP 4: 会社カテゴリー（技人国・高度専門職のみ表示） -->
+        <div class="step-divider" id="step4-divider" style="display:none"></div>
+        <div class="step-block" style="margin-top:20px;display:none" id="step4">
           <div class="step-label">
             <span class="step-num" id="snum-4">4</span>
             勤務先の会社カテゴリーを選択してください
-            <span style="font-size:11px;font-weight:400;color:var(--gray-500);margin-left:4px">（書類数に大きく影響します）</span>
-          </div>
-          <div class="chip-grid" id="chips-cat"></div>
-          <!-- カテゴリー説明（選択後に表示） -->
-          <div id="cat-note" style="display:none;margin-top:10px;padding:10px 13px;border-radius:var(--radius-md);font-size:12px;line-height:1.7;border-left:3px solid var(--blue-600);background:var(--blue-50);color:var(--gray-700)"></div>
-        </div>
-
-        <div class="step-divider"></div>
-
-        <!-- STEP 4: 会社カテゴリー -->
-        <div class="step-block" style="margin-top:20px" id="step4">
-          <div class="step-label">
-            <span class="step-num" id="snum-4">4</span>
-            勤務先の会社カテゴリーを選択してください
-            <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:6px">※ 技人国など一部の資格で必要書類が変わります</span>
+            <span style="font-size:11px;font-weight:400;color:var(--gray-500);margin-left:4px">書類数に大きく影響します</span>
           </div>
           <div class="chip-grid" id="chips-cat"></div>
         </div>
@@ -739,6 +724,8 @@
         </div>
         <!-- 都道府県タブ -->
         <div class="area-tabs" id="area-tabs"></div>
+        <!-- 区・市区町村タブ（都道府県選択後に動的生成） -->
+        <div class="area-tabs" id="district-tabs" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-200)"></div>
         <!-- 件数表示 -->
         <div id="area-count" style="font-size:12px;color:var(--gray-500);margin-bottom:10px"></div>
         <!-- グリッド -->
@@ -863,7 +850,19 @@ function onChipClick(type, id, el) {
   el.classList.add("selected");
 
   // 下流を有効化
-  if (type === "visa") enableChips("proc");
+  if (type === "visa") {
+    enableChips("proc");
+    // カテゴリーSTEPはgijinkoku・koudo選択時のみ表示
+    const catRelevant = ["gijinkoku", "koudo"].includes(id);
+    const step4    = document.getElementById("step4");
+    const step4div = document.getElementById("step4-divider");
+    if (step4)    step4.style.display    = catRelevant ? "block" : "none";
+    if (step4div) step4div.style.display = catRelevant ? "block" : "none";
+    if (!catRelevant) {
+      state.cat = "cat3"; // 非対象資格はcat3（中小企業）固定
+      buildCatChips();
+    }
+  }
   if (type === "proc") enableChips("emp");
 
   updateProgress();
@@ -981,6 +980,10 @@ function toggleDoc(key) {
 
 function resetAll() {
   state.visa = null; state.proc = null; state.emp = null; state.cat = 'cat3';
+  const step4    = document.getElementById("step4");
+  const step4div = document.getElementById("step4-divider");
+  if (step4)    step4.style.display    = "none";
+  if (step4div) step4div.style.display = "none";
   Object.keys(checked).forEach(k => delete checked[k]);
   resetChips("proc"); resetChips("emp");
   document.querySelectorAll("[data-type='visa']").forEach(c => c.classList.remove("selected"));
@@ -1039,6 +1042,7 @@ function navigatePseo(visaId, procId) {
    エリアタブ
 ──────────────────────────────────────────────────────────── */
 let currentArea = "tokyo";
+let currentDistrict = null;
 
 /* ────────────────────────────────────────────────────────────
    エリアタブ構築（都道府県ボタン生成 + 在留資格フィルター初期化）
@@ -1053,7 +1057,7 @@ function buildAreaTabs() {
 
   // 在留資格フィルターを VISA_DATA から動的生成
   const vSel = document.getElementById("area-visa-filter");
-  if (vSel) {
+  if (vSel && vSel.options.length === 1) {
     VISA_DATA.visas.forEach(v => {
       const opt = document.createElement("option");
       opt.value = v.id; opt.textContent = v.label;
@@ -1064,22 +1068,50 @@ function buildAreaTabs() {
   filterAgencies();
 }
 
-function selectArea(areaId, btn) {
-  currentArea = areaId;
+function selectArea(prefId, btn) {
+  currentArea = prefId;
+  currentDistrict = null;
   document.querySelectorAll(".area-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  buildDistrictTabs(prefId);
+  filterAgencies();
+}
+
+/* 区タブを都道府県切り替え時に動的生成 */
+function buildDistrictTabs(prefId) {
+  const wrap = document.getElementById("district-tabs");
+  if (!wrap) return;
+  const districts = VISA_LOGIC.getDistricts(prefId);
+  if (!districts.length) { wrap.innerHTML = ""; return; }
+  wrap.innerHTML =
+    `<button class="area-tab active" onclick="selectDistrict(null,this)">すべての区</button>` +
+    districts.map(d => `
+      <button class="area-tab" onclick="selectDistrict('${d.id}',this)">${d.label}</button>
+    `).join("");
+}
+
+function selectDistrict(districtId, btn) {
+  currentDistrict = districtId;
+  document.querySelectorAll("#district-tabs .area-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   filterAgencies();
 }
 
 /* ────────────────────────────────────────────────────────────
-   絞り込みロジック（キーワード・資格・種別）
+   絞り込みロジック（都道府県・区・キーワード・資格・種別）
 ──────────────────────────────────────────────────────────── */
 function filterAgencies() {
-  const keyword  = (document.getElementById("area-search")?.value || "").toLowerCase();
-  const visaFlt  = document.getElementById("area-visa-filter")?.value || "";
-  const typeFlt  = document.getElementById("area-type-filter")?.value || "";
+  const keyword = (document.getElementById("area-search")?.value || "").toLowerCase();
+  const visaFlt = document.getElementById("area-visa-filter")?.value || "";
+  const typeFlt = document.getElementById("area-type-filter")?.value || "";
 
-  let list = VISA_DATA.agencies[currentArea] || [];
+  // VISA_LOGIC.getAgencies() で構造化フィルタ
+  let list = VISA_LOGIC.getAgencies({
+    prefId:     currentArea,
+    districtId: currentDistrict || undefined,
+    visaId:     visaFlt || undefined,
+    type:       typeFlt || undefined,
+  });
 
   // キーワード（機関名・住所）
   if (keyword) {
@@ -1087,14 +1119,6 @@ function filterAgencies() {
       a.name.toLowerCase().includes(keyword) ||
       a.address.toLowerCase().includes(keyword)
     );
-  }
-  // 在留資格
-  if (visaFlt) {
-    list = list.filter(a => (a.visa || []).includes(visaFlt));
-  }
-  // 種別
-  if (typeFlt) {
-    list = list.filter(a => a.type === typeFlt);
   }
 
   const countEl = document.getElementById("area-count");
