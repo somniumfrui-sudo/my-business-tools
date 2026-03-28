@@ -1041,8 +1041,25 @@ function navigatePseo(visaId, procId) {
 /* ────────────────────────────────────────────────────────────
    エリアタブ
 ──────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────
+   都道府県別機関データ 動的ローダー
+   ・タブを開いた時 / 都道府県を切り替えた時に初めて読み込む
+   ・一度読み込んだ都道府県は再読み込みしない（キャッシュ）
+──────────────────────────────────────────────────────────── */
 let currentArea = "tokyo";
 let currentDistrict = null;
+const _loadedPrefs = new Set();
+
+function loadPrefAgencies(prefId) {
+  if (_loadedPrefs.has(prefId)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = `/visa-checker/agencies/${prefId}.js`;
+    s.onload  = () => { _loadedPrefs.add(prefId); resolve(); };
+    s.onerror = () => { _loadedPrefs.add(prefId); resolve(); }; // 失敗しても止めない
+    document.head.appendChild(s);
+  });
+}
 
 /* ────────────────────────────────────────────────────────────
    エリアタブ構築（都道府県ボタン生成 + 在留資格フィルター初期化）
@@ -1065,7 +1082,8 @@ function buildAreaTabs() {
     });
   }
 
-  filterAgencies();
+  // 初期都道府県（東京）を先読み
+  loadPrefAgencies(currentArea).then(() => filterAgencies());
 }
 
 function selectArea(prefId, btn) {
@@ -1074,7 +1092,8 @@ function selectArea(prefId, btn) {
   document.querySelectorAll(".area-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   buildDistrictTabs(prefId);
-  filterAgencies();
+  // 未読み込みの都道府県なら先にJSを読み込んでから描画
+  loadPrefAgencies(prefId).then(() => filterAgencies());
 }
 
 /* 区タブを都道府県切り替え時に動的生成 */
