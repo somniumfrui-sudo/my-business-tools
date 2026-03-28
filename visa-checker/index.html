@@ -620,7 +620,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <div>
           <div class="card-title">必要書類チェッカー</div>
-          <div class="card-subtitle">3ステップで必要書類を特定します</div>
+          <div class="card-subtitle">4ステップで必要書類を特定します</div>
         </div>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
@@ -658,6 +658,32 @@
           <div class="chip-grid" id="chips-emp"></div>
         </div>
 
+        <div class="step-divider"></div>
+
+        <!-- STEP 4: 会社カテゴリー -->
+        <div class="step-block" style="margin-top:20px" id="step4">
+          <div class="step-label">
+            <span class="step-num" id="snum-4">4</span>
+            勤務先の会社カテゴリーを選択してください
+            <span style="font-size:11px;font-weight:400;color:var(--gray-500);margin-left:4px">（書類数に大きく影響します）</span>
+          </div>
+          <div class="chip-grid" id="chips-cat"></div>
+          <!-- カテゴリー説明（選択後に表示） -->
+          <div id="cat-note" style="display:none;margin-top:10px;padding:10px 13px;border-radius:var(--radius-md);font-size:12px;line-height:1.7;border-left:3px solid var(--blue-600);background:var(--blue-50);color:var(--gray-700)"></div>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 4: 会社カテゴリー -->
+        <div class="step-block" style="margin-top:20px" id="step4">
+          <div class="step-label">
+            <span class="step-num" id="snum-4">4</span>
+            勤務先の会社カテゴリーを選択してください
+            <span style="font-size:11px;color:#6b7280;font-weight:400;margin-left:6px">※ 技人国など一部の資格で必要書類が変わります</span>
+          </div>
+          <div class="chip-grid" id="chips-cat"></div>
+        </div>
+
       </div>
 
       <div class="step-divider"></div>
@@ -687,11 +713,35 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <div>
           <div class="card-title">地域で探す</div>
-          <div class="card-subtitle">登録支援機関・行政書士を都道府県別に検索</div>
+          <div class="card-subtitle">登録支援機関・行政書士を都道府県・在留資格で絞り込み</div>
         </div>
       </div>
-      <div style="padding:20px">
+      <div style="padding:16px 20px 8px">
+        <!-- 検索バー -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <input type="text" id="area-search"
+            placeholder="🔍 機関名・住所で検索..."
+            oninput="filterAgencies()"
+            style="flex:1;min-width:180px;font-size:13px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--gray-50);color:var(--gray-900);outline:none">
+          <!-- 在留資格フィルター -->
+          <select id="area-visa-filter" onchange="filterAgencies()"
+            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--gray-50);color:var(--gray-900);outline:none;cursor:pointer;min-width:160px">
+            <option value="">すべての資格</option>
+          </select>
+          <!-- 種別フィルター -->
+          <select id="area-type-filter" onchange="filterAgencies()"
+            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--gray-50);color:var(--gray-900);outline:none;cursor:pointer">
+            <option value="">すべての種別</option>
+            <option value="登録支援機関">登録支援機関</option>
+            <option value="行政書士">行政書士</option>
+            <option value="出入国在留管理局">出入国在留管理局</option>
+          </select>
+        </div>
+        <!-- 都道府県タブ -->
         <div class="area-tabs" id="area-tabs"></div>
+        <!-- 件数表示 -->
+        <div id="area-count" style="font-size:12px;color:var(--gray-500);margin-bottom:10px"></div>
+        <!-- グリッド -->
         <div class="agency-grid" id="agency-grid"></div>
       </div>
     </div>
@@ -715,16 +765,17 @@
 /* ────────────────────────────────────────────────────────────
    STATE（UIから完全分離）
 ──────────────────────────────────────────────────────────── */
-const state   = { visa: null, proc: null, emp: null };
+const state   = { visa: null, proc: null, emp: null, cat: 'cat3' };
 const checked = {};   // key → boolean
 
 /* ────────────────────────────────────────────────────────────
    INIT
 ──────────────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
-  buildChips("visa", VISA_DATA.visas, "chips-visa");
-  buildChips("proc", VISA_DATA.procedures, "chips-proc", true);
-  buildChips("emp",  VISA_DATA.empTypes,   "chips-emp",  true);
+  buildChips("visa", VISA_DATA.visas,       "chips-visa");
+  buildChips("proc", VISA_DATA.procedures,  "chips-proc", true);
+  buildChips("emp",  VISA_DATA.empTypes,    "chips-emp",  true);
+  buildCatChips();
   buildPseoList();
   buildAreaTabs();
   handleUrlParams();   // URLパラメータで初期状態を設定（pSEO対応）
@@ -746,6 +797,56 @@ function buildChips(type, items, containerId, disabled = false) {
       ${item.label}
     </div>
   `).join("");
+}
+
+/* ────────────────────────────────────────────────────────────
+   カテゴリーチップ生成（特殊UI: 色バッジ付き）
+──────────────────────────────────────────────────────────── */
+function buildCatChips() {
+  const el = document.getElementById("chips-cat");
+  if (!el) return;
+  el.innerHTML = (VISA_DATA.categories || []).map(cat => `
+    <div
+      class="chip${cat.id === state.cat ? ' selected' : ''}"
+      data-type="cat"
+      data-id="${cat.id}"
+      onclick="onCatClick('${cat.id}', this)"
+      style="${cat.id === state.cat ? `background:${cat.color};border-color:${cat.color}` : `border-color:${cat.color}40`}"
+      title="${cat.desc}&#10;${cat.note}"
+    >
+      <span class="chip-dot" style="background:${cat.color}"></span>
+      ${cat.label}
+      <span style="font-size:11px;opacity:0.75;margin-left:2px">${cat.desc}</span>
+    </div>
+  `).join("");
+}
+
+function onCatClick(id, el) {
+  state.cat = id;
+  // スタイル更新
+  document.querySelectorAll("[data-type='cat']").forEach(c => {
+    const catId  = c.getAttribute("data-id");
+    const catDef = (VISA_DATA.categories || []).find(x => x.id === catId);
+    c.classList.remove("selected");
+    c.style.background   = "";
+    c.style.borderColor  = catDef ? catDef.color + "40" : "";
+    c.style.color        = "";
+  });
+  el.classList.add("selected");
+  const def = (VISA_DATA.categories || []).find(x => x.id === id);
+  if (def) { el.style.background = def.color; el.style.borderColor = def.color; el.style.color = "#fff"; }
+
+  // カテゴリー説明を表示
+  const noteEl = document.getElementById("cat-note");
+  if (noteEl && def) {
+    noteEl.style.display    = "block";
+    noteEl.style.borderColor = def.color;
+    noteEl.style.background  = def.color + "10";
+    noteEl.innerHTML = `<strong>${def.label}（${def.desc}）</strong><br>${def.note}`;
+  }
+
+  renderResult();
+  updatePageMeta();
 }
 
 function onChipClick(type, id, el) {
@@ -790,10 +891,11 @@ function updateProgress() {
 }
 
 function updateStepNums() {
-  const map = [[1, !!state.visa], [2, !!state.proc], [3, !!state.emp]];
-  map.forEach(([n, done]) => {
+  const steps = [state.visa, state.proc, state.emp, state.cat !== 'cat3' ? state.cat : null].filter(Boolean).length;
+  [[1, !!state.visa], [2, !!state.proc], [3, !!state.emp], [4, true]].forEach(([n, done]) => {
     const el = document.getElementById(`snum-${n}`);
-    el.className = "step-num" + (done ? " done" : n === (Object.values(state).filter(Boolean).length + 1) ? " active" : "");
+    if (!el) return;
+    el.className = "step-num" + (done ? " done" : "");
   });
 }
 
@@ -813,7 +915,7 @@ function renderResult() {
   }
 
   const emp  = state.emp || "direct";
-  const docs = VISA_LOGIC.getDocs(state.visa, state.proc, emp);
+  const docs = VISA_LOGIC.getDocs(state.visa, state.proc, emp, state.cat);
 
   if (!docs || docs.length === 0) {
     area.innerHTML = `<div class="result-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>この組み合わせのデータは準備中です</div>`;
@@ -878,7 +980,7 @@ function toggleDoc(key) {
 }
 
 function resetAll() {
-  state.visa = null; state.proc = null; state.emp = null;
+  state.visa = null; state.proc = null; state.emp = null; state.cat = 'cat3';
   Object.keys(checked).forEach(k => delete checked[k]);
   resetChips("proc"); resetChips("emp");
   document.querySelectorAll("[data-type='visa']").forEach(c => c.classList.remove("selected"));
@@ -938,34 +1040,100 @@ function navigatePseo(visaId, procId) {
 ──────────────────────────────────────────────────────────── */
 let currentArea = "tokyo";
 
+/* ────────────────────────────────────────────────────────────
+   エリアタブ構築（都道府県ボタン生成 + 在留資格フィルター初期化）
+──────────────────────────────────────────────────────────── */
 function buildAreaTabs() {
+  // 都道府県ボタン
   const tabs = document.getElementById("area-tabs");
   tabs.innerHTML = VISA_DATA.prefectures.map(p => `
-    <button class="area-tab${p.id === currentArea ? " active" : ""}" onclick="selectArea('${p.id}', this)">${p.label}</button>
+    <button class="area-tab${p.id === currentArea ? " active" : ""}"
+      onclick="selectArea('${p.id}', this)">${p.label}</button>
   `).join("");
-  renderAgencies(currentArea);
+
+  // 在留資格フィルターを VISA_DATA から動的生成
+  const vSel = document.getElementById("area-visa-filter");
+  if (vSel) {
+    VISA_DATA.visas.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.id; opt.textContent = v.label;
+      vSel.appendChild(opt);
+    });
+  }
+
+  filterAgencies();
 }
 
 function selectArea(areaId, btn) {
   currentArea = areaId;
   document.querySelectorAll(".area-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  renderAgencies(areaId);
+  filterAgencies();
 }
 
-function renderAgencies(areaId) {
+/* ────────────────────────────────────────────────────────────
+   絞り込みロジック（キーワード・資格・種別）
+──────────────────────────────────────────────────────────── */
+function filterAgencies() {
+  const keyword  = (document.getElementById("area-search")?.value || "").toLowerCase();
+  const visaFlt  = document.getElementById("area-visa-filter")?.value || "";
+  const typeFlt  = document.getElementById("area-type-filter")?.value || "";
+
+  let list = VISA_DATA.agencies[currentArea] || [];
+
+  // キーワード（機関名・住所）
+  if (keyword) {
+    list = list.filter(a =>
+      a.name.toLowerCase().includes(keyword) ||
+      a.address.toLowerCase().includes(keyword)
+    );
+  }
+  // 在留資格
+  if (visaFlt) {
+    list = list.filter(a => (a.visa || []).includes(visaFlt));
+  }
+  // 種別
+  if (typeFlt) {
+    list = list.filter(a => a.type === typeFlt);
+  }
+
+  const countEl = document.getElementById("area-count");
+  if (countEl) {
+    countEl.textContent = list.length
+      ? `${list.length}件の機関が見つかりました`
+      : "条件に合う機関が見つかりません";
+  }
+
+  renderAgencies(list);
+}
+
+/* ────────────────────────────────────────────────────────────
+   機関カードを描画
+──────────────────────────────────────────────────────────── */
+function renderAgencies(list) {
   const grid = document.getElementById("agency-grid");
-  const list = VISA_DATA.agencies[areaId] || VISA_DATA.agencies["other"];
 
   if (!list || list.length === 0) {
-    grid.innerHTML = "<p style='font-size:13px;color:#6b7280'>この地域のデータは準備中です</p>";
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray-500);font-size:13px">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.3">🏢</div>
+        この条件に合う機関のデータは準備中です
+      </div>`;
     return;
   }
 
+  const TYPE_CLS = {
+    "登録支援機関":       "type-reg",
+    "行政書士":           "type-scribe",
+    "出入国在留管理局":   "type-reg",
+  };
+
   grid.innerHTML = list.map(a => {
-    const initials = a.name.slice(0, 2);
-    const typeCls  = a.type === "登録支援機関" ? "type-reg" : "type-scribe";
+    const initials   = a.name.slice(0, 2);
+    const typeCls    = TYPE_CLS[a.type] || "type-reg";
     const visaLabels = (a.visa || []).map(id => VISA_LOGIC.getLabel("visa", id));
+    const prefLabel  = VISA_DATA.prefectures.find(p => p.id === currentArea)?.label || "";
+
     return `
     <div class="agency-card">
       <div class="agency-card-head">
@@ -977,12 +1145,18 @@ function renderAgencies(areaId) {
       </div>
       <div class="agency-info">
         <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            style="width:12px;height:12px;opacity:.6">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
           ${a.address}
         </span>
         <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 9.81 19.79 19.79 0 01.5 1.2 2 2 0 012.5 0H5.5a2 2 0 012 1.72 12 12 0 00.7 2.81 2 2 0 01-.45 2.11L6.49 7.37a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45 12 12 0 002.81.7A2 2 0 0122 14.5v2.42z"/></svg>
-          ${a.tel}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            style="width:12px;height:12px;opacity:.6">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 9.81 19.79 19.79 0 01.5 1.2 2 2 0 012.5 0H5.5a2 2 0 012 1.72 12 12 0 00.7 2.81 2 2 0 01-.45 2.11L6.49 7.37a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45 12 12 0 002.81.7A2 2 0 0122 14.5v2.42z"/>
+          </svg>
+          <a href="tel:${a.tel}" style="color:var(--blue-600);text-decoration:none">${a.tel}</a>
         </span>
       </div>
       <div class="agency-tags">
@@ -1002,41 +1176,202 @@ function switchTab(tabId, btn) {
   btn.classList.add("active");
 }
 
-/* ────────────────────────────────────────────────────────────
-   pSEO: URLパラメータ対応 & メタタグ更新
-   /visa-checker/?v=tokutei1&p=renew のような形式でも動作
-──────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   pSEO ルーティングエンジン
+   ────────────────────────────────────────────────────────────
+   対応するURL形式（優先順位順に処理）:
+
+   1. パスベース（最優先・クローラー向け）
+      /visa-checker/tokutei1/renew/        → 資格＋手続き確定
+      /visa-checker/area/tokyo/            → 地域ページ
+
+   2. クエリパラメータ（シェア・内部リンク向け）
+      /visa-checker/?v=tokutei1&p=renew&e=direct
+
+   3. パラメータなし → デフォルト表示（何も選択しない状態）
+════════════════════════════════════════════════════════════ */
 function handleUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  const v = params.get("v");
-  const p = params.get("p");
-  if (v) {
-    const chip = document.querySelector(`[data-type="visa"][data-id="${v}"]`);
-    if (chip) onChipClick("visa", v, chip);
+  const path   = location.pathname.replace(/\/$/, "");   // 末尾スラッシュ除去
+  const parts  = path.split("/").filter(Boolean);        // ["visa-checker","tokutei1","renew"]
+  const params = new URLSearchParams(location.search);
+
+  // ── 1. パスベースルーティング ──────────────────────────────
+  // /visa-checker/area/[prefId]
+  if (parts[1] === "area" && parts[2]) {
+    const prefId = parts[2];
+    switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
+    const btn = document.querySelector(`.area-tab[onclick*="'${prefId}'"]`);
+    if (btn) selectArea(prefId, btn);
+    updateAreaMeta(prefId);
+    return;
   }
-  if (v && p) {
-    setTimeout(() => {
-      const chip = document.querySelector(`[data-type="proc"][data-id="${p}"]`);
-      if (chip) onChipClick("proc", p, chip);
-    }, 50);
+
+  // /visa-checker/[visaId]/[procId]
+  const pathVisa = parts[1];
+  const pathProc = parts[2];
+  const pathEmp  = parts[3];   // 将来の拡張用
+
+  const visaIds = VISA_DATA.visas.map(v => v.id);
+  const procIds = VISA_DATA.procedures.map(p => p.id);
+  const empIds  = VISA_DATA.empTypes.map(e => e.id);
+
+  if (pathVisa && visaIds.includes(pathVisa)) {
+    _applySelection("visa", pathVisa);
+    if (pathProc && procIds.includes(pathProc)) {
+      setTimeout(() => {
+        _applySelection("proc", pathProc);
+        if (pathEmp && empIds.includes(pathEmp)) {
+          setTimeout(() => _applySelection("emp", pathEmp), 30);
+        }
+      }, 30);
+    }
+    return;
+  }
+
+  // ── 2. クエリパラメータ (/visa-checker/?v=...&p=...&e=...) ──
+  const qv = params.get("v");
+  const qp = params.get("p");
+  const qe = params.get("e");
+
+  if (qv && visaIds.includes(qv)) {
+    _applySelection("visa", qv);
+    if (qp && procIds.includes(qp)) {
+      setTimeout(() => {
+        _applySelection("proc", qp);
+        if (qe && empIds.includes(qe)) {
+          setTimeout(() => _applySelection("emp", qe), 30);
+        }
+      }, 30);
+    }
   }
 }
 
+/** チップを選択状態にして連動処理を走らせるユーティリティ */
+function _applySelection(type, id) {
+  const chip = document.querySelector(`[data-type="${type}"][data-id="${id}"]`);
+  if (chip && !chip.classList.contains("disabled")) {
+    onChipClick(type, id, chip);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   1. 動的タイトル・メタ更新（資格×手続きページ）
+      → 選択のたびに呼ばれる
+──────────────────────────────────────────────────────────── */
 function updatePageMeta() {
-  if (!state.visa || !state.proc) return;
-  const meta = VISA_LOGIC.generateMeta(state.visa, state.proc);
+  const vl = state.visa ? VISA_LOGIC.getLabel("visa", state.visa) : null;
+  const pl = state.proc ? VISA_LOGIC.getLabel("proc", state.proc) : null;
+  const el = state.emp  ? VISA_LOGIC.getLabel("emp",  state.emp)  : null;
 
-  // タイトル・description 動的更新（pSEO）
-  document.title                                          = meta.title;
-  document.getElementById("meta-title").textContent      = meta.title;
-  document.getElementById("meta-desc").setAttribute("content", meta.description);
-  document.getElementById("og-title").setAttribute("content", meta.title);
-  document.getElementById("og-desc").setAttribute("content", meta.description);
-  document.getElementById("page-h1").textContent         = meta.h1;
-  document.getElementById("breadcrumb-current").textContent = meta.h1;
-  document.getElementById("page-sub").textContent        =
-    `${VISA_LOGIC.getLabel("visa", state.visa)}で${VISA_LOGIC.getLabel("proc", state.proc)}を行う場合の必要書類一覧です。雇用形態（直接雇用・派遣・企業内転勤）を選択してください。`;
+  // ── 動的 h1 ──────────────────────────────────────────────
+  let h1, title, description, canonical;
+
+  if (vl && pl) {
+    // 資格＋手続き確定
+    const empSuffix = el ? `（${el}）` : "";
+    h1          = `${vl}の${pl}${empSuffix} 必要書類一覧`;
+    title       = `${vl}の${pl} 必要書類チェックリスト完全版 | All AI Toolbox`;
+    description = `${vl}で${pl}を行う場合に必要な書類を一覧表示。雇用形態別（直接雇用・派遣・企業内転勤）に整理。入管申請前の準備に。`;
+    canonical   = `/visa-checker/${state.visa}/${state.proc}/`;
+  } else if (vl) {
+    // 資格のみ確定
+    h1          = `${vl} の手続き別 必要書類ガイド`;
+    title       = `${vl} 必要書類・手続きガイド | All AI Toolbox`;
+    description = `${vl}の新規申請・更新・変更など手続き別に必要書類を確認できます。`;
+    canonical   = `/visa-checker/${state.visa}/`;
+  } else {
+    // 何も選択されていない（初期状態）
+    h1          = "外国人雇用・ビザ必要書類チェッカー";
+    title       = "外国人雇用・ビザ必要書類チェッカー | All AI Toolbox";
+    description = "在留資格×手続き×雇用形態を選ぶだけで必要書類が一覧表示。特定技能・技人国・高度専門職など全資格対応。";
+    canonical   = "/visa-checker/";
+  }
+
+  // ── DOM反映 ───────────────────────────────────────────────
+  document.title = title;
+  _setMeta("meta-title",    "textContent", title);
+  _setMeta("meta-desc",     "content",     description);
+  _setMeta("meta-canonical","href",        canonical);
+  _setMeta("og-title",      "content",     title);
+  _setMeta("og-desc",       "content",     description);
+
+  // h1 と説明文
+  const h1El = document.getElementById("page-h1");
+  if (h1El) h1El.textContent = h1;
+
+  const subEl = document.getElementById("page-sub");
+  if (subEl) {
+    subEl.textContent = vl && pl
+      ? `${vl}で${pl}を行う場合の必要書類一覧です。雇用形態（直接雇用・派遣・企業内転勤）を選択してください。`
+      : "在留資格・手続き種別・雇用形態を選ぶだけで、入管申請に必要な書類が一覧表示されます。";
+  }
+
+  // パンくず
+  const bcEl = document.getElementById("breadcrumb-current");
+  if (bcEl) bcEl.textContent = vl ? (pl ? `${vl} × ${pl}` : vl) : "ビザ書類チェッカー";
+
+  // ── ブラウザ履歴にURLを反映（pushState・クローラーには無効だがシェアURLに使える）──
+  if (state.visa && state.proc) {
+    const url = `/visa-checker/${state.visa}/${state.proc}/` + (state.emp ? `?e=${state.emp}` : "");
+    history.replaceState({ visa: state.visa, proc: state.proc, emp: state.emp }, title, url);
+  } else if (state.visa) {
+    history.replaceState({ visa: state.visa }, title, `/visa-checker/${state.visa}/`);
+  }
 }
+
+/** meta/link 要素を属性名またはtextContentで更新するユーティリティ */
+function _setMeta(id, attr, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (attr === "textContent") el.textContent = value;
+  else el.setAttribute(attr, value);
+}
+
+/* ────────────────────────────────────────────────────────────
+   2. 地域ページのメタ更新
+──────────────────────────────────────────────────────────── */
+function updateAreaMeta(prefId) {
+  const meta = VISA_LOGIC.generateAreaMeta(prefId);
+
+  document.title = meta.title;
+  _setMeta("meta-title",    "textContent", meta.title);
+  _setMeta("meta-desc",     "content",     meta.description);
+  _setMeta("meta-canonical","href",        meta.canonical);
+  _setMeta("og-title",      "content",     meta.title);
+  _setMeta("og-desc",       "content",     meta.description);
+
+  const h1El = document.getElementById("page-h1");
+  if (h1El) h1El.textContent = meta.h1;
+
+  const bcEl = document.getElementById("breadcrumb-current");
+  if (bcEl) bcEl.textContent = VISA_LOGIC.getLabel("pref", prefId);
+
+  history.replaceState({ area: prefId }, meta.title, meta.canonical);
+}
+
+/* ────────────────────────────────────────────────────────────
+   3. ブラウザの「戻る/進む」ボタン対応
+──────────────────────────────────────────────────────────── */
+window.addEventListener("popstate", (e) => {
+  const s = e.state;
+  if (!s) return;
+  if (s.area) {
+    switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
+    const btn = document.querySelector(`.area-tab[onclick*="'${s.area}'"]`);
+    if (btn) selectArea(s.area, btn);
+    updateAreaMeta(s.area);
+  } else if (s.visa) {
+    switchTab("checker", document.querySelector("[onclick*=\"'checker'\"]"));
+    resetAll();
+    setTimeout(() => {
+      _applySelection("visa", s.visa);
+      if (s.proc) setTimeout(() => {
+        _applySelection("proc", s.proc);
+        if (s.emp) setTimeout(() => _applySelection("emp", s.emp), 30);
+      }, 30);
+    }, 30);
+  }
+});
 </script>
 </body>
 </html>
