@@ -1,0 +1,35 @@
+// 登録支援機関データ - saga (29件)
+(function(){
+  const data = [
+    { name: "株式会社ホットライン", type: "登録支援機関", address: "佐賀県佐賀市松原一丁目４番４号", tel: "0952978188", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "熊本　郁夫（ＯＭＵＳＵＢＩ行政書士事務所）", type: "登録支援機関", address: "佐賀県唐津市養母田鬼塚１番１０号", tel: "0955745754", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県神埼市神埼町田道ヶ里２４５９番地１１", tel: "0952524145", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県武雄市北方町大字大崎１１００番地８", tel: "0954362386", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市天神二丁目２番２８号　松尾天神ビル４０６", tel: "0952975801", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県藤津郡太良町大字多良２８２６番地１", tel: "07023739419", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県神埼市神埼町枝ヶ里３３１番地１", tel: "0952527777", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市兵庫南四丁目１５番６号", tel: "0952373600", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県藤津郡太良町大字糸岐８６０３番地６", tel: "0954670677", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県杵島郡大町町大字大町５１番地３", tel: "0952823138", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県鳥栖市養父町４７３番地１　メゾンエクセルＢ－１０２", tel: "09013691658", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県唐津市浜玉町横田下８５２番地２５", tel: "0955705276", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市木原二丁目６番５号", tel: "0952294678", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県鳥栖市曽根崎町１４８４番地７", tel: "0942505503", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県多久市東多久町大字別府３８４２番地", tel: "07015709477", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県伊万里市新天町２１１番地１", tel: "0955227868", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県小城市三日月町樋口９８１番地３", tel: "0952734545", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市本庄町大字本庄１０番地", tel: "0952978477", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市南佐賀２丁目１５－１８", tel: "0952608555", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県鳥栖市田代外町５７７番地２", tel: "0942858671", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県唐津市相知町相知字緑山５３３番地３２", tel: "0955623012", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県杵島郡江北町大字山口１６１９番地", tel: "0952863935", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県伊万里市松浦町中野原１９０９番地", tel: "0955206888", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県杵島郡白石町大字新開１２３番地", tel: "07023434187", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県鳥栖市立石町１８５５番地１グリーンタウン鳥栖Ｈ", tel: "08083547221", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県神埼市千代田町餘江１２０８番地２", tel: "0952378395", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市南佐賀二丁目１５－１８", tel: "0942804940", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市鍋島町大字森田２４３９番地１", tel: "0952335735", visa: ["tokutei1"], prefId: "saga", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県三養基郡基山町小倉１０５３番地１３", tel: "09047705344", visa: ["tokutei1"], prefId: "saga", districtId: null },
+  ];
+  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+})();
