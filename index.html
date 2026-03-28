@@ -14,20 +14,137 @@
       color: #111;
     }
 
-    /* ── Header ── */
+    /* ══════════════════════════════════════════════
+       ★ ヘッダー（スティッキーナビバー）
+       ナビ項目の追加方法:
+         .site-nav の中に <a class="nav-link"> を1行追加するだけ
+    ══════════════════════════════════════════════ */
     .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #fff;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .site-header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── ロゴ ── */
+    .site-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      text-decoration: none;
+      color: inherit;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .site-brand-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+      letter-spacing: -0.02em;
+    }
+    .site-brand-sub {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 2px;
+      font-weight: 400;
+    }
+
+    /* ── 縦仕切り ── */
+    .nav-sep {
+      width: 1px;
+      height: 22px;
+      background: #e8eaed;
+      margin: 0 12px;
+      flex-shrink: 0;
+    }
+
+    /* ── ナビリンク群 ── */
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .site-nav::-webkit-scrollbar { display: none; }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 7px;
+      white-space: nowrap;
+      transition: background 0.13s, color 0.13s;
+    }
+    .nav-link svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.65;
+    }
+    .nav-link:hover {
+      background: #f3f4f6;
+      color: #111;
+    }
+    /* 現在地ハイライト */
+    .nav-link.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+    .nav-link.active svg { opacity: 1; }
+
+    /* NEW バッジ */
+    .nav-new {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: #1d4ed8;
+      color: #fff;
+      border-radius: 4px;
+      padding: 1px 5px;
+      line-height: 1.5;
+    }
+
+    /* スマホ対応 */
+    @media (max-width: 540px) {
+      .site-header-inner { height: auto; flex-wrap: wrap; padding: 10px 14px 8px; gap: 6px; }
+      .site-brand-sub { display: none; }
+      .nav-sep { display: none; }
+      .site-nav { width: 100%; padding-bottom: 2px; }
+      .nav-link { font-size: 12px; padding: 5px 9px; }
+    }
+
+    /* ══════════════════════════════════════════════
+       ★ ヒーロー
+    ══════════════════════════════════════════════ */
+    .site-hero {
       text-align: center;
       padding: 52px 24px 0;
     }
-
-    .site-header h1 {
+    .site-hero h1 {
       font-size: 34px;
       font-weight: 800;
       color: #111;
       letter-spacing: -0.02em;
     }
-
-    .site-header p {
+    .site-hero p {
       margin-top: 10px;
       font-size: 15px;
       color: #666;
@@ -35,47 +152,32 @@
 
     /* ── Divider ── */
     .divider {
-      max-width: 1200px;           /* grid の max-width に合わせて拡張 */
+      max-width: 1200px;
       margin: 28px auto 0;
       border: none;
       border-top: 1px solid #e8eaed;
     }
 
-    /* ── Grid ── */
+    /* ══════════════════════════════════════════════
+       ★ グリッド
+    ══════════════════════════════════════════════ */
     .grid {
-      max-width: 1200px;           /* 5列に広げるため 1040 → 1200 */
+      max-width: 1200px;
       margin: 0 auto;
       padding: 28px 20px 80px;
       display: grid;
-      grid-template-columns: repeat(5, 1fr);   /* PC: 5列 */
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
     }
 
-    /* タブレット横（〜1024px）: 4列 */
-    @media (max-width: 1024px) {
-      .grid { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 768px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 480px)  {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      .site-hero h1 { font-size: 26px; }
     }
 
-    /* タブレット縦（〜768px）: 3列 */
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    /* スマホ（〜480px）: auto-fill で最小140px → 自動的に2〜1列 */
-    @media (max-width: 480px) {
-      .grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      }
-      .site-header h1 { font-size: 26px; }
-    }
-
-    /* ── Card ──
-     *
-     * 新しいカードの追加方法:
-     *   1. tools/ 内に新フォルダを作成
-     *   2. .grid の中に <a class="card"> を1つ足すだけ！
-     *
-     */
+    /* ── Card ── */
     .card {
       display: flex;
       flex-direction: column;
@@ -88,31 +190,14 @@
       color: inherit;
       transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
     }
-
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,.08);
       border-color: #d0d5e0;
     }
-
-    .card-icon {
-      font-size: 28px;
-      line-height: 1;
-      margin-bottom: 2px;
-    }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #1a6ff4;
-      line-height: 1.35;
-    }
-
-    .card-desc {
-      font-size: 12px;
-      color: #666;
-      line-height: 1.55;
-    }
+    .card-icon  { font-size: 28px; line-height: 1; margin-bottom: 2px; }
+    .card-title { font-size: 13px; font-weight: 700; color: #1a6ff4; line-height: 1.35; }
+    .card-desc  { font-size: 12px; color: #666; line-height: 1.55; }
 
     /* ── Footer ── */
     .site-footer {
@@ -126,17 +211,69 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════
+     ★ スティッキーナビバー
+     追加方法: .site-nav の中に <a class="nav-link"> を1行足すだけ
+══════════════════════════════════════════════ -->
 <header class="site-header">
+  <div class="site-header-inner">
+
+    <a href="/" class="site-brand">
+      <span class="site-brand-name">All AI Toolbox</span>
+      <span class="site-brand-sub">100+ 無料AIツール</span>
+    </a>
+
+    <div class="nav-sep"></div>
+
+    <nav class="site-nav">
+
+      <!-- ツール一覧（ホーム） -->
+      <a class="nav-link" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        ツール一覧
+      </a>
+
+      <!-- ビザ書類チェッカー -->
+      <a class="nav-link" href="/tools/visa-checker/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M16 2v4M8 2v4M2 10h20"/>
+        </svg>
+        ビザ書類チェッカー
+        <span class="nav-new">NEW</span>
+      </a>
+
+      <!-- ▼ 将来のナビ項目をここに追加 ▼
+      <a class="nav-link" href="/tools/SLUG/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          ...
+        </svg>
+        ページ名
+      </a>
+      -->
+
+    </nav>
+
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════
+     ★ ヒーローテキスト
+══════════════════════════════════════════════ -->
+<div class="site-hero">
   <h1>All AI Toolbox</h1>
   <p>すべてのツールが無料・登録不要　100種類以上のユニークで便利な無料AIツールを提供しています。</p>
-</header>
+</div>
 
 <hr class="divider">
 
-<!-- =====================================================
+<!-- ══════════════════════════════════════════════
      ★ ツールグリッド
      追加方法: .grid の中に <a class="card"> を1つ足すだけ！
-     ===================================================== -->
+══════════════════════════════════════════════ -->
 <div class="grid">
 
   <a class="card" href="/tools/calc-sns/">
@@ -575,6 +712,16 @@
 <footer class="site-footer">
   &copy; 2026 All AI Toolbox
 </footer>
+
+<!-- 現在地ハイライト（JS 1行） -->
+<script>
+  document.querySelectorAll('.nav-link').forEach(a => {
+    const h = a.getAttribute('href');
+    if (h === '/' ? location.pathname === '/' : location.pathname.startsWith(h)) {
+      a.classList.add('active');
+    }
+  });
+</script>
 
 </body>
 </html>
