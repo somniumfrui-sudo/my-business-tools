@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- pSEO: JS で動的に書き換える（テンプレート変数プレースホルダー） -->
+  <title id="meta-title">外国人雇用・ビザ必要書類チェッカー | All AI Toolbox</title>
+  <meta id="meta-desc" name="description" content="在留資格×手続き×雇用形態を選ぶだけで必要書類が一覧表示。特定技能・技人国・高度専門職など全資格対応。">
+  <link id="meta-canonical" rel="canonical" href="/visa-checker/">
+
+  <!-- Open Graph -->
+  <meta id="og-title"    property="og:title"       content="外国人雇用・ビザ書類チェッカー | All AI Toolbox">
+  <meta id="og-desc"     property="og:description" content="在留資格別・手続き別の必要書類を3ステップで特定">
+  <meta property="og:type" content="website">
+
+  <!-- All AI Toolbox の既存フォントに合わせる -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── リセット & ベース ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-700: #1d4ed8;
+      --blue-600: #2563eb;
+      --blue-100: #dbeafe;
+      --blue-50:  #eff6ff;
+      --green-700:#15803d;
+      --green-100:#dcfce7;
+      --amber-700:#b45309;
+      --amber-100:#fef3c7;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-500: #6b7280;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --gray-50:  #f9fafb;
+      --white:    #ffffff;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: -apple-system, "Noto Sans JP", "Helvetica Neue", sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ─── All AI Toolbox 既存サイトへの接続ヘッダー ──────────── */
+    .portal-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-bar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 52px;
+    }
+    .portal-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: var(--gray-500);
+      text-decoration: none;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      transition: background .15s, color .15s;
+    }
+    .portal-back:hover { background: var(--gray-100); color: var(--gray-900); }
+    .portal-back svg { width: 14px; height: 14px; }
+
+    .portal-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--gray-500);
+      list-style: none;
+    }
+    .portal-breadcrumb li:not(:last-child)::after { content: "/"; margin-left: 4px; }
+    .portal-breadcrumb a { color: var(--gray-500); text-decoration: none; }
+    .portal-breadcrumb a:hover { color: var(--blue-600); }
+    .portal-breadcrumb .current { color: var(--gray-900); font-weight: 500; }
+
+    /* ─── ページヘッダー ──────────────────────────────────────── */
+    .page-hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: var(--white);
+      padding: 40px 20px 36px;
+    }
+    .hero-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 100px;
+      padding: 4px 12px;
+      margin-bottom: 14px;
+    }
+    .hero-badge svg { width: 13px; height: 13px; }
+    .page-h1 {
+      font-size: clamp(20px, 3.5vw, 28px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .page-sub {
+      font-size: 14px;
+      opacity: .85;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    /* 統計バー */
+    .hero-stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      font-size: 13px;
+      opacity: .8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hero-stat strong { opacity: 1; font-weight: 700; font-size: 15px; }
+    .hero-stat svg { width: 14px; height: 14px; opacity: .7; }
+
+    /* ─── メインコンテンツ ────────────────────────────────────── */
+    .main-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* ─── タブナビ ────────────────────────────────────────────── */
+    .page-tabs {
+      display: flex;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+    .page-tab {
+      flex: 1;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .page-tab svg { width: 15px; height: 15px; }
+    .page-tab.active {
+      background: var(--blue-700);
+      color: var(--white);
+    }
+    .page-tab:not(.active):hover { background: var(--gray-100); color: var(--gray-700); }
+
+    /* タブコンテンツ */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ─── チェッカーカード ───────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--gray-50);
+    }
+    .card-header svg { width: 18px; height: 18px; color: var(--blue-600); flex-shrink: 0; }
+    .card-title { font-size: 15px; font-weight: 700; }
+    .card-subtitle { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+
+    /* プログレスバー */
+    .progress-track {
+      height: 3px;
+      background: var(--gray-200);
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--blue-600);
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+
+    /* ─── ステップ選択 ────────────────────────────────────────── */
+    .steps-wrap { padding: 20px; }
+    .step-block  { margin-bottom: 20px; }
+    .step-block:last-child { margin-bottom: 0; }
+
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 10px;
+    }
+    .step-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--gray-200);
+      color: var(--gray-500);
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s, color .2s;
+    }
+    .step-num.active  { background: var(--blue-600); color: var(--white); }
+    .step-num.done    { background: #15803d; color: var(--white); }
+
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 15px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+    .chip:hover:not(.disabled) {
+      border-color: var(--blue-600);
+      color: var(--blue-700);
+      background: var(--blue-50);
+    }
+    .chip.selected {
+      background: var(--blue-700);
+      border-color: var(--blue-700);
+      color: var(--white);
+    }
+    .chip.disabled {
+      opacity: .38;
+      cursor: not-allowed;
+    }
+    .chip-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* セクション区切り */
+    .step-divider { height: 1px; background: var(--gray-200); margin: 0; }
+
+    /* ─── 結果エリア ─────────────────────────────────────────── */
+    .result-area { padding: 20px; }
+    .result-placeholder {
+      text-align: center;
+      padding: 36px 20px;
+      color: var(--gray-500);
+      font-size: 13px;
+      border: 1.5px dashed var(--gray-200);
+      border-radius: var(--radius-md);
+    }
+    .result-placeholder svg {
+      width: 36px; height: 36px;
+      color: var(--gray-300);
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    /* サマリーグリッド */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 520px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .sum-box {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      text-align: center;
+    }
+    .sum-num  { font-size: 24px; font-weight: 700; line-height: 1.2; }
+    .sum-lbl  { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+    /* 書類リスト */
+    .doc-list { display: flex; flex-direction: column; gap: 6px; }
+    .doc-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .doc-item:hover { background: var(--gray-100); }
+    .doc-item.required-doc   { border-color: #bfdbfe; background: var(--blue-50); }
+    .doc-item.conditional-doc { border-color: #fde68a; background: #fffbeb; }
+    .doc-item.done-doc        { opacity: .55; }
+
+    .doc-check {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      border: 2px solid var(--gray-300);
+      background: var(--white);
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+    .doc-check.checked { background: var(--blue-700); border-color: var(--blue-700); }
+    .doc-check svg { width: 10px; height: 10px; }
+
+    .doc-body {}
+    .doc-name { font-size: 13px; font-weight: 600; line-height: 1.45; }
+    .doc-note { font-size: 11px; color: var(--gray-500); margin-top: 3px; }
+    .doc-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 100px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .badge-req  { background: var(--blue-100);  color: #1e40af; }
+    .badge-cond { background: var(--amber-100); color: var(--amber-700); }
+
+    /* 結果ヘッダー */
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .result-title { font-size: 15px; font-weight: 700; }
+    .result-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .result-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid var(--gray-200);
+      color: var(--gray-500);
+    }
+
+    /* アクションボタン */
+    .action-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn:hover { background: var(--gray-100); }
+    .btn-primary {
+      background: var(--blue-700);
+      border-color: var(--blue-700);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: #1e40af; }
+    .btn-ghost { background: transparent; border-color: transparent; color: var(--gray-500); }
+    .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+
+    /* ─── pSEOリンク一覧タブ ─────────────────────────────────── */
+    .pseo-section { margin-bottom: 28px; }
+    .pseo-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 10px;
+      padding-left: 10px;
+      border-left: 3px solid var(--blue-600);
+    }
+    .pseo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+    }
+    .pseo-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: var(--gray-700);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .15s;
+      box-shadow: var(--shadow-sm);
+    }
+    .pseo-card:hover {
+      border-color: var(--blue-600);
+      color: var(--blue-700);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .pseo-card svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .5; }
+    .pseo-card-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ─── エリアタブ ─────────────────────────────────────────── */
+    .agency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+    .agency-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .agency-card-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .agency-avatar {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--blue-100);
+      color: var(--blue-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .agency-name { font-size: 14px; font-weight: 700; line-height: 1.35; }
+    .agency-type {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-top: 3px;
+    }
+    .type-reg    { background: var(--blue-100);  color: #1e40af; }
+    .type-scribe { background: var(--green-100); color: var(--green-700); }
+    .agency-info { font-size: 12px; color: var(--gray-500); display: flex; flex-direction: column; gap: 4px; }
+    .agency-info span { display: flex; align-items: center; gap: 4px; }
+    .agency-info svg { width: 12px; height: 12px; opacity: .6; }
+    .agency-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .agency-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 100px;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      border: 1px solid var(--gray-200);
+    }
+
+    /* エリア選択 */
+    .area-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .area-tab {
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .area-tab.active { background: var(--blue-700); border-color: var(--blue-700); color: var(--white); }
+    .area-tab:hover:not(.active) { border-color: var(--blue-600); color: var(--blue-600); }
+
+    /* ─── フッター ───────────────────────────────────────────── */
+    .page-footer {
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 40px;
+    }
+    .page-footer a { color: var(--blue-600); text-decoration: none; }
+
+    /* ─── レスポンシブ ───────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .page-hero { padding: 28px 16px 24px; }
+      .hero-stats { gap: 14px; }
+      .page-tabs { gap: 2px; }
+      .page-tab  { font-size: 12px; padding: 8px 8px; }
+      .steps-wrap { padding: 16px; }
+      .result-area { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── All AI Toolbox 接続ナビ ── -->
+<nav class="portal-bar">
+  <div class="portal-bar-inner">
+    <a class="portal-back" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      All AI Toolbox
+    </a>
+    <ol class="portal-breadcrumb">
+      <li><a href="/">ホーム</a></li>
+      <li><span class="current" id="breadcrumb-current">ビザ書類チェッカー</span></li>
+    </ol>
+  </div>
+</nav>
+
+<!-- ── ページヒーロー ── -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      無料・登録不要
+    </div>
+    <h1 class="page-h1" id="page-h1">外国人雇用・ビザ必要書類チェッカー</h1>
+    <p class="page-sub" id="page-sub">
+      在留資格・手続き種別・雇用形態を選ぶだけで、入管申請に必要な書類が一覧表示されます。<br>
+      特定技能・技人国・高度専門職など主要7資格に対応。
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+        <strong>7</strong> 在留資格
+      </div>
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <strong>4</strong> 手続き種別
+      </div>
+      <div class="hero-stat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <strong>28</strong> パターン対応
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── メインコンテンツ ── -->
+<div class="main-wrap">
+
+  <!-- タブナビ -->
+  <div class="page-tabs" role="tablist">
+    <button class="page-tab active" role="tab" onclick="switchTab('checker', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      書類チェッカー
+    </button>
+    <button class="page-tab" role="tab" onclick="switchTab('pseo', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
+      資格別ページ一覧
+    </button>
+    <button class="page-tab" role="tab" onclick="switchTab('area', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      地域で探す
+    </button>
+  </div>
+
+  <!-- ══ TAB 1: チェッカー ══ -->
+  <div id="tab-checker" class="tab-content active">
+    <div class="card">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <div>
+          <div class="card-title">必要書類チェッカー</div>
+          <div class="card-subtitle">3ステップで必要書類を特定します</div>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="steps-wrap">
+
+        <!-- STEP 1: 在留資格 -->
+        <div class="step-block" id="step1">
+          <div class="step-label">
+            <span class="step-num active" id="snum-1">1</span>
+            在留資格を選択してください
+          </div>
+          <div class="chip-grid" id="chips-visa"></div>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 2: 手続き -->
+        <div class="step-block" style="margin-top:20px" id="step2">
+          <div class="step-label">
+            <span class="step-num" id="snum-2">2</span>
+            手続きの種類を選択してください
+          </div>
+          <div class="chip-grid" id="chips-proc"></div>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- STEP 3: 雇用形態 -->
+        <div class="step-block" style="margin-top:20px" id="step3">
+          <div class="step-label">
+            <span class="step-num" id="snum-3">3</span>
+            雇用形態を選択してください
+          </div>
+          <div class="chip-grid" id="chips-emp"></div>
+        </div>
+
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- 結果エリア -->
+      <div class="result-area" id="result-area">
+        <div class="result-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 9h6M9 13h6M9 17h4"/>
+          </svg>
+          在留資格と手続きを選択すると<br>必要書類リストが表示されます
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: pSEOページ一覧 ══ -->
+  <div id="tab-pseo" class="tab-content">
+    <div id="pseo-list-wrap"></div>
+  </div>
+
+  <!-- ══ TAB 3: エリア ══ -->
+  <div id="tab-area" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div>
+          <div class="card-title">地域で探す</div>
+          <div class="card-subtitle">登録支援機関・行政書士を都道府県別に検索</div>
+        </div>
+      </div>
+      <div style="padding:20px">
+        <div class="area-tabs" id="area-tabs"></div>
+        <div class="agency-grid" id="agency-grid"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── フッター ── -->
+<footer class="page-footer">
+  <p>
+    <a href="/">All AI Toolbox</a> &gt; ビザ書類チェッカー |
+    ※本ツールは参考情報の提供を目的としています。正確な書類は最寄りの出入国在留管理局または行政書士にご確認ください。
+  </p>
+</footer>
+
+<!-- ── データ層を読み込む ── -->
+<script src="data.js"></script>
+
+<!-- ── アプリロジック ── -->
+<script>
+/* ────────────────────────────────────────────────────────────
+   STATE（UIから完全分離）
+──────────────────────────────────────────────────────────── */
+const state   = { visa: null, proc: null, emp: null };
+const checked = {};   // key → boolean
+
+/* ────────────────────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+  buildChips("visa", VISA_DATA.visas, "chips-visa");
+  buildChips("proc", VISA_DATA.procedures, "chips-proc", true);
+  buildChips("emp",  VISA_DATA.empTypes,   "chips-emp",  true);
+  buildPseoList();
+  buildAreaTabs();
+  handleUrlParams();   // URLパラメータで初期状態を設定（pSEO対応）
+});
+
+/* ────────────────────────────────────────────────────────────
+   チップ生成
+──────────────────────────────────────────────────────────── */
+function buildChips(type, items, containerId, disabled = false) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(item => `
+    <div
+      class="chip${disabled ? " disabled" : ""}"
+      data-type="${type}"
+      data-id="${item.id}"
+      onclick="onChipClick('${type}', '${item.id}', this)"
+    >
+      ${item.color ? `<span class="chip-dot" style="background:${item.color}"></span>` : ""}
+      ${item.label}
+    </div>
+  `).join("");
+}
+
+function onChipClick(type, id, el) {
+  if (el.classList.contains("disabled")) return;
+
+  // 下流の選択をリセット
+  if (type === "visa") { state.proc = null; state.emp = null; resetChips("proc"); resetChips("emp"); }
+  if (type === "proc") { state.emp = null; resetChips("emp"); }
+
+  state[type] = id;
+
+  // 選択済みスタイル
+  document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+
+  // 下流を有効化
+  if (type === "visa") enableChips("proc");
+  if (type === "proc") enableChips("emp");
+
+  updateProgress();
+  updateStepNums();
+  renderResult();
+  updatePageMeta();
+}
+
+function resetChips(type) {
+  document.querySelectorAll(`[data-type="${type}"]`).forEach(c => {
+    c.classList.remove("selected");
+    c.classList.add("disabled");
+  });
+}
+function enableChips(type) {
+  document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove("disabled"));
+}
+
+/* ────────────────────────────────────────────────────────────
+   プログレス & ステップ番号
+──────────────────────────────────────────────────────────── */
+function updateProgress() {
+  const steps = [state.visa, state.proc, state.emp].filter(Boolean).length;
+  document.getElementById("progress-fill").style.width = (steps / 3 * 100) + "%";
+}
+
+function updateStepNums() {
+  const map = [[1, !!state.visa], [2, !!state.proc], [3, !!state.emp]];
+  map.forEach(([n, done]) => {
+    const el = document.getElementById(`snum-${n}`);
+    el.className = "step-num" + (done ? " done" : n === (Object.values(state).filter(Boolean).length + 1) ? " active" : "");
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   書類リスト描画
+──────────────────────────────────────────────────────────── */
+function renderResult() {
+  const area = document.getElementById("result-area");
+  if (!state.visa || !state.proc) {
+    area.innerHTML = `<div class="result-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/>
+      </svg>
+      在留資格と手続きを選択すると<br>必要書類リストが表示されます
+    </div>`;
+    return;
+  }
+
+  const emp  = state.emp || "direct";
+  const docs = VISA_LOGIC.getDocs(state.visa, state.proc, emp);
+
+  if (!docs || docs.length === 0) {
+    area.innerHTML = `<div class="result-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>この組み合わせのデータは準備中です</div>`;
+    return;
+  }
+
+  const vl   = VISA_LOGIC.getLabel("visa", state.visa);
+  const pl   = VISA_LOGIC.getLabel("proc", state.proc);
+  const el   = VISA_LOGIC.getLabel("emp",  emp);
+  const reqN = docs.filter(d => d.isRequired).length;
+  const conN = docs.filter(d => !d.isRequired).length;
+  const doneN = docs.filter((_, i) => checked[ck(i)]).length;
+
+  area.innerHTML = `
+    <div class="result-head">
+      <div class="result-title">必要書類リスト</div>
+      <div class="result-tags">
+        <span class="result-tag">${vl}</span>
+        <span class="result-tag">${pl}</span>
+        <span class="result-tag">${el}</span>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="sum-box"><div class="sum-num" style="color:var(--blue-700)">${docs.length}</div><div class="sum-lbl">書類合計</div></div>
+      <div class="sum-box"><div class="sum-num" style="color:#15803d">${reqN}</div><div class="sum-lbl">必須書類</div></div>
+      <div class="sum-box"><div class="sum-num" style="color:var(--amber-700)">${conN}</div><div class="sum-lbl">条件付き</div></div>
+      <div class="sum-box"><div class="sum-num" style="color:var(--blue-700)">${doneN}</div><div class="sum-lbl">準備済み</div></div>
+    </div>
+
+    <div class="doc-list">
+      ${docs.map((d, i) => {
+        const key  = ck(i);
+        const done = checked[key];
+        const cls  = d.isRequired ? "required-doc" : "conditional-doc";
+        return `
+        <div class="doc-item ${cls}${done ? " done-doc" : ""}" onclick="toggleDoc('${key}')">
+          <div class="doc-check${done ? " checked" : ""}">
+            ${done ? `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : ""}
+          </div>
+          <div class="doc-body">
+            <div class="doc-name">${d.name}<span class="doc-badge ${d.isRequired ? "badge-req" : "badge-cond"}">${d.isRequired ? "必須" : "条件付"}</span></div>
+            ${d.note ? `<div class="doc-note">${d.note}</div>` : ""}
+            ${d.condition ? `<div class="doc-note" style="color:#92400e">▸ ${d.condition}</div>` : ""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="window.print()">🖨 印刷・PDF保存</button>
+      <button class="btn" onclick="resetAll()">↺ リセット</button>
+    </div>
+  `;
+}
+
+function ck(i) { return `${state.visa}_${state.proc}_${state.emp || "direct"}_${i}`; }
+
+function toggleDoc(key) {
+  checked[key] = !checked[key];
+  renderResult();
+}
+
+function resetAll() {
+  state.visa = null; state.proc = null; state.emp = null;
+  Object.keys(checked).forEach(k => delete checked[k]);
+  resetChips("proc"); resetChips("emp");
+  document.querySelectorAll("[data-type='visa']").forEach(c => c.classList.remove("selected"));
+  updateProgress(); updateStepNums();
+  document.getElementById("result-area").innerHTML = `<div class="result-placeholder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/>
+    </svg>
+    在留資格と手続きを選択すると<br>必要書類リストが表示されます
+  </div>`;
+}
+
+/* ────────────────────────────────────────────────────────────
+   pSEO ページ一覧タブ
+──────────────────────────────────────────────────────────── */
+function buildPseoList() {
+  const wrap = document.getElementById("pseo-list-wrap");
+  let html = "";
+
+  VISA_DATA.visas.forEach(v => {
+    html += `<div class="pseo-section">
+      <div class="pseo-section-title" style="border-color:${v.color}">${v.label}</div>
+      <div class="pseo-grid">
+        ${VISA_DATA.procedures.map(p => `
+          <a class="pseo-card" href="/visa-checker/${v.slug}/${p.id}/"
+             onclick="return navigatePseo('${v.id}','${p.id}')">
+            <span class="pseo-card-dot" style="background:${v.color}"></span>
+            ${v.label} × ${p.label}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-left:auto">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+        `).join("")}
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html;
+}
+
+function navigatePseo(visaId, procId) {
+  // 同一ページ内でチェッカーを起動（SPAモード）
+  switchTab("checker", document.querySelector("[onclick*=\"'checker'\"]"));
+  setTimeout(() => {
+    const vc = document.querySelector(`[data-type="visa"][data-id="${visaId}"]`);
+    if (vc) onChipClick("visa", visaId, vc);
+    setTimeout(() => {
+      const pc = document.querySelector(`[data-type="proc"][data-id="${procId}"]`);
+      if (pc) onChipClick("proc", procId, pc);
+    }, 50);
+  }, 50);
+  return false;
+}
+
+/* ────────────────────────────────────────────────────────────
+   エリアタブ
+──────────────────────────────────────────────────────────── */
+let currentArea = "tokyo";
+
+function buildAreaTabs() {
+  const tabs = document.getElementById("area-tabs");
+  tabs.innerHTML = VISA_DATA.prefectures.map(p => `
+    <button class="area-tab${p.id === currentArea ? " active" : ""}" onclick="selectArea('${p.id}', this)">${p.label}</button>
+  `).join("");
+  renderAgencies(currentArea);
+}
+
+function selectArea(areaId, btn) {
+  currentArea = areaId;
+  document.querySelectorAll(".area-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderAgencies(areaId);
+}
+
+function renderAgencies(areaId) {
+  const grid = document.getElementById("agency-grid");
+  const list = VISA_DATA.agencies[areaId] || VISA_DATA.agencies["other"];
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = "<p style='font-size:13px;color:#6b7280'>この地域のデータは準備中です</p>";
+    return;
+  }
+
+  grid.innerHTML = list.map(a => {
+    const initials = a.name.slice(0, 2);
+    const typeCls  = a.type === "登録支援機関" ? "type-reg" : "type-scribe";
+    const visaLabels = (a.visa || []).map(id => VISA_LOGIC.getLabel("visa", id));
+    return `
+    <div class="agency-card">
+      <div class="agency-card-head">
+        <div class="agency-avatar">${initials}</div>
+        <div>
+          <div class="agency-name">${a.name}</div>
+          <span class="agency-type ${typeCls}">${a.type}</span>
+        </div>
+      </div>
+      <div class="agency-info">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${a.address}
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 9.81 19.79 19.79 0 01.5 1.2 2 2 0 012.5 0H5.5a2 2 0 012 1.72 12 12 0 00.7 2.81 2 2 0 01-.45 2.11L6.49 7.37a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45 12 12 0 002.81.7A2 2 0 0122 14.5v2.42z"/></svg>
+          ${a.tel}
+        </span>
+      </div>
+      <div class="agency-tags">
+        ${visaLabels.map(l => `<span class="agency-tag">${l}</span>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ────────────────────────────────────────────────────────────
+   タブ切り替え
+──────────────────────────────────────────────────────────── */
+function switchTab(tabId, btn) {
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  document.querySelectorAll(".page-tab").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + tabId).classList.add("active");
+  btn.classList.add("active");
+}
+
+/* ────────────────────────────────────────────────────────────
+   pSEO: URLパラメータ対応 & メタタグ更新
+   /visa-checker/?v=tokutei1&p=renew のような形式でも動作
+──────────────────────────────────────────────────────────── */
+function handleUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get("v");
+  const p = params.get("p");
+  if (v) {
+    const chip = document.querySelector(`[data-type="visa"][data-id="${v}"]`);
+    if (chip) onChipClick("visa", v, chip);
+  }
+  if (v && p) {
+    setTimeout(() => {
+      const chip = document.querySelector(`[data-type="proc"][data-id="${p}"]`);
+      if (chip) onChipClick("proc", p, chip);
+    }, 50);
+  }
+}
+
+function updatePageMeta() {
+  if (!state.visa || !state.proc) return;
+  const meta = VISA_LOGIC.generateMeta(state.visa, state.proc);
+
+  // タイトル・description 動的更新（pSEO）
+  document.title                                          = meta.title;
+  document.getElementById("meta-title").textContent      = meta.title;
+  document.getElementById("meta-desc").setAttribute("content", meta.description);
+  document.getElementById("og-title").setAttribute("content", meta.title);
+  document.getElementById("og-desc").setAttribute("content", meta.description);
+  document.getElementById("page-h1").textContent         = meta.h1;
+  document.getElementById("breadcrumb-current").textContent = meta.h1;
+  document.getElementById("page-sub").textContent        =
+    `${VISA_LOGIC.getLabel("visa", state.visa)}で${VISA_LOGIC.getLabel("proc", state.proc)}を行う場合の必要書類一覧です。雇用形態（直接雇用・派遣・企業内転勤）を選択してください。`;
+}
+</script>
+</body>
+</html>
