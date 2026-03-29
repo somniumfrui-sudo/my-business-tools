@@ -722,8 +722,12 @@
             <option value="出入国在留管理局">出入国在留管理局</option>
           </select>
         </div>
-        <!-- 都道府県タブ -->
-        <div class="area-tabs" id="area-tabs"></div>
+        <!-- 都道府県セレクト -->
+        <div style="margin-bottom:10px">
+          <select id="area-tabs" onchange="selectArea(this.value)"
+            style="font-size:14px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);background:var(--gray-50);color:var(--gray-900);outline:none;cursor:pointer;width:100%;max-width:220px">
+          </select>
+        </div>
         <!-- 区・市区町村タブ（都道府県選択後に動的生成） -->
         <div class="area-tabs" id="district-tabs" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-200)"></div>
         <!-- 件数表示 -->
@@ -1065,12 +1069,11 @@ function loadPrefAgencies(prefId) {
    エリアタブ構築（都道府県ボタン生成 + 在留資格フィルター初期化）
 ──────────────────────────────────────────────────────────── */
 function buildAreaTabs() {
-  // 都道府県ボタン
-  const tabs = document.getElementById("area-tabs");
-  tabs.innerHTML = VISA_DATA.prefectures.map(p => `
-    <button class="area-tab${p.id === currentArea ? " active" : ""}"
-      onclick="selectArea('${p.id}', this)">${p.label}</button>
-  `).join("");
+  // 都道府県セレクトボックスを生成
+  const sel = document.getElementById("area-tabs");
+  sel.innerHTML = VISA_DATA.prefectures.map(p =>
+    `<option value="${p.id}"${p.id === currentArea ? " selected" : ""}>${p.label}</option>`
+  ).join("");
 
   // 在留資格フィルターを VISA_DATA から動的生成
   const vSel = document.getElementById("area-visa-filter");
@@ -1082,15 +1085,13 @@ function buildAreaTabs() {
     });
   }
 
-  // 初期都道府県（東京）を先読み
+  // 初期都道府県を先読み
   loadPrefAgencies(currentArea).then(() => filterAgencies());
 }
 
-function selectArea(prefId, btn) {
+function selectArea(prefId) {
   currentArea = prefId;
   currentDistrict = null;
-  document.querySelectorAll(".area-tab").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
   buildDistrictTabs(prefId);
   // 未読み込みの都道府県なら先にJSを読み込んでから描画
   loadPrefAgencies(prefId).then(() => filterAgencies());
@@ -1244,7 +1245,7 @@ function handleUrlParams() {
     const prefId = parts[2];
     switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
     const btn = document.querySelector(`.area-tab[onclick*="'${prefId}'"]`);
-    if (btn) selectArea(prefId, btn);
+    selectArea(prefId); const sel = document.getElementById("area-tabs"); if(sel) sel.value = prefId;
     updateAreaMeta(prefId);
     return;
   }
@@ -1401,7 +1402,7 @@ window.addEventListener("popstate", (e) => {
   if (s.area) {
     switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
     const btn = document.querySelector(`.area-tab[onclick*="'${s.area}'"]`);
-    if (btn) selectArea(s.area, btn);
+    selectArea(s.area); const sel = document.getElementById("area-tabs"); if(sel) sel.value = s.area;
     updateAreaMeta(s.area);
   } else if (s.visa) {
     switchTab("checker", document.querySelector("[onclick*=\"'checker'\"]"));
