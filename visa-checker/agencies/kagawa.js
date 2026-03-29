@@ -8,8 +8,7 @@
     { name: "ハイウェイサービス四国協同組合", type: "登録支援機関", address: "香川県高松市藤塚町二丁目１１番２０号", tel: "0878630606", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
     { name: "協同組合スプラ", type: "登録支援機関", address: "香川県高松市春日町１６３８－１", tel: "0878143859", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
     { name: "株式会社トクシントラスト", type: "登録支援機関", address: "香川県仲多度郡多度津町大字東白方７０１番地１", tel: "0877358118", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
-    { name: "つばめプロジェクト", type: "登録支援機関", address: "香川県高松市兵庫町６－９不二ビル１階中号室", tel: "08093967788
-08037859117", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
+    { name: "つばめプロジェクト", type: "登録支援機関", address: "香川県高松市兵庫町６－９不二ビル１階中号室", tel: "08093967788", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
     { name: "西部産業協同組合", type: "登録支援機関", address: "香川県三豊市三野町下高瀬１１９１番地１", tel: "0875237789", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
     { name: "建設技術交流協同組合", type: "登録支援機関", address: "香川県丸亀市郡家町１７２７番地５３", tel: "0877285360", visa: ["tokutei1"], prefId: "kagawa", districtId: null },
     { name: "協同組合泰和", type: "登録支援機関", address: "香川県高松市松縄町３４－１４", tel: "0878629211", visa: ["tokutei1"], prefId: "kagawa", districtId: null },

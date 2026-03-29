@@ -45,8 +45,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県新潟市中央区西大畑町６２０番地４３ハイツ日本海５０５", tel: "08095127126", visa: ["tokutei1"], prefId: "niigata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県中魚沼郡津南町大字下船渡丁２６８２番地３", tel: "0257653700", visa: ["tokutei1"], prefId: "niigata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県長岡市鉄工町二丁目５番７号", tel: "0258299741", visa: ["tokutei1"], prefId: "niigata", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県新潟市西区山田２５８７番地７", tel: "05036976897
-07013726897", visa: ["tokutei1"], prefId: "niigata", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県新潟市西区山田２５８７番地７", tel: "05036976897", visa: ["tokutei1"], prefId: "niigata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県長岡市美沢一丁目３６番地２", tel: "07026714588", visa: ["tokutei1"], prefId: "niigata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県長岡市旭岡一丁目１番地", tel: "0258868671", visa: ["tokutei1"], prefId: "niigata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "新潟県新潟市北区新崎一丁目１３番２０号", tel: "0252586831", visa: ["tokutei1"], prefId: "niigata", districtId: null },

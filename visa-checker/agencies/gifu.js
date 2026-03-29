@@ -163,8 +163,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県各務原市各務山の前町四丁目５４３番地", tel: "0583227106", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県関市西田原大千前６１番地１", tel: "0575252661", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県可児市土田７１１番地１", tel: "0574257776", visa: ["tokutei1"], prefId: "gifu", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県岐阜市徹明通５丁目８番地　田中ビルヂング２階南", tel: "0582524314
-07064108935", visa: ["tokutei1"], prefId: "gifu", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県岐阜市徹明通５丁目８番地　田中ビルヂング２階南", tel: "0582524314", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県岐阜市六条北四丁目１９番１号", tel: "0582730678", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県岐阜市茜部菱野三丁目１７１番地", tel: "09065935916", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県多治見市旭ケ丘十丁目２番地の１９４", tel: "08051024255", visa: ["tokutei1"], prefId: "gifu", districtId: null },
@@ -180,8 +179,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県不破郡垂井町表佐１１２番地２", tel: "0584719613", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県大垣市荒川町４６－４", tel: "05031100355", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県揖斐郡池田町片山１３６７番地", tel: "0585740899", visa: ["tokutei1"], prefId: "gifu", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県美濃加茂市牧野５５８番地", tel: "0574427955
-09081806559", visa: ["tokutei1"], prefId: "gifu", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県美濃加茂市牧野５５８番地", tel: "0574427955", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県安八郡安八町南今ヶ淵１５００-１", tel: "09096228473", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県不破郡垂井町府中１５２８番地の３", tel: "0584716140", visa: ["tokutei1"], prefId: "gifu", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県岐阜市中鶉一丁目１２８番地サンアリーネビル１Ｆ", tel: "0582737327", visa: ["tokutei1"], prefId: "gifu", districtId: null },

@@ -29,8 +29,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県香南市香我美町徳王子１６４３番地 サニーテラスＩＷＡＩ２０４号室", tel: "08084413520", visa: ["tokutei1"], prefId: "kochi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県宿毛市幸町５番１２号", tel: "0880630738", visa: ["tokutei1"], prefId: "kochi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県須崎市須崎字向山１９７８番地", tel: "0889439181", visa: ["tokutei1"], prefId: "kochi", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市春野町仁ノ３５８７番地３７", tel: "0888217728
-09043393665", visa: ["tokutei1"], prefId: "kochi", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市春野町仁ノ３５８７番地３７", tel: "0888217728", visa: ["tokutei1"], prefId: "kochi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市春野町弘岡下３２３０番地４", tel: "08045826593", visa: ["tokutei1"], prefId: "kochi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市介良甲８５１番地２", tel: "0888793264", visa: ["tokutei1"], prefId: "kochi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県香美市土佐山田町加茂４８８番地", tel: "09057102001", visa: ["tokutei1"], prefId: "kochi", districtId: null },

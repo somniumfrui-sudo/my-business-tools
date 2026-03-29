@@ -21,7 +21,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県甲府市上曽根町３６６２番地１７５", tel: "0552701625", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県甲府市中央２-３-７", tel: "0552245680", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県甲府市池田一丁目５番９号", tel: "0552520555", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県都留市十日市場１４２０番地", tel: "0554 436158", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県都留市十日市場１４２０番地", tel: "0554", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県甲斐市亀沢６９４９番地９６", tel: "0552603100", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県山梨市小原東１１１番地１", tel: "0262145161", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県中巨摩郡昭和町清水新居８９７番地３Ｎビル２０２号", tel: "0552699020", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },

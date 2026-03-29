@@ -37,7 +37,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県下関市彦島本村町６丁目１６番１０号", tel: "0832506703", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県下関市彦島塩浜町１丁目１番９号", tel: "0832667155", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県下関市豊浦町大字吉永５２６番地の１", tel: "0837743366", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県山口市下小鯖５７-１", tel: "083 9021865", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県山口市下小鯖５７-１", tel: "083", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県周南市大字櫛ケ浜２２７番地１", tel: "0834253773", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県山口市佐山２７６６-１", tel: "0839896117", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県山口市小郡下郷１５６０番地の５", tel: "0839025511", visa: ["tokutei1"], prefId: "yamaguchi", districtId: null },

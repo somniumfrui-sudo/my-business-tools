@@ -565,7 +565,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県一宮市千秋町小山字東六反２０番地３", tel: "0586527890", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市熱田区神宮二丁目２番７号渡辺ビル", tel: "0522658723", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市東区代官町３９番２２号太洋ビルディング２階９号室", tel: "0523252401", visa: ["tokutei1"], prefId: "aichi", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県海部郡飛島村大宝四丁目２３番地", tel: "0567 693333", visa: ["tokutei1"], prefId: "aichi", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県海部郡飛島村大宝四丁目２３番地", tel: "0567", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市千種区千種通六丁目２９番地", tel: "0527414011", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市北区東味鋺一丁目７２２番地", tel: "0529011780", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市中区千代田三丁目２７番１７号鈴井ビル３０２号", tel: "0522117736", visa: ["tokutei1"], prefId: "aichi", districtId: null },
@@ -647,8 +647,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市瑞穂区田光町三丁目２７番地", tel: "08049693678", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市中区錦二丁目１７番３０号　河越ビル２F", tel: "0522095466", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県豊明市沓掛町神明２１番地の１", tel: "0562952651", visa: ["tokutei1"], prefId: "aichi", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市中村区靖国町３丁目７５番地　コーポミュー３D", tel: "05035610600
-09086708514", visa: ["tokutei1"], prefId: "aichi", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県名古屋市中村区靖国町３丁目７５番地　コーポミュー３D", tel: "05035610600", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県豊田市和会町東郷１２０番地２", tel: "0565211724", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県一宮市北方町北方字東泉屋郷１８９番地", tel: "0586525501", visa: ["tokutei1"], prefId: "aichi", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県小牧市小牧四丁目２２５番地２澤屋清七ビル３０７号室", tel: "0568488898", visa: ["tokutei1"], prefId: "aichi", districtId: null },

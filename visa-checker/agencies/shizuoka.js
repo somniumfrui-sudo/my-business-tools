@@ -283,8 +283,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県駿東郡小山町須走１８３番地ー１F", tel: "0550705100", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県磐田市森下３４６番地１、１Ｆ", tel: "0538746632", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県浜松市中央区幸五丁目１１番４３号", tel: "0534758885", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県沼津市三園町１３番１５号　シャルマンコーポ沼津大黒５０１", tel: "09035898168
-08026628282", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県沼津市三園町１３番１５号　シャルマンコーポ沼津大黒５０１", tel: "09035898168", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県藤枝市本町三丁目５番１３号", tel: "0546447870", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県静岡市清水区押切１６２０番地", tel: "0543476699", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県静岡市駿河区八幡二丁目８の１９", tel: "0546601333", visa: ["tokutei1"], prefId: "shizuoka", districtId: null },

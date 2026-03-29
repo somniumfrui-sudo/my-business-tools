@@ -65,8 +65,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市綾田町一丁目３４番５号", tel: "0764119731", visa: ["tokutei1"], prefId: "toyama", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市日俣１３８番地６", tel: "0764132801", visa: ["tokutei1"], prefId: "toyama", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市黒瀬４３７番地の１", tel: "0764948041", visa: ["tokutei1"], prefId: "toyama", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市呉羽町３９１８番地１７１", tel: "0764341412
-09097642563", visa: ["tokutei1"], prefId: "toyama", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市呉羽町３９１８番地１７１", tel: "0764341412", visa: ["tokutei1"], prefId: "toyama", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県高岡市オフィスパーク１３番", tel: "0766638820", visa: ["tokutei1"], prefId: "toyama", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県高岡市野村１３７３番地４　いわせの創ビル２Ｆ", tel: "0766284145", visa: ["tokutei1"], prefId: "toyama", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市婦中町田島５４６番地３", tel: "0764665656", visa: ["tokutei1"], prefId: "toyama", districtId: null },

@@ -193,7 +193,7 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県つくば市竹園二丁目４番地１パセオパルケ１０２", tel: "0298866993", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県鹿嶋市大字荒野１６００番地１１４", tel: "0299942818", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県下妻市大宝５０番地２", tel: "0296470477", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
-    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県水戸市渡里町３２６６番１号", tel: "029 3538228", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
+    { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県水戸市渡里町３２６６番１号", tel: "029", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県つくば市松代４丁目２１番地２　シャレール松代２棟２０２号", tel: "0298531760", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県古河市大山１２８４番地１", tel: "09046631670", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県水戸市笠原町６４５番地１", tel: "0292444165", visa: ["tokutei1"], prefId: "ibaraki", districtId: null },
