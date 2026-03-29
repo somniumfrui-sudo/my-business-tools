@@ -54,5 +54,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "宮崎県日南市南郷町中村乙７０５１番地２９４", tel: "08073559872", visa: ["tokutei1"], prefId: "miyazaki", districtId: "miyazaki-2" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "宮崎県延岡市稲葉崎町５丁目７４２１番地３２", tel: "08054622388", visa: ["tokutei1"], prefId: "miyazaki", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

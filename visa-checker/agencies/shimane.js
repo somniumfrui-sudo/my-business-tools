@@ -19,5 +19,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "島根県出雲市天神町６６４番地", tel: "0853306040", visa: ["tokutei1"], prefId: "shimane", districtId: "shimane-4" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "島根県松江市東津田町１２０１－５", tel: "0852618562", visa: ["tokutei1"], prefId: "shimane", districtId: "shimane-2" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

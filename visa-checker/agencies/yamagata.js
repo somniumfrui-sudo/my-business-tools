@@ -36,5 +36,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山形県鶴岡市大塚町１６番４０号", tel: "0235246134", visa: ["tokutei1"], prefId: "yamagata", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山形県山形市山家町一丁目６番５５号", tel: "08031908289", visa: ["tokutei1"], prefId: "yamagata", districtId: "yamagata-3" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

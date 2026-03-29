@@ -73,5 +73,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "石川県金沢市鱗町９７番地１アトラスビル２階", tel: "09020303748", visa: ["tokutei1"], prefId: "ishikawa", districtId: "ishikawa-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "石川県金沢市畝田東３丁目５１６番地", tel: "0762206570", visa: ["tokutei1"], prefId: "ishikawa", districtId: "ishikawa-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

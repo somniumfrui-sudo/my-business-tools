@@ -541,5 +541,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福岡県久留米市国分町１９５２番地５サンコーポ国分４０１号", tel: "0942483242", visa: ["tokutei1"], prefId: "fukuoka", districtId: "fukuoka-3" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福岡県北九州市小倉北区浅野１丁目２番３９号", tel: "09028561777", visa: ["tokutei1"], prefId: "fukuoka", districtId: "fukuoka-2" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

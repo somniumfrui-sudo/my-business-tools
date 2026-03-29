@@ -47,5 +47,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市仁井田２１２５番地１", tel: "0888471026", visa: ["tokutei1"], prefId: "kochi", districtId: "kochi-2" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "高知県高知市潮見台１丁目２６０３番地", tel: "0888568555", visa: ["tokutei1"], prefId: "kochi", districtId: "kochi-2" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

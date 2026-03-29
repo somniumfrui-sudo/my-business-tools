@@ -138,5 +138,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "熊本県熊本市南区島町３丁目８番２８号ＩＮＦビル２Ｆ", tel: "0962456433", visa: ["tokutei1"], prefId: "kumamoto", districtId: "kumamoto-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "熊本県熊本市東区若葉１丁目１２－１オカムラビル１階", tel: "0925616611", visa: ["tokutei1"], prefId: "kumamoto", districtId: "kumamoto-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

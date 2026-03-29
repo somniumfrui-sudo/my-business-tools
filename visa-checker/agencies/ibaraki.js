@@ -300,5 +300,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県取手市取手二丁目３番２号田中駅前ビル４Ｆ", tel: "0297705001", visa: ["tokutei1"], prefId: "ibaraki", districtId: "ibaraki-13" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "茨城県東茨城郡茨城町大字駒場２１２番地１", tel: "08010141617", visa: ["tokutei1"], prefId: "ibaraki", districtId: "ibaraki-16" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

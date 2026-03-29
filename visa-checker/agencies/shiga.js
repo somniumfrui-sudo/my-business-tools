@@ -116,5 +116,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "滋賀県東近江市東沖野三丁目１２－２", tel: "0748232425", visa: ["tokutei1"], prefId: "shiga", districtId: "shiga-4" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "滋賀県彦根市新海浜二丁目１０番地８", tel: "0749205176", visa: ["tokutei1"], prefId: "shiga", districtId: "shiga-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

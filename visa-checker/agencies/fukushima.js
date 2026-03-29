@@ -97,5 +97,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福島県福島市成川字仲ノ内１０－１", tel: "0245735151", visa: ["tokutei1"], prefId: "fukushima", districtId: "fukushima-2" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福島県郡山市朝日二丁目２３－６", tel: "0249545910", visa: ["tokutei1"], prefId: "fukushima", districtId: "fukushima-3" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

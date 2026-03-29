@@ -65,5 +65,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "徳島県徳島市新南福島２丁目１－２", tel: "09077287775", visa: ["tokutei1"], prefId: "tokushima", districtId: "tokushima-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "徳島県阿波市市場町大俣字貞久３０１番１", tel: "0883365760", visa: ["tokutei1"], prefId: "tokushima", districtId: "tokushima-4" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

@@ -75,5 +75,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "鹿児島県鹿児島市錦江町８番２１号", tel: "0992224446", visa: ["tokutei1"], prefId: "kagoshima", districtId: "kagoshima-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "鹿児島県薩摩郡さつま町山崎１１６６番地パティオス山崎Ｋ２Ｙ１０８号室", tel: "07094296045", visa: ["tokutei1"], prefId: "kagoshima", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

@@ -516,5 +516,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "千葉県千葉市稲毛区萩台町３１６番地４", tel: "07038223361", visa: ["tokutei1"], prefId: "chiba", districtId: "chiba-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "千葉県松戸市東平賀２４１番２号", tel: "0477120606", visa: ["tokutei1"], prefId: "chiba", districtId: "chiba-15" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

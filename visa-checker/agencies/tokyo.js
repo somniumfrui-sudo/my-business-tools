@@ -2312,5 +2312,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "東京都港区芝大門一丁目１６番１１号", tel: "0354052456", visa: ["tokutei1"], prefId: "tokyo", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "東京都稲城市東長沼１６０１番地７号", tel: "0423798283", visa: ["tokutei1"], prefId: "tokyo", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

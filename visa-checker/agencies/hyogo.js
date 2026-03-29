@@ -397,5 +397,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "兵庫県姫路市広峰１丁目４－５０", tel: "0792876880", visa: ["tokutei1"], prefId: "hyogo", districtId: "hyogo-2" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "兵庫県神戸市中央区橘通1－1－2－2階", tel: "09015826069", visa: ["tokutei1"], prefId: "hyogo", districtId: "hyogo-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

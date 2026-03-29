@@ -101,5 +101,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "大分県大分市府内町３丁目４番２０号　大分恒和ビル２階", tel: "0975132111", visa: ["tokutei1"], prefId: "oita", districtId: "oita-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "大分県中津市牛神町１丁目１５番地７", tel: "0979648912", visa: ["tokutei1"], prefId: "oita", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

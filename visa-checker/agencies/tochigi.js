@@ -147,5 +147,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "栃木県宇都宮市馬場通り三丁目４番７号宇都宮ＰＥＡＫＳ５０３", tel: "0286786851", visa: ["tokutei1"], prefId: "tochigi", districtId: "tochigi-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "栃木県栃木市平井町２５１番地８ブランドールコーポ１０６", tel: "0282255441", visa: ["tokutei1"], prefId: "tochigi", districtId: "tochigi-3" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

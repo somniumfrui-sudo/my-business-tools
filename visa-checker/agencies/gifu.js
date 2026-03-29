@@ -263,5 +263,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県羽島郡岐南町八剣４丁目２０２番地", tel: "0582158912", visa: ["tokutei1"], prefId: "gifu", districtId: "gifu-8" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岐阜県大垣市領家町１丁目７番地３", tel: "0584843397", visa: ["tokutei1"], prefId: "gifu", districtId: "gifu-4" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

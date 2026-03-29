@@ -73,5 +73,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "長崎県長崎市丸山町１番２８号", tel: "09045893682", visa: ["tokutei1"], prefId: "nagasaki", districtId: "nagasaki-2" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "長崎県長崎市西山台１丁目１５番１号", tel: "0958480088", visa: ["tokutei1"], prefId: "nagasaki", districtId: "nagasaki-2" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

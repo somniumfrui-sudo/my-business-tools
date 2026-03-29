@@ -459,5 +459,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "埼玉県川口市並木一丁目１７番２０号", tel: "07041080955", visa: ["tokutei1"], prefId: "saitama", districtId: "saitama-3" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "埼玉県川口市西川口５丁目１番２７号", tel: "07050798540", visa: ["tokutei1"], prefId: "saitama", districtId: "saitama-3" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

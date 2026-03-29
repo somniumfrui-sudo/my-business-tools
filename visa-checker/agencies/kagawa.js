@@ -123,5 +123,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "香川県高松市瓦町２丁目７番地２", tel: "0878992626", visa: ["tokutei1"], prefId: "kagawa", districtId: "kagawa-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "香川県坂出市林田町４２８５番地３２３", tel: "0897477860", visa: ["tokutei1"], prefId: "kagawa", districtId: "kagawa-4" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

@@ -106,5 +106,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "奈良県吉野郡吉野町大字上市２５４－１", tel: "05054748580", visa: ["tokutei1"], prefId: "nara", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "奈良県奈良市北袋町３２番地の１－１０５号", tel: "05054823545", visa: ["tokutei1"], prefId: "nara", districtId: "nara-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

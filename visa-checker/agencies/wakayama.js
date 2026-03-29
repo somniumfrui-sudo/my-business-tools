@@ -43,5 +43,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "和歌山県岩出市西国分７９３番１", tel: "0736695255", visa: ["tokutei1"], prefId: "wakayama", districtId: "wakayama-4" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "和歌山県岩出市吉田９２－１０５", tel: "07076613329", visa: ["tokutei1"], prefId: "wakayama", districtId: "wakayama-4" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

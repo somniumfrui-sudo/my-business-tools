@@ -156,5 +156,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "長野県松本市野溝西２丁目６番９－３号", tel: "09044602552", visa: ["tokutei1"], prefId: "nagano", districtId: "nagano-8" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "長野県上田市中央六丁目１５番４６号", tel: "0268710308", visa: ["tokutei1"], prefId: "nagano", districtId: "nagano-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

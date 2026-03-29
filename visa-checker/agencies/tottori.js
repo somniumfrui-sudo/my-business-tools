@@ -25,5 +25,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "鳥取県鳥取市吉成７７９番地３９日本海ビル１０１", tel: "0857536788", visa: ["tokutei1"], prefId: "tottori", districtId: "tottori-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "鳥取県鳥取市田島７９３ー８", tel: "08063274985", visa: ["tokutei1"], prefId: "tottori", districtId: "tottori-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

@@ -230,5 +230,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "群馬県佐波郡玉村町大字樋越５９０番地１", tel: "0270716163", visa: ["tokutei1"], prefId: "gunma", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "群馬県渋川市北橘町八崎３９４番地の２", tel: "0279258023", visa: ["tokutei1"], prefId: "gunma", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

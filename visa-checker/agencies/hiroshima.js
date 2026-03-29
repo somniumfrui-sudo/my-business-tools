@@ -323,5 +323,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "広島県尾道市栗原町９７７０番地５", tel: "0848299808", visa: ["tokutei1"], prefId: "hiroshima", districtId: "hiroshima-3" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "広島県福山市神辺町字道上２５７６番地３", tel: "0849214844", visa: ["tokutei1"], prefId: "hiroshima", districtId: "hiroshima-2" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

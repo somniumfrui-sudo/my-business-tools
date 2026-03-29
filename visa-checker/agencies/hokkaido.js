@@ -274,5 +274,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "北海道函館市東山３丁目１８番１号", tel: "09083727661", visa: ["tokutei1"], prefId: "hokkaido", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "北海道空知郡南幌町栄町４丁目４番３４号", tel: "0113872800", visa: ["tokutei1"], prefId: "hokkaido", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

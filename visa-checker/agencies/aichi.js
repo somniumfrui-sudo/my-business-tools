@@ -1106,5 +1106,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県小牧市入鹿出新田１１０２番地", tel: "0568746011", visa: ["tokutei1"], prefId: "aichi", districtId: "aichi-7" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛知県春日井市藤山台１丁目４番地２（藤山台団地１１４－３０２号）", tel: "0568297695", visa: ["tokutei1"], prefId: "aichi", districtId: "aichi-8" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

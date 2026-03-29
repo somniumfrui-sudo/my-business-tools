@@ -113,5 +113,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "沖縄県那覇市安里３８１－１", tel: "08017237973", visa: ["tokutei1"], prefId: "okinawa", districtId: "okinawa-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "沖縄県南城市大里字大城１３９２番地", tel: "0989462051", visa: ["tokutei1"], prefId: "okinawa", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

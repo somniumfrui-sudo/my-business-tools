@@ -31,5 +31,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県佐賀市鍋島町大字森田２４３９番地１", tel: "0952335735", visa: ["tokutei1"], prefId: "saga", districtId: "saga-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "佐賀県三養基郡基山町小倉１０５３番地１３", tel: "09047705344", visa: ["tokutei1"], prefId: "saga", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

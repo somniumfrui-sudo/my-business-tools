@@ -90,5 +90,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市掛尾町１７－１", tel: "09089550174", visa: ["tokutei1"], prefId: "toyama", districtId: "toyama-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "富山県富山市町村１番地", tel: "0764250900", visa: ["tokutei1"], prefId: "toyama", districtId: "toyama-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

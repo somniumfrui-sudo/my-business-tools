@@ -57,5 +57,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県中巨摩郡昭和町河東中島９６３番地１", tel: "0552753213", visa: ["tokutei1"], prefId: "yamanashi", districtId: "yamanashi-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山梨県南都留郡忍野村忍草３４９０番地１", tel: "0555843639", visa: ["tokutei1"], prefId: "yamanashi", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

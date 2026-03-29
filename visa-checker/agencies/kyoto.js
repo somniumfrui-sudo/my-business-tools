@@ -151,5 +151,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "京都府京都市右京区西院西矢掛町１８－２　アールグランツ西院３０５", tel: "08040141218", visa: ["tokutei1"], prefId: "kyoto", districtId: "kyoto-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "京都府京都市伏見区深草善導寺町３－４６", tel: "08080496768", visa: ["tokutei1"], prefId: "kyoto", districtId: "kyoto-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

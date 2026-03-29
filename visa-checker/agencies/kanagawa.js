@@ -414,5 +414,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "神奈川県平塚市紅谷町１３－２１", tel: "0463728405", visa: ["tokutei1"], prefId: "kanagawa", districtId: "kanagawa-4" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "神奈川県横浜市緑区中山一丁目１４番１０号", tel: "0455077473", visa: ["tokutei1"], prefId: "kanagawa", districtId: "kanagawa-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

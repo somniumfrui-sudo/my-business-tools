@@ -29,5 +29,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "秋田県仙北市田沢湖生保内字下高野７３番地７３ゲストハウス水沢温泉", tel: "0187428499", visa: ["tokutei1"], prefId: "akita", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "秋田県秋田市中通三丁目３番４８－７０５号", tel: "09064561745", visa: ["tokutei1"], prefId: "akita", districtId: "akita-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

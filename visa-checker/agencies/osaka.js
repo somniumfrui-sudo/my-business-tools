@@ -1013,5 +1013,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "大阪府大阪市中央区瓦町２丁目３－１４　日宝瓦町ビル５Ｆ１０", tel: "0667969256", visa: ["tokutei1"], prefId: "osaka", districtId: "osaka-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "大阪府岸和田市松風町２３－３７", tel: "0724379345", visa: ["tokutei1"], prefId: "osaka", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

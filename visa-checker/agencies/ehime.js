@@ -98,5 +98,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛媛県新居浜市黒島１丁目１番２７号", tel: "07014697221", visa: ["tokutei1"], prefId: "ehime", districtId: "ehime-5" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "愛媛県松山市北条辻１４２３番地４", tel: "0899946262", visa: ["tokutei1"], prefId: "ehime", districtId: "ehime-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

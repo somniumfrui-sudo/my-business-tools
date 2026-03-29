@@ -83,5 +83,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県下関市豊浦町大字吉永１２４６", tel: "09095082332", visa: ["tokutei1"], prefId: "yamaguchi", districtId: "yamaguchi-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "山口県下松市大字笠戸島１５３０番地３８", tel: "0833520123", visa: ["tokutei1"], prefId: "yamaguchi", districtId: "yamaguchi-9" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

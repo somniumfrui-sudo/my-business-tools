@@ -186,5 +186,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "三重県四日市市桜新町２丁目２１２番地", tel: "0593582758", visa: ["tokutei1"], prefId: "mie", districtId: "mie-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "三重県四日市市三栄町２番１１号", tel: "0593540030", visa: ["tokutei1"], prefId: "mie", districtId: "mie-1" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

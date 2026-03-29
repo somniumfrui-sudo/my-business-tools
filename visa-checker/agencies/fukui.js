@@ -66,5 +66,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福井県丹生郡越前町高佐第３６号１７番地", tel: "09037477626", visa: ["tokutei1"], prefId: "fukui", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "福井県あわら市田中々１－１０－３", tel: "09022674311", visa: ["tokutei1"], prefId: "fukui", districtId: "fukui-5" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

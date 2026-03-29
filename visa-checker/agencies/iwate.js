@@ -46,5 +46,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岩手県北上市本石町一丁目５番３０号プロビル２０２", tel: "0197728001", visa: ["tokutei1"], prefId: "iwate", districtId: null },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岩手県八幡平市安比高原１６５番地６", tel: "0195788823", visa: ["tokutei1"], prefId: "iwate", districtId: null },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

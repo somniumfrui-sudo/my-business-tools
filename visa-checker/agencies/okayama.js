@@ -193,5 +193,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岡山県岡山市北区津高９３０－１ディアス津高", tel: "0866842233", visa: ["tokutei1"], prefId: "okayama", districtId: "okayama-1" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "岡山県笠岡市神島４２５１番地４", tel: "0865660505", visa: ["tokutei1"], prefId: "okayama", districtId: "okayama-5" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();

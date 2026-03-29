@@ -333,5 +333,10 @@
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県富士市岩本８４０－１", tel: "0545306813", visa: ["tokutei1"], prefId: "shizuoka", districtId: "shizuoka-5" },
     { name: "株式会社ワンステップイースト", type: "登録支援機関", address: "静岡県伊東市吉田４４５番地の３", tel: "0557445830", visa: ["tokutei1"], prefId: "shizuoka", districtId: "shizuoka-13" },
   ];
-  if (window.VISA_DATA) VISA_DATA.agencies.push(...data);
+  if (window.VISA_DATA && VISA_DATA.agencies) {
+    VISA_DATA.agencies.push(...data);
+  } else {
+    window._pendingAgencies = window._pendingAgencies || [];
+    window._pendingAgencies.push(...data);
+  }
 })();
