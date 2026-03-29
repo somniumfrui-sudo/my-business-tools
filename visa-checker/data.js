@@ -559,6 +559,14 @@ const VISA_DATA = {
 
 
 // ─────────────────────────────────────────────────────────────
+//  pending agencies を回収（data.jsより先にprefファイルが読まれた場合の保険）
+// ─────────────────────────────────────────────────────────────
+if (window._pendingAgencies && window._pendingAgencies.length) {
+  VISA_DATA.agencies.push(...window._pendingAgencies);
+  window._pendingAgencies = [];
+}
+
+// ─────────────────────────────────────────────────────────────
 //  内部ヘルパー: カテゴリーが関係しない資格か判定
 // ─────────────────────────────────────────────────────────────
 function _isCatRelevant(visaId) {
