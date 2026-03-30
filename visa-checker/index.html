@@ -476,15 +476,12 @@
     }
     .agency-card-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
     .agency-avatar {
-      width: 38px; height: 38px;
+      width: 40px; height: 40px;
       border-radius: var(--radius-sm);
-      background: var(--blue-100);
-      color: var(--blue-700);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 22px;
       flex-shrink: 0;
     }
     .agency-name { font-size: 14px; font-weight: 700; line-height: 1.35; }
@@ -1058,9 +1055,13 @@ function loadPrefAgencies(prefId) {
   if (_loadedPrefs.has(prefId)) return Promise.resolve();
   return new Promise((resolve) => {
     const s = document.createElement("script");
-    s.src = `/visa-checker/agencies/${prefId}.js`;
-    s.onload  = () => { _loadedPrefs.add(prefId); resolve(); };
-    s.onerror = () => { _loadedPrefs.add(prefId); resolve(); }; // 失敗しても止めない
+    s.src = `/visa-checker/agencies/${prefId}.js?v=2`;
+    s.onload  = () => {
+      _loadedPrefs.add(prefId);
+      // スクリプト実行が確実に終わってから resolve
+      setTimeout(resolve, 0);
+    };
+    s.onerror = () => { _loadedPrefs.add(prefId); resolve(); };
     document.head.appendChild(s);
   });
 }
@@ -1093,8 +1094,11 @@ function selectArea(prefId) {
   currentArea = prefId;
   currentDistrict = null;
   buildDistrictTabs(prefId);
-  // 未読み込みの都道府県なら先にJSを読み込んでから描画
-  loadPrefAgencies(prefId).then(() => filterAgencies());
+  // 読み込み済みでも必ず filterAgencies を実行
+  loadPrefAgencies(prefId).then(() => {
+    // currentArea が変わっていなければ描画（連続クリック対策）
+    if (currentArea === prefId) filterAgencies();
+  });
 }
 
 /* 区タブを都道府県切り替え時に動的生成 */
@@ -1173,7 +1177,12 @@ function renderAgencies(list) {
   };
 
   grid.innerHTML = list.map(a => {
-    const initials   = a.name.slice(0, 2);
+    const ICON_MAP = {
+      "登録支援機関":     { emoji: "🏢", bg: "#eff6ff" },
+      "行政書士":         { emoji: "✍️",  bg: "#f0fdf4" },
+      "出入国在留管理局": { emoji: "🏛️",  bg: "#fef3c7" },
+    };
+    const iconInfo = ICON_MAP[a.type] || { emoji: "🏢", bg: "#f3f4f6" };
     const typeCls    = TYPE_CLS[a.type] || "type-reg";
     const visaLabels = (a.visa || []).map(id => VISA_LOGIC.getLabel("visa", id));
     const prefLabel  = VISA_DATA.prefectures.find(p => p.id === currentArea)?.label || "";
@@ -1181,7 +1190,7 @@ function renderAgencies(list) {
     return `
     <div class="agency-card">
       <div class="agency-card-head">
-        <div class="agency-avatar">${initials}</div>
+        <div class="agency-avatar" style="background:${iconInfo.bg}">${iconInfo.emoji}</div>
         <div>
           <div class="agency-name">${a.name}</div>
           <span class="agency-type ${typeCls}">${a.type}</span>
