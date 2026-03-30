@@ -840,9 +840,18 @@ window.VISA_LOGIC = {
     };
   },
 
-  // ── pSEOメタデータ（地域）────────────────────────────────
-  generateAreaMeta(prefId) {
+  // ── pSEOメタデータ（地域 / 地域×資格）────────────────────
+  generateAreaMeta(prefId, visaId) {
     const p = this.getLabel("pref", prefId);
+    if (visaId) {
+      const v = this.getLabel("visa", visaId);
+      return {
+        title:       `${p}の${v} 登録支援機関・行政書士リスト | All AI Toolbox`,
+        description: `${p}で${v}の外国人雇用・ビザ申請をサポートする登録支援機関と行政書士の一覧。`,
+        h1:          `${p}の${v} 対応 登録支援機関`,
+        canonical:   `/visa-checker/area/${prefId}/${visaId}/`,
+      };
+    }
     return {
       title:       `${p}の外国人雇用サポート | 登録支援機関・行政書士リスト | All AI Toolbox`,
       description: `${p}で外国人雇用・ビザ申請をサポートする登録支援機関と行政書士の一覧。在留資格別に対応機関を検索できます。`,
