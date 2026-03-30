@@ -5,7 +5,7 @@
  * catId: "cat1"〜"cat4"（省略時は "cat3"）
  */
 
-const VISA_DATA = {
+window.VISA_DATA = {
 
   // ── STEP 1: 在留資格 ──────────────────────────────────────
   visas: [
@@ -574,7 +574,7 @@ function _isCatRelevant(visaId) {
 }
 
 
-const VISA_LOGIC = {
+window.VISA_LOGIC = {
 
   getLabel(type, id) {
     const maps = {
