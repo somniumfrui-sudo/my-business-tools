@@ -57,20 +57,62 @@ window.GRANT_DATA = {
     { id: "none",   label: "特になし",                    icon: "—"  },
   ],
 
-  // 自治体加算が手厚い都道府県
+  // 自治体加算（2025〜2026年実施実績ベース・要最新確認）
   bonusPrefectures: {
-    tokyo:     { label: "東京都",   amount: 200000, note: "東京都中小企業外国人材支援事業" },
-    gunma:     { label: "群馬県",   amount: 150000, note: "ぐんま外国人材活躍促進補助金" },
-    hokkaido:  { label: "北海道",   amount: 150000, note: "北海道外国人雇用促進支援補助金" },
-    aichi:     { label: "愛知県",   amount: 150000, note: "愛知県外国人材就労環境整備助成" },
-    osaka:     { label: "大阪府",   amount: 150000, note: "大阪府外国人労働者定着支援補助金" },
-    fukuoka:   { label: "福岡県",   amount: 100000, note: "福岡県外国人雇用サポート補助金" },
-    saitama:   { label: "埼玉県",   amount: 100000, note: "埼玉県外国人材確保支援補助金" },
-    kanagawa:  { label: "神奈川県", amount: 100000, note: "神奈川県外国人材活用促進助成金" },
-    chiba:     { label: "千葉県",   amount: 100000, note: "千葉県外国人労働者支援補助金" },
-    shizuoka:  { label: "静岡県",   amount: 100000, note: "静岡県外国人材定着促進補助金" },
-    hiroshima: { label: "広島県",   amount: 100000, note: "ひろしま外国人材活躍支援補助金" },
-    miyagi:    { label: "宮城県",   amount: 100000, note: "宮城県外国人雇用定着支援助成" },
+    // ── 外国人雇用支援が特に手厚い都道府県 ──────────────
+    tokyo: {
+      label: "東京都",
+      amount: 250000,
+      note: "中小企業の外国人従業員研修等支援助成金（日本語教育費用の1/2・最大25万円）",
+      url: "https://www.hataraku.metro.tokyo.lg.jp/",
+    },
+    aichi: {
+      label: "愛知県",
+      amount: 200000,
+      note: "愛知県外国人材定着促進事業（日本語学習費・住居初期費用補助、上限20万円）",
+      url: "https://www.pref.aichi.jp/",
+    },
+    osaka: {
+      label: "大阪府",
+      amount: 200000,
+      note: "大阪府多文化共生推進補助金（異文化理解研修・多言語情報整備費用補助、上限20万円）",
+      url: "https://www.pref.osaka.lg.jp/",
+    },
+    gunma: {
+      label: "群馬県",
+      amount: 200000,
+      note: "群馬県外国人介護人材定着促進事業（令和7年度継続実施・日本語学習・定着支援）",
+      url: "https://www.pref.gunma.jp/",
+    },
+    fukuoka: {
+      label: "福岡県",
+      amount: 150000,
+      note: "福岡県外国人材雇用促進事業（中小企業向け採用費・日本語研修費・生活環境整備費補助）",
+      url: "https://www.pref.fukuoka.lg.jp/",
+    },
+    shizuoka: {
+      label: "静岡県",
+      amount: 150000,
+      note: "静岡県外国人材定着促進補助金（受入初期費用・生活支援費用の一部補助）",
+      url: "https://www.pref.shizuoka.jp/",
+    },
+    hokkaido: {
+      label: "北海道",
+      amount: 150000,
+      note: "北海道外国人材受入支援事業（農業・観光業等での受入費・日本語教育・住居支援補助）",
+      url: "https://www.pref.hokkaido.lg.jp/",
+    },
+    // ── その他の都道府県（一般的な自治体支援想定額）────────
+    kanagawa:  { label: "神奈川県", amount: 100000, note: "神奈川県多文化共生推進事業（企業向け適応支援・語学サポート助成）" },
+    saitama:   { label: "埼玉県",   amount: 100000, note: "埼玉県外国人材確保支援補助金（川口市・鴻巣市等での市独自加算あり）" },
+    chiba:     { label: "千葉県",   amount: 100000, note: "千葉県外国人雇用支援補助金（採用・定着費用の一部補助）" },
+    hiroshima: { label: "広島県",   amount: 100000, note: "広島県外国人材活躍支援補助金（受入環境整備費用補助）" },
+    miyagi:    { label: "宮城県",   amount: 100000, note: "宮城県外国人材活用支援事業（採用・定着支援費用補助）" },
+    hyogo:     { label: "兵庫県",   amount: 100000, note: "兵庫県外国人材定着支援補助金（多言語対応・研修費用補助）" },
+    kyoto:     { label: "京都府",   amount: 100000, note: "京都府外国人材活躍推進事業（日本語学習・生活支援費用補助）" },
+    nagano:    { label: "長野県",   amount: 100000, note: "長野県外国人材受入支援補助金（受入費用・日本語教育補助）" },
+    gifu:      { label: "岐阜県",   amount: 100000, note: "高山市外国人材雇用支援事業補助金等（市町村独自加算あり）" },
+    ibaraki:   { label: "茨城県",   amount: 100000, note: "茨城県外国人材定着支援補助金（採用・研修費用の一部補助）" },
   },
 };
 
