@@ -557,7 +557,6 @@
       .total-amount { font-size: 36px; }
     }
   </style>
-<script src="/visa-checker/data-grant.js"></script>
 </head>
 <body>
 
@@ -676,7 +675,6 @@
 
 <!-- ─── スクリプト ──────────────────────────────────────────── -->
 <script>
-// data-grant.js はheadで読み込み済み
 /* ────────────────────────────────────────────────────────────
    状態管理
 ──────────────────────────────────────────────────────────── */
@@ -685,12 +683,12 @@ const state = { step1: null, step2: null, step3: null, pref: null };
 /* ────────────────────────────────────────────────────────────
    初期化
 ──────────────────────────────────────────────────────────── */
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   buildChips("step1", GRANT_DATA.step1Options, "chips-step1");
   buildChips("step2", GRANT_DATA.step2Options, "chips-step2");
   buildChips("step3", GRANT_DATA.step3Options, "chips-step3");
   buildPrefSelect();
-});
+}
 
 /* ────────────────────────────────────────────────────────────
    チップ生成
@@ -862,5 +860,6 @@ function resetForm() {
 }
 </script>
 
+<script src="/visa-checker/data-grant.js" onload="initApp()"></script>
 </body>
 </html>
