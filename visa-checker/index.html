@@ -1004,25 +1004,54 @@ function buildPseoList() {
   const wrap = document.getElementById("pseo-list-wrap");
   let html = "";
 
+  // ── セクション1: 資格×手続き ────────────────────────────
+  html += `<div class="pseo-section">
+    <div class="pseo-section-title" style="border-color:#2563eb">📋 資格・手続き別 必要書類</div>
+    <div class="pseo-grid">`;
   VISA_DATA.visas.forEach(v => {
-    html += `<div class="pseo-section">
-      <div class="pseo-section-title" style="border-color:${v.color}">${v.label}</div>
-      <div class="pseo-grid">
-        ${VISA_DATA.procedures.map(p => `
-          <a class="pseo-card" href="/visa-checker/${v.slug}/${p.id}/"
-             onclick="return navigatePseo('${v.id}','${p.id}')">
-            <span class="pseo-card-dot" style="background:${v.color}"></span>
-            ${v.label} × ${p.label}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-left:auto">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </a>
-        `).join("")}
-      </div>
-    </div>`;
+    VISA_DATA.procedures.forEach(p => {
+      html += `<a class="pseo-card" href="/visa-checker/${v.slug}/${p.id}/"
+           onclick="return navigatePseo('${v.id}','${p.id}')">
+        <span class="pseo-card-dot" style="background:${v.color}"></span>
+        ${v.label} × ${p.label}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>`;
+    });
   });
+  html += `</div></div>`;
+
+  // ── セクション2: 地域×資格 ──────────────────────────────
+  html += `<div class="pseo-section" style="margin-top:24px">
+    <div class="pseo-section-title" style="border-color:#059669">🗾 地域×在留資格 登録支援機関</div>
+    <div class="pseo-grid">`;
+  VISA_DATA.prefectures.forEach(pref => {
+    VISA_DATA.visas.filter(v => v.id === "tokutei1" || v.id === "gijinkoku").forEach(v => {
+      html += `<a class="pseo-card" href="/visa-checker/area/${pref.id}/${v.id}/"
+           onclick="return navigateArea('${pref.id}','${v.id}')">
+        <span class="pseo-card-dot" style="background:${v.color}"></span>
+        ${pref.label} × ${v.label}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>`;
+    });
+  });
+  html += `</div></div>`;
 
   wrap.innerHTML = html;
+}
+
+function navigateArea(prefId, visaId) {
+  switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
+  const sel = document.getElementById("area-tabs");
+  if (sel) sel.value = prefId;
+  selectArea(prefId);
+  setTimeout(() => {
+    const vSel = document.getElementById("area-visa-filter");
+    if (vSel) { vSel.value = visaId; filterAgencies(); }
+    updateAreaMeta(prefId, visaId);
+  }, 100);
+  history.pushState({ area: prefId, visa: visaId }, "",
+    `/visa-checker/area/${prefId}/${visaId}/`);
+  return false;
 }
 
 function navigatePseo(visaId, procId) {
@@ -1249,13 +1278,22 @@ function handleUrlParams() {
   const params = new URLSearchParams(location.search);
 
   // ── 1. パスベースルーティング ──────────────────────────────
-  // /visa-checker/area/[prefId]
+  // /visa-checker/area/[prefId]/[visaId]  ← 地域×資格ページ
   if (parts[1] === "area" && parts[2]) {
-    const prefId = parts[2];
+    const prefId  = parts[2];
+    const visaFlt = parts[3] || null;  // 任意: tokutei1 など
     switchTab("area", document.querySelector("[onclick*=\"'area'\"]"));
-    const btn = document.querySelector(`.area-tab[onclick*="'${prefId}'"]`);
     selectArea(prefId); const sel = document.getElementById("area-tabs"); if(sel) sel.value = prefId;
-    updateAreaMeta(prefId);
+    // 在留資格フィルターを自動選択
+    if (visaFlt) {
+      const vSel = document.getElementById("area-visa-filter");
+      if (vSel) { vSel.value = visaFlt; }
+    }
+    // データ読み込み後にフィルタ適用
+    loadPrefAgencies(prefId).then(() => {
+      if (currentArea === prefId) filterAgencies();
+    });
+    updateAreaMeta(prefId, visaFlt);
     return;
   }
 
@@ -1383,8 +1421,8 @@ function _setMeta(id, attr, value) {
 /* ────────────────────────────────────────────────────────────
    2. 地域ページのメタ更新
 ──────────────────────────────────────────────────────────── */
-function updateAreaMeta(prefId) {
-  const meta = VISA_LOGIC.generateAreaMeta(prefId);
+function updateAreaMeta(prefId, visaId) {
+  const meta = VISA_LOGIC.generateAreaMeta(prefId, visaId);
 
   document.title = meta.title;
   _setMeta("meta-title",    "textContent", meta.title);
@@ -1397,9 +1435,9 @@ function updateAreaMeta(prefId) {
   if (h1El) h1El.textContent = meta.h1;
 
   const bcEl = document.getElementById("breadcrumb-current");
-  if (bcEl) bcEl.textContent = VISA_LOGIC.getLabel("pref", prefId);
+  if (bcEl) bcEl.textContent = meta.h1;
 
-  history.replaceState({ area: prefId }, meta.title, meta.canonical);
+  history.replaceState({ area: prefId, visa: visaId }, meta.title, meta.canonical);
 }
 
 /* ────────────────────────────────────────────────────────────
