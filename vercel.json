@@ -25,6 +25,10 @@
       "destination": "/visa-checker/agencies/:file"
     },
     {
+      "source": "/grant-checker/:path*",
+      "destination": "/grant-checker/index.html"
+    },
+    {
       "source": "/visa-checker/:path*",
       "destination": "/visa-checker/index.html"
     }
