@@ -674,7 +674,6 @@
 </footer>
 
 <!-- ─── スクリプト ──────────────────────────────────────────── -->
-<script src="/visa-checker/data.js"></script>
 <script src="/visa-checker/data-grant.js"></script>
 <script>
 /* ────────────────────────────────────────────────────────────
@@ -723,8 +722,7 @@ function selectChip(stepKey, id, el) {
 ──────────────────────────────────────────────────────────── */
 function buildPrefSelect() {
   const sel = document.getElementById("sel-pref");
-  if (!window.VISA_DATA) return;
-  VISA_DATA.prefectures.forEach(p => {
+  GRANT_DATA.prefectures.forEach(p => {
     const opt = document.createElement("option");
     opt.value = p.id;
     opt.textContent = p.label;
