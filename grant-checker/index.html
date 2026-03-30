@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title id="meta-title">外国人雇用 助成金シミュレーター | All AI Toolbox</title>
+  <meta id="meta-desc" name="description" content="外国人雇用に使える助成金を4ステップで診断。キャリアアップ助成金・人材開発支援助成金など2026年最新基準で概算金額を表示します。">
+  <link id="meta-canonical" rel="canonical" href="/grant-checker/">
+
+  <meta id="og-title"    property="og:title"       content="外国人雇用 助成金シミュレーター | All AI Toolbox">
+  <meta id="og-desc"     property="og:description" content="4ステップで受給可能な助成金と概算金額をその場で診断">
+  <meta property="og:type" content="website">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-700: #1d4ed8;
+      --blue-600: #2563eb;
+      --blue-100: #dbeafe;
+      --blue-50:  #eff6ff;
+      --green-800:#166534;
+      --green-700:#15803d;
+      --green-600:#16a34a;
+      --green-100:#dcfce7;
+      --green-50: #f0fdf4;
+      --amber-700:#b45309;
+      --amber-100:#fef3c7;
+      --amber-50: #fffbeb;
+      --gold:     #d97706;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-500: #6b7280;
+      --gray-300: #d1d5db;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --gray-50:  #f9fafb;
+      --white:    #ffffff;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.07);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ─── ナビバー ─────────────────────────────────────────── */
+    .portal-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-logo {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--blue-700);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .portal-nav { display: flex; gap: 4px; overflow-x: auto; }
+    .portal-nav a {
+      font-size: 13px;
+      color: var(--gray-600, #4b5563);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .portal-nav a:hover { background: var(--gray-100); }
+    .portal-nav a.active { background: var(--blue-50); color: var(--blue-700); font-weight: 600; }
+
+    /* ─── ヒーロー ─────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+      color: var(--white);
+      padding: 48px 20px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 50%, rgba(16,185,129,.25) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(6,78,59,.4) 0%, transparent 50%);
+    }
+    .hero-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 99px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .hero-sub {
+      font-size: 14px;
+      opacity: .85;
+      line-height: 1.7;
+      margin-bottom: 24px;
+      max-width: 560px;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--radius-md);
+      padding: 10px 18px;
+      text-align: center;
+    }
+    .hero-stat-num {
+      font-size: 20px;
+      font-weight: 700;
+      display: block;
+      line-height: 1.2;
+    }
+    .hero-stat-label { font-size: 11px; opacity: .8; }
+
+    /* ─── パンくず ─────────────────────────────────────────── */
+    .breadcrumb {
+      font-size: 12px;
+      color: var(--gray-500);
+      padding: 12px 20px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .breadcrumb a { color: var(--gray-500); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--blue-600); }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* ─── メインレイアウト ─────────────────────────────────── */
+    .main-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ─── カード共通 ───────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    /* ─── STEPブロック ─────────────────────────────────────── */
+    .step-block { margin-bottom: 8px; }
+    .step-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 14px;
+    }
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--green-700);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 20px 0;
+    }
+
+    /* ─── チップグリッド ───────────────────────────────────── */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--gray-200);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--gray-700);
+      transition: all .15s;
+      text-align: left;
+      line-height: 1.4;
+    }
+    .chip:hover { border-color: var(--green-700); color: var(--green-700); background: var(--green-50); }
+    .chip.selected {
+      background: var(--green-700);
+      border-color: var(--green-700);
+      color: var(--white);
+    }
+    .chip-icon { font-size: 20px; flex-shrink: 0; }
+    .chip-desc { font-size: 11px; opacity: .7; margin-top: 2px; }
+
+    /* ─── セレクトボックス ─────────────────────────────────── */
+    .pref-select {
+      font-size: 14px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+      color: var(--gray-900);
+      outline: none;
+      cursor: pointer;
+      width: 100%;
+      max-width: 280px;
+      transition: border-color .15s;
+    }
+    .pref-select:focus { border-color: var(--green-700); }
+
+    /* ─── 診断ボタン ───────────────────────────────────────── */
+    .diagnose-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--green-700), var(--green-600));
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(21,128,61,.35);
+    }
+    .diagnose-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(21,128,61,.4); }
+    .diagnose-btn:active { transform: translateY(0); }
+    .diagnose-btn:disabled { background: var(--gray-300); box-shadow: none; cursor: not-allowed; transform: none; }
+
+    /* ─── 結果エリア ───────────────────────────────────────── */
+    .result-area { display: none; margin-top: 24px; }
+    .result-area.visible { display: block; animation: fadeUp .4s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── 合計金額バナー ───────────────────────────────────── */
+    .total-banner {
+      background: linear-gradient(135deg, #064e3b, #065f46);
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .total-banner::after {
+      content: "¥";
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 120px;
+      font-family: "DM Serif Display", serif;
+      opacity: .08;
+      line-height: 1;
+    }
+    .total-banner-tone-excellent .total-amount { color: #fcd34d; }
+    .total-banner-tone-good      .total-amount { color: #6ee7b7; }
+    .total-banner-tone-normal    .total-amount { color: var(--white); }
+    .total-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      opacity: .8;
+      margin-bottom: 6px;
+    }
+    .total-amount {
+      font-size: clamp(32px, 6vw, 48px);
+      font-family: "DM Serif Display", serif;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .total-note {
+      font-size: 11px;
+      opacity: .65;
+      margin-bottom: 14px;
+    }
+    .total-message-headline {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .total-message-sub {
+      font-size: 13px;
+      opacity: .8;
+      line-height: 1.6;
+    }
+    .total-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 99px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* ─── 助成金カード ─────────────────────────────────────── */
+    .grants-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .grant-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      margin-bottom: 10px;
+      transition: box-shadow .15s;
+    }
+    .grant-card:hover { box-shadow: var(--shadow-md); }
+    .grant-card-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .grant-icon {
+      width: 42px; height: 42px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .grant-name {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      flex: 1;
+    }
+    .grant-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .grant-amount-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .grant-amount {
+      font-size: 22px;
+      font-family: "DM Serif Display", serif;
+      font-weight: 700;
+      color: var(--green-700);
+    }
+    .grant-point {
+      font-size: 12.5px;
+      color: var(--gray-500);
+      line-height: 1.6;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--gray-100);
+      display: flex;
+      gap: 8px;
+    }
+    .grant-point::before { content: "💡"; flex-shrink: 0; }
+
+    /* ─── 自治体ボーナス ───────────────────────────────────── */
+    .local-bonus {
+      background: var(--amber-50);
+      border: 1.5px solid var(--amber-100);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .local-bonus-icon { font-size: 28px; flex-shrink: 0; }
+    .local-bonus-name { font-size: 13px; font-weight: 700; color: var(--amber-700); }
+    .local-bonus-note { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .local-bonus-amount {
+      margin-left: auto;
+      font-size: 20px;
+      font-family: "DM Serif Display", serif;
+      font-weight: 700;
+      color: var(--amber-700);
+      white-space: nowrap;
+    }
+
+    /* ─── 免責注記 ─────────────────────────────────────────── */
+    .disclaimer {
+      font-size: 12px;
+      color: var(--gray-500);
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      line-height: 1.7;
+      margin-top: 20px;
+    }
+
+    /* ─── CTAボタン ────────────────────────────────────────── */
+    .cta-area {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cta-btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .15s;
+    }
+    .cta-primary {
+      background: var(--green-700);
+      color: var(--white);
+      border: none;
+      box-shadow: 0 4px 12px rgba(21,128,61,.3);
+    }
+    .cta-primary:hover { background: var(--green-800); }
+    .cta-secondary {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1.5px solid var(--gray-200);
+    }
+    .cta-secondary:hover { border-color: var(--green-700); color: var(--green-700); }
+
+    /* ─── リセットリンク ───────────────────────────────────── */
+    .reset-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--gray-500);
+      cursor: pointer;
+      margin-top: 16px;
+      text-decoration: none;
+      background: none;
+      border: none;
+    }
+    .reset-link:hover { color: var(--gray-700); }
+
+    /* ─── プレースホルダー ─────────────────────────────────── */
+    .result-placeholder {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray-500);
+    }
+    .result-placeholder svg {
+      width: 48px; height: 48px;
+      stroke: var(--gray-300);
+      margin-bottom: 12px;
+    }
+    .result-placeholder p { font-size: 13px; line-height: 1.6; }
+
+    /* ─── フッター ─────────────────────────────────────────── */
+    .page-footer {
+      font-size: 12px;
+      color: var(--gray-500);
+      text-align: center;
+      padding: 16px 20px;
+      border-top: 1px solid var(--gray-200);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .page-footer a { color: var(--gray-500); text-decoration: none; }
+    .page-footer a:hover { color: var(--blue-600); }
+
+    /* ─── レスポンシブ ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .chip-grid { grid-template-columns: 1fr; }
+      .hero { padding: 32px 16px 40px; }
+      .card { padding: 18px; }
+      .total-banner { padding: 20px; }
+      .total-amount { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── ナビバー ───────────────────────────────────────────── -->
+<nav class="portal-bar">
+  <a href="/" class="portal-logo">All AI Toolbox</a>
+  <div class="portal-nav">
+    <a href="/">ホーム</a>
+    <a href="/visa-checker/">ビザ書類チェッカー</a>
+    <a href="/grant-checker/" class="active">助成金シミュレーター</a>
+  </div>
+</nav>
+
+<!-- ─── ヒーロー ───────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">💴 2026年最新基準対応</div>
+    <h1 class="hero-title">外国人雇用<br>助成金シミュレーター</h1>
+    <p class="hero-sub">
+      雇用形態・企業規模・アクション・地域を選ぶだけで、受給可能性のある助成金と概算金額を即時診断。
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num">6</span>
+        <span class="hero-stat-label">対応助成金</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">最大<br>283万円</span>
+        <span class="hero-stat-label">受給シミュレーション</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">47</span>
+        <span class="hero-stat-label">都道府県対応</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── パンくず ───────────────────────────────────────────── -->
+<div class="breadcrumb">
+  <a href="/">All AI Toolbox</a>
+  <span>›</span>
+  <span id="breadcrumb-current">助成金シミュレーター</span>
+</div>
+
+<!-- ─── メイン ─────────────────────────────────────────────── -->
+<main class="main-wrap">
+
+  <!-- 入力フォーム -->
+  <div class="card" id="form-card">
+
+    <!-- STEP1 -->
+    <div class="step-block">
+      <div class="step-label">
+        <span class="step-num">1</span>
+        目的・対象者を選択してください
+      </div>
+      <div class="chip-grid" id="chips-step1"></div>
+    </div>
+
+    <div class="step-divider"></div>
+
+    <!-- STEP2 -->
+    <div class="step-block">
+      <div class="step-label">
+        <span class="step-num">2</span>
+        企業規模を選択してください
+      </div>
+      <div class="chip-grid" id="chips-step2"></div>
+    </div>
+
+    <div class="step-divider"></div>
+
+    <!-- STEP3 -->
+    <div class="step-block">
+      <div class="step-label">
+        <span class="step-num">3</span>
+        実施する予定のアクションを選択してください
+      </div>
+      <div class="chip-grid" id="chips-step3"></div>
+    </div>
+
+    <div class="step-divider"></div>
+
+    <!-- STEP4 -->
+    <div class="step-block">
+      <div class="step-label">
+        <span class="step-num">4</span>
+        事業所の都道府県を選択してください
+        <span style="font-size:11px;font-weight:400;color:var(--gray-500);margin-left:4px">自治体加算に影響します</span>
+      </div>
+      <select class="pref-select" id="sel-pref">
+        <option value="">都道府県を選択...</option>
+      </select>
+    </div>
+
+    <!-- 診断ボタン -->
+    <button class="diagnose-btn" id="diagnose-btn" onclick="runDiagnosis()" disabled>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      受給可能な助成金を診断する
+    </button>
+
+  </div>
+
+  <!-- 結果エリア -->
+  <div id="result-area"></div>
+
+</main>
+
+<footer class="page-footer">
+  <a href="/">All AI Toolbox</a> › 外国人雇用 助成金シミュレーター |
+  ※本ツールは参考情報の提供を目的としています。正確な要件・金額は管轄のハローワークまたは社会保険労務士にご確認ください。
+</footer>
+
+<!-- ─── スクリプト ──────────────────────────────────────────── -->
+<script src="/visa-checker/data.js"></script>
+<script src="/visa-checker/data-grant.js"></script>
+<script>
+/* ────────────────────────────────────────────────────────────
+   状態管理
+──────────────────────────────────────────────────────────── */
+const state = { step1: null, step2: null, step3: null, pref: null };
+
+/* ────────────────────────────────────────────────────────────
+   初期化
+──────────────────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", () => {
+  buildChips("step1", GRANT_DATA.step1Options, "chips-step1");
+  buildChips("step2", GRANT_DATA.step2Options, "chips-step2");
+  buildChips("step3", GRANT_DATA.step3Options, "chips-step3");
+  buildPrefSelect();
+});
+
+/* ────────────────────────────────────────────────────────────
+   チップ生成
+──────────────────────────────────────────────────────────── */
+function buildChips(stepKey, options, containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(opt => `
+    <button class="chip"
+      data-step="${stepKey}" data-id="${opt.id}"
+      onclick="selectChip('${stepKey}','${opt.id}',this)">
+      ${opt.icon ? `<span class="chip-icon">${opt.icon}</span>` : ""}
+      <span>
+        ${opt.label}
+        ${opt.desc ? `<div class="chip-desc">${opt.desc}</div>` : ""}
+      </span>
+    </button>
+  `).join("");
+}
+
+function selectChip(stepKey, id, el) {
+  // 同ステップの選択を外す
+  document.querySelectorAll(`.chip[data-step="${stepKey}"]`).forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  state[stepKey] = id;
+  checkReady();
+}
+
+/* ────────────────────────────────────────────────────────────
+   都道府県セレクト
+──────────────────────────────────────────────────────────── */
+function buildPrefSelect() {
+  const sel = document.getElementById("sel-pref");
+  if (!window.VISA_DATA) return;
+  VISA_DATA.prefectures.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.label;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", () => {
+    state.pref = sel.value || null;
+    checkReady();
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   ボタン有効化チェック
+──────────────────────────────────────────────────────────── */
+function checkReady() {
+  const ok = state.step1 && state.step2 && state.step3 && state.pref;
+  document.getElementById("diagnose-btn").disabled = !ok;
+}
+
+/* ────────────────────────────────────────────────────────────
+   診断実行
+──────────────────────────────────────────────────────────── */
+function runDiagnosis() {
+  const result = GRANT_LOGIC.getGrants(
+    state.step1, state.step2, state.step3, state.pref
+  );
+  renderResult(result);
+
+  // スクロール
+  document.getElementById("result-area").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // URL更新
+  history.pushState({ ...state }, "", `/grant-checker/${state.step1}/`);
+}
+
+/* ────────────────────────────────────────────────────────────
+   結果描画
+──────────────────────────────────────────────────────────── */
+function renderResult(result) {
+  const { grants, localBonus, totalAmount, message } = result;
+  const ra = document.getElementById("result-area");
+
+  const toneClass = `total-banner-tone-${message.tone}`;
+  const totalLabel = GRANT_LOGIC.formatAmount(totalAmount);
+  const count = grants.length;
+
+  let html = `
+    <!-- 合計バナー -->
+    <div class="total-banner ${toneClass}">
+      <div class="total-count-badge">
+        ✅ ${count}種類の助成金が対象 + 自治体加算
+      </div>
+      <div class="total-label">概算受給可能額（合計）</div>
+      <div class="total-amount">${totalLabel}</div>
+      <div class="total-note">※要件により変動します。詳細はハローワークにご確認ください。</div>
+      <div class="total-message-headline">${message.headline}</div>
+      <div class="total-message-sub">${message.sub}</div>
+    </div>
+  `;
+
+  // 助成金リスト
+  if (grants.length > 0) {
+    html += `<div class="grants-title">📋 対象助成金の内訳</div>`;
+    grants.forEach(g => {
+      const bgColor = g.color + "18";
+      html += `
+        <div class="grant-card">
+          <div class="grant-card-head">
+            <div class="grant-icon" style="background:${bgColor}">${g.icon}</div>
+            <div class="grant-name">${g.name}</div>
+            <span class="grant-badge" style="background:${bgColor};color:${g.color}">${g.badge}</span>
+          </div>
+          <div class="grant-amount-row">
+            <div class="grant-amount">${g.estimatedLabel}</div>
+          </div>
+          <div class="grant-point">${g.point}</div>
+        </div>
+      `;
+    });
+  }
+
+  // 自治体加算
+  if (localBonus) {
+    html += `
+      <div class="local-bonus">
+        <div class="local-bonus-icon">🏛️</div>
+        <div>
+          <div class="local-bonus-name">${localBonus.label} 自治体加算</div>
+          <div class="local-bonus-note">${localBonus.note}</div>
+        </div>
+        <div class="local-bonus-amount">+${GRANT_LOGIC.formatAmount(localBonus.amount)}</div>
+      </div>
+    `;
+  }
+
+  // CTA
+  html += `
+    <div class="cta-area">
+      <a href="/visa-checker/" class="cta-btn cta-secondary">
+        📄 ビザ書類チェッカーへ
+      </a>
+      <button class="cta-btn cta-primary" onclick="window.print()">
+        🖨️ この結果を印刷・保存
+      </button>
+    </div>
+  `;
+
+  // 免責
+  html += `
+    <div class="disclaimer">
+      <strong>⚠️ 免責事項：</strong>
+      本シミュレーターの結果は参考値です。実際の受給可能額・要件は、企業の状況・申請タイミング・行政の審査によって異なります。
+      申請前に必ず管轄の<strong>ハローワーク</strong>または<strong>社会保険労務士</strong>にご相談ください。
+    </div>
+    <button class="reset-link" onclick="resetForm()">
+      ↺ もう一度診断する
+    </button>
+  `;
+
+  ra.innerHTML = html;
+  ra.className = "result-area visible";
+}
+
+/* ────────────────────────────────────────────────────────────
+   リセット
+──────────────────────────────────────────────────────────── */
+function resetForm() {
+  state.step1 = state.step2 = state.step3 = state.pref = null;
+  document.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+  document.getElementById("sel-pref").value = "";
+  document.getElementById("diagnose-btn").disabled = true;
+  document.getElementById("result-area").className = "result-area";
+  document.getElementById("result-area").innerHTML = "";
+  document.getElementById("form-card").scrollIntoView({ behavior: "smooth" });
+  history.replaceState({}, "", "/grant-checker/");
+}
+</script>
+
+</body>
+</html>
