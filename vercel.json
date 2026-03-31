@@ -33,6 +33,10 @@
       "destination": "/visa-checker/:file.js"
     },
     {
+      "source": "/land-nav/:path*",
+      "destination": "/land-nav/index.html"
+    },
+    {
       "source": "/visa-checker/:path*",
       "destination": "/visa-checker/index.html"
     }
