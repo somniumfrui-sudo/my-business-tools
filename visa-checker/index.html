@@ -58,18 +58,36 @@
       background: var(--white);
       border-bottom: 1px solid var(--gray-200);
       padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
       position: sticky;
       top: 0;
       z-index: 100;
     }
     .portal-bar-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      height: 52px;
+      display: contents;
     }
+    .portal-logo {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--blue-700);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .portal-nav { display: flex; gap: 4px; overflow-x: auto; }
+    .portal-nav a {
+      font-size: 13px;
+      color: #4b5563;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .portal-nav a:hover { background: var(--gray-100); }
+    .portal-nav a.active { background: var(--blue-50); color: var(--blue-700); font-weight: 600; }
     .portal-back {
       display: inline-flex;
       align-items: center;
@@ -579,14 +597,12 @@
 
 <!-- ── All AI Toolbox 接続ナビ ── -->
 <nav class="portal-bar">
-  <div class="portal-bar-inner">
-    <a href="/" class="portal-logo">All AI Toolbox</a>
-    <div class="portal-nav">
+  <a href="/" class="portal-logo">All AI Toolbox</a>
+  <div class="portal-nav">
       <a href="/">ホーム</a>
-      <a href="/visa-checker/" class="active">ビザ書類チェッカー</a>
-      <a href="/grant-checker/">助成金シミュレーター</a>
-      <a href="/land-nav/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>農地・山林活用ナビ</a>
-    </div>
+      <a href="/visa-checker/" class="active">📋 ビザ書類チェッカー</a>
+      <a href="/grant-checker/">💴 助成金シミュレーター</a>
+      <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
   </div>
 </nav>
 
