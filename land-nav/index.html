@@ -483,6 +483,35 @@
       .revenue-amount { font-size: 34px; }
     }
   </style>
+
+  <!-- Schema.org: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": '負動産レスキュー：農地・山林活用ナビ',
+    "url": 'https://all-ai-toolbox.com/land-nav/',
+    "description": '農地・山林・原野の転用可否・出口戦略・補助金を4ステップで診断。ソーラーシェアリング・農地バンク・国庫帰属制度対応。47都道府県の地価係数で収益シミュレーション。',
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "ja",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"},
+    "provider": {"@type": "Organization", "name": "All AI Toolbox", "url": "https://all-ai-toolbox.com/"}
+  }
+  </script>
+
+  <!-- Schema.org: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":'農用地区域内（青農）の農地は転用できますか？',"acceptedAnswer":{"@type":"Answer","text":'原則として転用は不可です。農振除外（農用地利用計画の変更）の申請が必要で、数年かかる場合もあります。ソーラーシェアリング（一時転用）は認められるケースがあります。'}},
+      {"@type":"Question","name":'相続土地国庫帰属制度とは何ですか？',"acceptedAnswer":{"@type":"Answer","text":'2023年4月に開始した制度で、相続した管理困難な土地を国に引き渡せます。農地・山林も対象で、法務局への申請が必要です。負担金は面積・地価相当額で概算20〜50万円程度です。'}},
+      {"@type":"Question","name":'ソーラーシェアリングの収入目安は？',"acceptedAnswer":{"@type":"Answer","text":'農地上に太陽光パネルを設置して農業と売電を両立する方法です。目安として1,000㎡の農地で年間約50〜150万円の売電収入が見込めます（地域・設備による）。'}}
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -501,7 +530,7 @@
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-eyebrow">🌾 農地法・森林法対応 2026年版</div>
-    <h1 class="hero-title">負動産レスキュー<br><span>農地・山林活用ナビ</span></h1>
+    <h1 class="hero-title" id="hero-h1">負動産レスキュー：農地・山林活用ナビ</h1>
     <p class="hero-sub">
       使い道に困っている農地・山林・原野を4ステップで診断。<br>
       転用可否・出口戦略・補助金・収益シミュレーションを一気に提示します。
@@ -603,6 +632,23 @@
 
 </main>
 
+
+<!-- シェアボタン -->
+<div style="max-width:860px;margin:0 auto;padding:16px 20px;text-align:center">
+  <p style="font-size:12px;color:#6b7280;margin-bottom:10px">診断結果をシェアする</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <a href="https://twitter.com/intent/tweet?text=使い道に困っている農地・山林の出口戦略を4ステップで診断！転用可否・補助金・収益シミュレーション付き。%20%23AllAIToolbox&url=https://all-ai-toolbox.com/land-nav/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#000;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      𝕏 でシェア
+    </a>
+    <a href="https://line.me/R/msg/text/?使い道に困っている農地・山林の出口戦略を4ステップで診断！転用可否・補助金・収益シミュレーション付き。%20https://all-ai-toolbox.com/land-nav/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#06c755;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      LINE でシェア
+    </a>
+  </div>
+</div>
 <footer class="page-footer">
   <a href="/">All AI Toolbox</a> › 負動産レスキュー：農地・山林活用ナビ |
   ※本ツールは参考情報の提供を目的としています。正確な転用可否・手続きは農業委員会・市区町村・専門家にご確認ください。
@@ -620,8 +666,48 @@ const state = { step1: null, step2: null, step3: null, step4: null, area: null, 
 ──────────────────────────────────────────────────────── */
 // data-land.js読み込み後に実行
 window.addEventListener("load", function() {
-  if (window.LAND_DATA) initApp();
+  if (window.LAND_DATA) {
+    initApp();
+    handleUrlParams();
+  }
 });
+
+/* ────────────────────────────────────────────────────────
+   URLルーティング（pSEO）
+   /land-nav/area/[prefId]/
+   /land-nav/area/[prefId]/[districtId]/
+──────────────────────────────────────────────────────── */
+function handleUrlParams() {
+  const parts = location.pathname.replace(/\/$/, "").split("/").filter(Boolean);
+  // /land-nav/area/[prefId]/[districtId]
+  if (parts[1] !== "area" || !parts[2]) return;
+
+  const prefId    = parts[2];
+  const distId    = parts[3] || null;
+  const pref      = LAND_DATA.prefectures.find(p => p.id === prefId);
+  if (!pref) return;
+
+  // 市区町村ラベルを取得（data.jsのdistrictsを参照）
+  let cityLabel = "";
+  if (distId && window.VISA_DATA) {
+    const dist = VISA_DATA.districts?.find(d => d.id === distId);
+    if (dist) cityLabel = dist.label;
+  }
+
+  const meta = LAND_LOGIC.generateMeta(prefId, cityLabel);
+  document.title = meta.title;
+
+  const descEl = document.getElementById("meta-desc");
+  if (descEl) descEl.setAttribute("content", meta.description);
+
+  const h1El = document.getElementById("hero-h1");
+  if (h1El) h1El.textContent = meta.h1;
+
+  const bcEl = document.getElementById("breadcrumb-current");
+  if (bcEl) bcEl.textContent = `${pref.label}${cityLabel ? " " + cityLabel : ""} 農地・山林活用ナビ`;
+
+  history.replaceState({}, meta.title, meta.canonical);
+}
 
 function initApp() {
   buildChips("step1", LAND_DATA.step1Options, "chips-step1");
