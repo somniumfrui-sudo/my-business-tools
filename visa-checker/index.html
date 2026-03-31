@@ -545,6 +545,35 @@
       .result-area { padding: 16px; }
     }
   </style>
+
+  <!-- Schema.org: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": '外国人雇用・ビザ必要書類チェッカー',
+    "url": 'https://all-ai-toolbox.com/visa-checker/',
+    "description": '在留資格・手続き・雇用形態を選ぶだけで必要書類を特定。特定技能・技人国・高度専門職など7資格対応。登録支援機関の検索機能付き。',
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "ja",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "JPY"},
+    "provider": {"@type": "Organization", "name": "All AI Toolbox", "url": "https://all-ai-toolbox.com/"}
+  }
+  </script>
+
+  <!-- Schema.org: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":'特定技能1号の更新に必要な書類は？',"acceptedAnswer":{"@type":"Answer","text":'特定技能所属機関の概要書、雇用契約書、支援計画書、登録支援機関との契約書など。雇用形態やカテゴリーによって異なります。'}},
+      {"@type":"Question","name":'技術・人文知識・国際業務の新規申請に必要な書類は？',"acceptedAnswer":{"@type":"Answer","text":'在留資格認定証明書交付申請書、証明写真、会社概要、雇用契約書、大学卒業証明書など。会社のカテゴリーによって追加書類が異なります。'}},
+      {"@type":"Question","name":'登録支援機関とは何ですか？',"acceptedAnswer":{"@type":"Answer","text":'特定技能外国人の支援業務を代行する機関です。出入国在留管理庁に登録されており、全国に約15,000機関あります。'}}
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -738,6 +767,23 @@
 </div>
 
 <!-- ── フッター ── -->
+
+<!-- シェアボタン -->
+<div style="max-width:860px;margin:0 auto;padding:16px 20px;text-align:center">
+  <p style="font-size:12px;color:#6b7280;margin-bottom:10px">診断結果をシェアする</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <a href="https://twitter.com/intent/tweet?text=外国人雇用のビザ書類を3ステップで特定！特定技能・技人国・高度専門職に対応。%20%23AllAIToolbox&url=https://all-ai-toolbox.com/visa-checker/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#000;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      𝕏 でシェア
+    </a>
+    <a href="https://line.me/R/msg/text/?外国人雇用のビザ書類を3ステップで特定！特定技能・技人国・高度専門職に対応。%20https://all-ai-toolbox.com/visa-checker/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#06c755;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      LINE でシェア
+    </a>
+  </div>
+</div>
 <footer class="page-footer">
   <p>
     <a href="/">All AI Toolbox</a> &gt; ビザ書類チェッカー |
