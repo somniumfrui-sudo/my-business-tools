@@ -608,7 +608,7 @@
   ※本ツールは参考情報の提供を目的としています。正確な転用可否・手続きは農業委員会・市区町村・専門家にご確認ください。
 </footer>
 
-<script src="/data-land.js" onload="initApp()"></script>
+<script src="/data-land.js"></script>
 <script>
 /* ────────────────────────────────────────────────────────
    状態
@@ -618,6 +618,11 @@ const state = { step1: null, step2: null, step3: null, step4: null, area: null, 
 /* ────────────────────────────────────────────────────────
    初期化
 ──────────────────────────────────────────────────────── */
+// data-land.js読み込み後に実行
+window.addEventListener("load", function() {
+  if (window.LAND_DATA) initApp();
+});
+
 function initApp() {
   buildChips("step1", LAND_DATA.step1Options, "chips-step1");
   buildChips("step2", LAND_DATA.step2Options, "chips-step2");
