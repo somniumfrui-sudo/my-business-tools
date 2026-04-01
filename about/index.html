@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運営者情報 | All AI Toolbox</title>
+  <meta name="description" content="All AI Toolboxの運営者情報。AIエンジニアによる運営。外国人雇用・農地活用・助成金など行政手続きをノイズゼロにするツール群を無料提供しています。">
+  <link rel="canonical" href="https://all-ai-toolbox.com/about/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-700: #1d4ed8; --blue-50: #eff6ff;
+      --gray-900: #111827; --gray-700: #374151; --gray-500: #6b7280;
+      --gray-200: #e5e7eb; --gray-100: #f3f4f6; --gray-50: #f9fafb;
+      --white: #ffffff;
+      --radius-md: 10px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.07);
+    }
+    body { font-family: "Noto Sans JP", sans-serif; background: var(--gray-50); color: var(--gray-900); font-size: 15px; line-height: 1.7; }
+
+    /* ナビ */
+    .portal-bar { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 0 20px; height: 52px; display: flex; align-items: center; gap: 20px; position: sticky; top: 0; z-index: 100; }
+    .portal-logo { font-weight: 700; font-size: 15px; color: var(--blue-700); text-decoration: none; white-space: nowrap; }
+    .portal-nav { display: flex; gap: 4px; overflow-x: auto; }
+    .portal-nav a { font-size: 13px; color: var(--gray-500); text-decoration: none; padding: 6px 12px; border-radius: 6px; white-space: nowrap; transition: background .15s; }
+    .portal-nav a:hover { background: var(--gray-100); }
+    .portal-nav a.active { background: var(--blue-50); color: var(--blue-700); font-weight: 600; }
+
+    /* ページヘッダー */
+    .page-hero { background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: var(--white); padding: 40px 20px 48px; }
+    .page-hero-inner { max-width: 760px; margin: 0 auto; }
+    .page-hero h1 { font-size: clamp(22px, 4vw, 32px); font-weight: 700; margin-bottom: 8px; }
+    .page-hero p { font-size: 14px; opacity: .85; }
+
+    /* パンくず */
+    .breadcrumb { font-size: 12px; color: var(--gray-500); padding: 12px 20px; max-width: 780px; margin: 0 auto; }
+    .breadcrumb a { color: var(--gray-500); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* メインコンテンツ */
+    .main-wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+    .content-card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); padding: 36px; margin-bottom: 24px; }
+
+    h2 { font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--blue-700); }
+    h3 { font-size: 15px; font-weight: 700; color: var(--gray-700); margin: 24px 0 10px; }
+    p { margin-bottom: 14px; color: var(--gray-700); }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    li { margin-bottom: 6px; color: var(--gray-700); }
+    a { color: var(--blue-700); }
+
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    .info-table th, .info-table td { padding: 12px 16px; border: 1px solid var(--gray-200); font-size: 14px; text-align: left; vertical-align: top; }
+    .info-table th { background: var(--gray-50); font-weight: 600; color: var(--gray-700); width: 30%; }
+
+    .highlight-box { background: var(--blue-50); border-left: 4px solid var(--blue-700); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 16px 20px; margin: 20px 0; }
+    .highlight-box p { color: var(--gray-700); margin: 0; }
+
+    .updated { font-size: 12px; color: var(--gray-500); margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--gray-200); }
+
+    /* フッター */
+    .page-footer { font-size: 12px; color: var(--gray-500); text-align: center; padding: 20px; border-top: 1px solid var(--gray-200); }
+    .page-footer a { color: var(--gray-500); text-decoration: none; margin: 0 8px; }
+
+    @media (max-width: 600px) { .content-card { padding: 20px; } .info-table th { width: 40%; } }
+  </style>
+</head>
+<body>
+
+<nav class="portal-bar">
+  <a href="/" class="portal-logo">All AI Toolbox</a>
+  <div class="portal-nav">
+    <a href="/">🏠 ツール一覧</a>
+    <a href="/visa-checker/">📋 ビザ書類チェッカー</a>
+    <a href="/grant-checker/">💴 助成金シミュレーター</a>
+    <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
+    <a href="/about/" class="active">運営者情報</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1>運営者情報</h1>
+    <p>All AI Toolbox を運営する開発者について</p>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <a href="/">All AI Toolbox</a><span>›</span>運営者情報
+</div>
+
+<main class="main-wrap">
+
+  <div class="content-card">
+    <h2>運営者情報</h2>
+
+    <table class="info-table">
+      <tr><th>サイト名</th><td>All AI Toolbox</td></tr>
+      <tr><th>URL</th><td><a href="https://all-ai-toolbox.com/">https://all-ai-toolbox.com/</a></td></tr>
+      <tr><th>運営者</th><td>個人運営（AIエンジニア）</td></tr>
+      <tr><th>所在地</th><td>日本</td></tr>
+      <tr><th>お問い合わせ</th><td>サイト内お問い合わせフォームをご利用ください</td></tr>
+      <tr><th>開設</th><td>2025年</td></tr>
+    </table>
+
+    <h3>サイトのコンセプト</h3>
+    <p>
+      All AI Toolbox は、<strong>「複雑な行政手続きやビジネスの意思決定を、AIと最新データで『ノイズゼロ』にする」</strong>をコンセプトに開発された無料ツール群です。
+    </p>
+    <p>
+      外国人雇用のビザ申請書類の特定、助成金の受給可能性の診断、農地・山林の活用方法の提案など、本来であれば専門家への相談や分厚い行政資料の精読が必要な手続きを、誰でも3分で最適な答えに辿り着けるよう設計しています。
+    </p>
+
+    <div class="highlight-box">
+      <p>📌 <strong>開発の背景</strong>：中小企業の経営者や個人事業主が行政手続きの複雑さに翻弄されている現状を目の当たりにしてきました。法律・制度の「翻訳者」として、公的機関のデータを誰もが使いやすい形に変換する「社会インフラ」を目指しています。</p>
+    </div>
+
+    <h3>技術的な特徴</h3>
+    <ul>
+      <li><strong>最新公的データの反映</strong>：出入国在留管理庁・厚生労働省・農林水産省・法務省等の公式情報を定期的に更新しています</li>
+      <li><strong>プライバシーファースト設計</strong>：すべての計算・診断処理はブラウザ内で完結し、入力データはサーバーに一切送信・保存されません</li>
+      <li><strong>登録不要・完全無料</strong>：アカウント登録やメールアドレスの入力なしに全機能を利用できます</li>
+      <li><strong>モバイル対応</strong>：スマートフォン・タブレットでも快適に動作するレスポンシブデザインを採用しています</li>
+    </ul>
+
+    <h3>運営者の専門性について</h3>
+    <p>
+      本サイトはAIエンジニアが個人で開発・運営しています。各ツールのロジックは、農業委員会の実務資料・厚生労働省の支給申請ガイドブック・出入国在留管理庁の審査要領等の一次情報に基づいて設計されています。ただし、最終的な申請・手続きにあたっては、行政書士・社会保険労務士・農業委員会等の専門機関にご相談いただくことを強くおすすめします。
+    </p>
+
+    <p class="updated">最終更新日：2026年4月1日</p>
+  </div>
+
+</main>
+
+<footer class="page-footer">
+  &copy; 2026 All AI Toolbox ―
+  <a href="/">ホーム</a>
+  <a href="/about/">運営者情報</a>
+  <a href="/privacy/">プライバシーポリシー</a>
+  <a href="/disclaimer/">免責事項</a>
+</footer>
+
+</body>
+</html>
