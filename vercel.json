@@ -37,6 +37,18 @@
       "destination": "/land-nav/index.html"
     },
     {
+      "source": "/about/",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/privacy/",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/disclaimer/",
+      "destination": "/disclaimer/index.html"
+    },
+    {
       "source": "/visa-checker/:path*",
       "destination": "/visa-checker/index.html"
     }
