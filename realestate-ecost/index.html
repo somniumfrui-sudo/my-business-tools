@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="meta-title">不動産契約コスト削減シミュレーター | 電子契約導入で年間いくら節約できる？ | All AI Toolbox</title>
+  <meta id="meta-desc" name="description" content="不動産業者向け。紙の契約書から電子契約へ切り替えた場合の年間コスト削減額を即計算。印紙税・郵送コスト・人件費を自動算出。">
+  <link rel="canonical" href="https://all-ai-toolbox.com/tools/realestate-ecost/">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112" crossorigin="anonymous"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy-950: #0a0f1e;
+      --navy-900: #0f172a;
+      --navy-800: #1e293b;
+      --navy-700: #334155;
+      --navy-500: #64748b;
+      --navy-300: #94a3b8;
+      --navy-100: #e2e8f0;
+      --gold-500: #d4a843;
+      --gold-400: #e4bc5a;
+      --gold-200: #fef3c7;
+      --gold-100: #fffbeb;
+      --red-600:  #dc2626;
+      --green-600:#16a34a;
+      --green-50: #f0fdf4;
+      --white:    #ffffff;
+      --gray-50:  #f8fafc;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-gold: 0 4px 24px rgba(212,168,67,.18);
+    }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: var(--gray-50);
+      color: var(--navy-900);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ナビ */
+    .portal-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--navy-100);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-logo { font-weight: 700; font-size: 15px; color: #1d4ed8; text-decoration: none; white-space: nowrap; }
+    .portal-nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .portal-nav::-webkit-scrollbar { display: none; }
+    .portal-nav a { font-size: 13px; color: var(--navy-500); text-decoration: none; padding: 6px 12px; border-radius: var(--radius-sm); white-space: nowrap; transition: background .15s; }
+    .portal-nav a:hover { background: var(--navy-100); }
+    .portal-nav a.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+
+    /* ヒーロー */
+    .hero {
+      background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-800) 60%, #1a2744 100%);
+      color: var(--white);
+      padding: 52px 20px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 80% 30%, rgba(212,168,67,.12) 0%, transparent 55%),
+        radial-gradient(ellipse at 10% 80%, rgba(212,168,67,.08) 0%, transparent 50%);
+    }
+    .hero::after {
+      content: "¥";
+      position: absolute;
+      right: 40px;
+      bottom: -20px;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 200px;
+      font-weight: 700;
+      color: rgba(212,168,67,.06);
+      line-height: 1;
+    }
+    .hero-inner { max-width: 860px; margin: 0 auto; position: relative; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(212,168,67,.4);
+      background: rgba(212,168,67,.1);
+      color: var(--gold-400);
+      border-radius: 99px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-family: "Cormorant Garamond", "Noto Sans JP", serif;
+      font-size: clamp(24px, 4.5vw, 40px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .hero-title span { color: var(--gold-400); }
+    .hero-sub { font-size: 14px; opacity: .8; line-height: 1.8; margin-bottom: 28px; max-width: 540px; }
+    .hero-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-stat {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius-md);
+      padding: 10px 18px;
+      text-align: center;
+    }
+    .hero-stat-num { font-family: "Cormorant Garamond", serif; font-size: 22px; font-weight: 700; color: var(--gold-400); display: block; }
+    .hero-stat-label { font-size: 11px; opacity: .7; }
+
+    /* パンくず */
+    .breadcrumb { font-size: 12px; color: var(--navy-500); padding: 12px 20px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb a { color: var(--navy-500); text-decoration: none; }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* メイン */
+    .main-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+    /* カード */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--navy-100);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    /* セクションラベル */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy-800);
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--navy-100);
+    }
+    .section-badge {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--navy-900);
+      color: var(--gold-400);
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 入力グリッド */
+    .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-size: 13px; font-weight: 600; color: var(--navy-700); }
+    .input-group .hint { font-size: 11px; color: var(--navy-500); }
+
+    input[type="number"],
+    select {
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--navy-100);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+      color: var(--navy-900);
+      outline: none;
+      transition: border-color .15s, background .15s;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--gold-500); background: var(--white); }
+
+    /* 物件価格チップ */
+    .price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    @media (min-width: 500px) { .price-grid { grid-template-columns: repeat(4, 1fr); } }
+    .price-chip {
+      padding: 10px 8px;
+      border: 1.5px solid var(--navy-100);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy-700);
+      text-align: center;
+      transition: all .15s;
+    }
+    .price-chip:hover { border-color: var(--gold-500); color: var(--gold-500); }
+    .price-chip.selected { background: var(--navy-900); border-color: var(--navy-900); color: var(--gold-400); }
+    .price-chip .stamp { font-size: 16px; display: block; margin-bottom: 3px; }
+    .price-chip .label { font-size: 11px; opacity: .75; }
+
+    /* 計算ボタン */
+    .calc-btn {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all .2s;
+      box-shadow: var(--shadow-gold);
+      position: relative;
+      overflow: hidden;
+    }
+    .calc-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(212,168,67,.15), transparent);
+      transform: translateX(-100%);
+      transition: transform .5s;
+    }
+    .calc-btn:hover::after { transform: translateX(100%); }
+    .calc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2); }
+    .calc-btn:disabled { background: var(--navy-100); color: var(--navy-500); box-shadow: none; cursor: not-allowed; transform: none; }
+
+    /* 結果エリア */
+    .result-area { display: none; }
+    .result-area.visible { display: block; animation: fadeUp .5s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    /* 結果バナー */
+    .result-banner {
+      background: linear-gradient(135deg, var(--navy-950), var(--navy-800));
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      color: var(--white);
+    }
+    .result-banner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(212,168,67,.15), transparent 60%);
+    }
+    .result-banner-inner { position: relative; }
+    .result-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--gold-400); opacity: .9; margin-bottom: 6px; }
+    .result-amount {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(44px, 8vw, 72px);
+      font-weight: 700;
+      color: var(--gold-400);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .result-sub { font-size: 13px; opacity: .7; margin-bottom: 20px; }
+    .result-catchcopy {
+      display: inline-block;
+      background: rgba(212,168,67,.15);
+      border: 1px solid rgba(212,168,67,.3);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gold-200);
+      line-height: 1.5;
+    }
+
+    /* 内訳グリッド */
+    .breakdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .breakdown-card {
+      background: var(--white);
+      border: 1.5px solid var(--navy-100);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: box-shadow .15s;
+    }
+    .breakdown-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+    .breakdown-icon { font-size: 22px; margin-bottom: 8px; }
+    .breakdown-name { font-size: 12px; color: var(--navy-500); margin-bottom: 4px; }
+    .breakdown-amount { font-family: "Cormorant Garamond", serif; font-size: 26px; font-weight: 700; color: var(--red-600); line-height: 1.1; }
+    .breakdown-amount.savings { color: var(--green-600); }
+    .breakdown-note { font-size: 11px; color: var(--navy-500); margin-top: 4px; }
+
+    /* pSEOテキストエリア */
+    .pseo-block {
+      background: var(--gold-100);
+      border: 1.5px solid rgba(212,168,67,.3);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      margin-bottom: 20px;
+    }
+    .pseo-block h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--navy-900);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .pseo-block p { font-size: 13px; color: var(--navy-700); line-height: 1.8; margin-bottom: 8px; }
+    .pseo-block p:last-child { margin-bottom: 0; }
+
+    /* pSEO選択 */
+    .pseo-select-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pseo-select {
+      font-size: 13px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--navy-100);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+      color: var(--navy-900);
+      outline: none;
+      cursor: pointer;
+    }
+    .pseo-select:focus { border-color: var(--gold-500); }
+
+    /* CTAエリア */
+    .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .cta-btn {
+      flex: 1; min-width: 200px;
+      padding: 13px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .15s;
+      font-family: "Noto Sans JP", sans-serif;
+      border: none;
+    }
+    .cta-primary { background: var(--navy-900); color: var(--gold-400); }
+    .cta-primary:hover { background: var(--navy-950); }
+    .cta-secondary { background: var(--white); color: var(--navy-700); border: 1.5px solid var(--navy-100); }
+    .cta-secondary:hover { border-color: var(--gold-500); color: var(--gold-500); }
+
+    /* 免責 */
+    .disclaimer { font-size: 11px; color: var(--navy-500); background: var(--gray-50); border: 1px solid var(--navy-100); border-radius: var(--radius-md); padding: 12px 14px; line-height: 1.7; margin-top: 16px; }
+
+    /* リセット */
+    .reset-btn { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--navy-500); cursor: pointer; margin-top: 16px; background: none; border: none; font-family: inherit; }
+    .reset-btn:hover { color: var(--navy-700); }
+
+    /* フッター */
+    .page-footer { font-size: 12px; color: var(--navy-500); text-align: center; padding: 20px; border-top: 1px solid var(--navy-100); max-width: 900px; margin: 0 auto; }
+    .page-footer a { color: var(--navy-500); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .card { padding: 18px; }
+      .hero { padding: 32px 16px 48px; }
+      .result-banner { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="portal-bar">
+  <a href="/" class="portal-logo">All AI Toolbox</a>
+  <div class="portal-nav">
+    <a href="/">🏠 ツール一覧</a>
+    <a href="/visa-checker/">📋 ビザ書類チェッカー</a>
+    <a href="/grant-checker/">💴 助成金シミュレーター</a>
+    <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
+    <a href="/tools/realestate-ecost/" class="active">🏢 電子契約コスト削減</a>
+    <a href="/about/">運営者情報</a>
+    <a href="/privacy/">プライバシーポリシー</a>
+    <a href="/disclaimer/">免責事項</a>
+    <a href="/contact/">お問い合わせ</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🏢 不動産業者向け 2026年版</div>
+    <h1 class="hero-title" id="page-h1">不動産契約<span>コスト削減</span><br>シミュレーター</h1>
+    <p class="hero-sub">印紙代・郵送コスト・人件費を入力するだけで、電子契約へ切り替えた場合の年間削減額を即算出。紙の契約書を続けるコストを可視化します。</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num">4</span><span class="hero-stat-label">項目入力するだけ</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">印紙税</span><span class="hero-stat-label">軽減税率対応</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">pSEO</span><span class="hero-stat-label">地域×業種テキスト</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <a href="/">All AI Toolbox</a><span>›</span>
+  <span id="breadcrumb-text">不動産契約コスト削減シミュレーター</span>
+</div>
+
+<main class="main-wrap">
+
+  <!-- pSEO地域×業種選択 -->
+  <div class="card">
+    <div class="section-label">
+      <span class="section-badge">🗾</span>
+      地域と業種を選択してください（診断書の見出しに反映）
+    </div>
+    <div class="pseo-select-row">
+      <select id="sel-pref" class="pseo-select" onchange="updateMeta()">
+        <option value="">都道府県を選択...</option>
+        <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option>
+        <option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option>
+        <option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option>
+        <option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option>
+        <option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option>
+        <option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option>
+        <option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option>
+        <option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option>
+        <option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option>
+        <option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option>
+        <option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option>
+        <option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+      </select>
+      <select id="sel-industry" class="pseo-select" onchange="updateMeta()">
+        <option value="不動産業">不動産業（全般）</option>
+        <option value="売買仲介">売買仲介業</option>
+        <option value="賃貸管理業">賃貸管理業</option>
+        <option value="マンション管理業">マンション管理業</option>
+        <option value="不動産デベロッパー">不動産デベロッパー</option>
+        <option value="土地家屋調査士">土地家屋調査士事務所</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 入力フォーム -->
+  <div class="card" id="form-card">
+
+    <!-- STEP1: 物件価格 -->
+    <div class="section-label">
+      <span class="section-badge">1</span>
+      月間の平均的な物件価格（印紙税額の算出に使用）
+    </div>
+    <div class="price-grid" id="price-grid">
+      <button class="price-chip" data-price="1000" data-stamp="1000" onclick="selectPrice(this)">
+        <span class="stamp">1,000円</span>
+        1,000万以下
+        <span class="label">印紙税 1,000円</span>
+      </button>
+      <button class="price-chip" data-price="3000" data-stamp="10000" onclick="selectPrice(this)">
+        <span class="stamp">1万円</span>
+        〜3,000万
+        <span class="label">印紙税 1万円（軽減）</span>
+      </button>
+      <button class="price-chip" data-price="5000" data-stamp="20000" onclick="selectPrice(this)">
+        <span class="stamp">2万円</span>
+        〜5,000万
+        <span class="label">印紙税 2万円（軽減）</span>
+      </button>
+      <button class="price-chip" data-price="10000" data-stamp="60000" onclick="selectPrice(this)">
+        <span class="stamp">6万円</span>
+        1億円〜
+        <span class="label">印紙税 6万円</span>
+      </button>
+    </div>
+
+    <div style="height:1px;background:var(--navy-100);margin:22px 0"></div>
+
+    <!-- STEP2〜4: 数値入力 -->
+    <div class="section-label">
+      <span class="section-badge">2</span>
+      コスト条件を入力してください
+    </div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="monthly-contracts">月間契約件数</label>
+        <input type="number" id="monthly-contracts" value="10" min="1" max="9999" oninput="checkReady()">
+        <span class="hint">1ヶ月に締結する契約の件数</span>
+      </div>
+      <div class="input-group">
+        <label for="postage">1件あたりの郵送代（円）</label>
+        <input type="number" id="postage" value="520" min="0" oninput="checkReady()">
+        <span class="hint">書留・速達含む郵送費の目安</span>
+      </div>
+      <div class="input-group">
+        <label for="work-hours">1件あたりの事務作業時間（分）</label>
+        <input type="number" id="work-hours" value="60" min="0" oninput="checkReady()">
+        <span class="hint">印刷〜郵送〜管理の合計時間</span>
+      </div>
+      <div class="input-group">
+        <label for="hourly-rate">担当者の時給（円）</label>
+        <input type="number" id="hourly-rate" value="1800" min="0" oninput="checkReady()">
+        <span class="hint">社会保険等を含めた実質時給</span>
+      </div>
+      <div class="input-group">
+        <label for="ecost-monthly">電子契約サービス月額（円）</label>
+        <input type="number" id="ecost-monthly" value="10000" min="0" oninput="checkReady()">
+        <span class="hint">DocuSign・クラウドサイン等の月額目安</span>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="calc-btn" onclick="calculate()" disabled>
+      ✦ 年間削減コストを計算する
+    </button>
+  </div>
+
+  <!-- 結果エリア -->
+  <div class="result-area" id="result-area">
+
+    <!-- メイン結果バナー -->
+    <div class="result-banner">
+      <div class="result-banner-inner">
+        <div class="result-label" id="res-label">年間コスト削減シミュレーション</div>
+        <div class="result-amount" id="res-amount">—</div>
+        <div class="result-sub" id="res-sub">電子契約へ切り替えた場合の推定年間節約額</div>
+        <div class="result-catchcopy" id="res-catchcopy"></div>
+      </div>
+    </div>
+
+    <!-- 内訳 -->
+    <div class="breakdown-grid" id="breakdown-grid"></div>
+
+    <!-- pSEOテキスト -->
+    <div class="pseo-block" id="pseo-block">
+      <h2 id="pseo-h2"></h2>
+      <p id="pseo-body1"></p>
+      <p id="pseo-body2"></p>
+      <p id="pseo-body3"></p>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-row">
+      <button class="cta-btn cta-primary" onclick="window.print()">🖨️ 診断書を印刷・PDF保存</button>
+      <a href="/grant-checker/" class="cta-btn cta-secondary">💴 助成金シミュレーターも試す</a>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ 本シミュレーターの計算結果は概算です。印紙税は令和6年度軽減税率（不動産譲渡契約書）を適用しています。実際のコストは契約内容・サービス選定・社内体制により異なります。導入前に専門家にご相談ください。
+    </div>
+
+    <button class="reset-btn" onclick="resetForm()">↺ もう一度計算する</button>
+  </div>
+
+</main>
+
+<footer class="page-footer">
+  &copy; 2026 All AI Toolbox ―
+  <a href="/">ホーム</a> /
+  <a href="/about/">運営者情報</a> /
+  <a href="/privacy/">プライバシーポリシー</a> /
+  <a href="/disclaimer/">免責事項</a>
+</footer>
+
+<script>
+// ── 印紙税マスター（不動産譲渡契約書・軽減税率適用） ──────────
+const STAMP_DUTY = {
+  1000:  1000,   // 1,000万以下
+  3000:  10000,  // 1,000万超〜5,000万以下（軽減後 1万円）
+  5000:  20000,  // 5,000万超〜1億以下（軽減後 2万円）
+  10000: 60000,  // 1億超〜5億以下（軽減後 6万円）
+};
+
+let selectedPrice = null;
+let selectedStamp = null;
+
+// ── 物件価格選択 ─────────────────────────────────────────────
+function selectPrice(el) {
+  document.querySelectorAll(".price-chip").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedPrice = parseInt(el.dataset.price);
+  selectedStamp = parseInt(el.dataset.stamp);
+  checkReady();
+}
+
+// ── ボタン有効化 ─────────────────────────────────────────────
+function checkReady() {
+  const ok = selectedPrice !== null &&
+    document.getElementById("monthly-contracts").value > 0;
+  document.getElementById("calc-btn").disabled = !ok;
+}
+
+// ── 計算実行 ─────────────────────────────────────────────────
+function calculate() {
+  const monthlyContracts = parseInt(document.getElementById("monthly-contracts").value) || 10;
+  const postage          = parseInt(document.getElementById("postage").value)            || 520;
+  const workMinutes      = parseInt(document.getElementById("work-hours").value)         || 60;
+  const hourlyRate       = parseInt(document.getElementById("hourly-rate").value)        || 1800;
+  const ecostMonthly     = parseInt(document.getElementById("ecost-monthly").value)      || 10000;
+
+  // 1件あたりコスト計算
+  const stampPerContract  = selectedStamp;
+  const postagePerContract = postage;
+  const laborPerContract  = Math.round((workMinutes / 60) * hourlyRate);
+  const costPerContract   = stampPerContract + postagePerContract + laborPerContract;
+
+  // 年間コスト
+  const annualPaperCost = costPerContract * monthlyContracts * 12;
+  const annualEcostCost = ecostMonthly * 12;
+  const annualSavings   = annualPaperCost - annualEcostCost;
+
+  renderResult({
+    stampPerContract, postagePerContract, laborPerContract, costPerContract,
+    annualPaperCost, annualEcostCost, annualSavings, monthlyContracts
+  });
+
+  document.getElementById("result-area").className = "result-area visible";
+  document.getElementById("result-area").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── 結果描画 ─────────────────────────────────────────────────
+function renderResult(d) {
+  const pref     = document.getElementById("sel-pref").value     || "全国";
+  const industry = document.getElementById("sel-industry").value || "不動産業";
+
+  // メインバナー
+  document.getElementById("res-label").textContent =
+    `${pref}の${industry}：年間コスト削減シミュレーション`;
+  document.getElementById("res-amount").textContent =
+    d.annualSavings > 0 ? `▼ ${fmt(d.annualSavings)}円` : `±${fmt(Math.abs(d.annualSavings))}円`;
+  document.getElementById("res-sub").textContent =
+    `月${d.monthlyContracts}件 × 12ヶ月で紙契約にかかるコスト ${fmt(d.annualPaperCost)}円 → 電子契約費用 ${fmt(d.annualEcostCost)}円を差し引いた節約額`;
+
+  // キャッチコピー
+  document.getElementById("res-catchcopy").textContent = getCatchcopy(d.annualSavings);
+
+  // 内訳カード
+  document.getElementById("breakdown-grid").innerHTML = `
+    <div class="breakdown-card">
+      <div class="breakdown-icon">📄</div>
+      <div class="breakdown-name">印紙税（1件）</div>
+      <div class="breakdown-amount">${fmt(d.stampPerContract)}円</div>
+      <div class="breakdown-note">不動産譲渡・軽減税率適用</div>
+    </div>
+    <div class="breakdown-card">
+      <div class="breakdown-icon">📮</div>
+      <div class="breakdown-name">郵送コスト（1件）</div>
+      <div class="breakdown-amount">${fmt(d.postagePerContract)}円</div>
+      <div class="breakdown-note">書留・速達含む</div>
+    </div>
+    <div class="breakdown-card">
+      <div class="breakdown-icon">⏱️</div>
+      <div class="breakdown-name">人件費（1件）</div>
+      <div class="breakdown-amount">${fmt(d.laborPerContract)}円</div>
+      <div class="breakdown-note">印刷〜郵送〜管理の作業コスト</div>
+    </div>
+    <div class="breakdown-card">
+      <div class="breakdown-icon">📋</div>
+      <div class="breakdown-name">紙契約 年間総コスト</div>
+      <div class="breakdown-amount">${fmt(d.annualPaperCost)}円</div>
+      <div class="breakdown-note">1件${fmt(d.costPerContract)}円 × ${d.monthlyContracts}件 × 12ヶ月</div>
+    </div>
+    <div class="breakdown-card">
+      <div class="breakdown-icon">💻</div>
+      <div class="breakdown-name">電子契約 年間コスト</div>
+      <div class="breakdown-amount savings">${fmt(d.annualEcostCost)}円</div>
+      <div class="breakdown-note">月額サービス料 × 12ヶ月</div>
+    </div>
+    <div class="breakdown-card" style="border-color:var(--gold-500);background:var(--gold-100)">
+      <div class="breakdown-icon">✦</div>
+      <div class="breakdown-name">年間削減額</div>
+      <div class="breakdown-amount savings" style="color:var(--navy-900)">${fmt(d.annualSavings)}円</div>
+      <div class="breakdown-note">${d.annualSavings > 0 ? '導入メリットあり' : '件数増加で逆転の可能性'}</div>
+    </div>
+  `;
+
+  // pSEOテキスト
+  renderPseo(d, pref, industry);
+}
+
+// ── pSEOテキスト生成 ─────────────────────────────────────────
+function renderPseo(d, pref, industry) {
+  const h2 = `${pref}の${industry}における電子契約導入 コスト削減シミュレーション`;
+  document.getElementById("pseo-h2").textContent = h2;
+
+  const saving = d.annualSavings;
+  const paperTotal = d.annualPaperCost;
+
+  document.getElementById("pseo-body1").textContent =
+    `${pref}の${industry}において、月${d.monthlyContracts}件の契約を締結している場合、紙の契約書に年間${fmt(paperTotal)}円のコストがかかっています。これには不動産譲渡契約書に貼付する印紙税（1件あたり${fmt(d.stampPerContract)}円）、書留郵送料（${fmt(d.postagePerContract)}円）、印刷・封入・管理などの事務作業人件費（${fmt(d.laborPerContract)}円）が含まれます。`;
+
+  if (saving > 0) {
+    document.getElementById("pseo-body2").textContent =
+      `電子契約サービス（月額${fmt(d.annualEcostCost / 12)}円）に切り替えると、年間で約${fmt(saving)}円のコスト削減が見込まれます。電子契約は印紙税が非課税であり、郵送・印刷コストも発生しないため、特に取引件数が多い${pref}の${industry}ほど導入メリットが高くなります。`;
+    document.getElementById("pseo-body3").textContent =
+      `2026年現在、電子署名法・宅地建物取引業法の改正により${pref}でも電子契約の法的有効性が確立しています。重要事項説明（IT重説）との組み合わせで、対面なし・完全オンラインでの取引完結も可能です。導入前には社会保険労務士・行政書士や電子契約サービスのカスタマーサポートへの事前相談を推奨します。`;
+  } else {
+    document.getElementById("pseo-body2").textContent =
+      `現在の契約件数では電子契約サービス費用とのコスト差が小さい状況です。ただし契約件数が増加した場合、または月額料金の安いプランを選択することで逆転する可能性があります。`;
+    document.getElementById("pseo-body3").textContent =
+      `電子契約導入のメリットはコスト削減だけでなく、書類の紛失リスク低減・検索性向上・リモートワーク対応など業務効率化にも及びます。${pref}の${industry}での導入事例も増えており、中長期的な視点での検討をおすすめします。`;
+  }
+
+  // pSEOのh2をページタイトルに反映
+  document.getElementById("pseo-h2").textContent = h2;
+}
+
+// ── キャッチコピー生成 ───────────────────────────────────────
+function getCatchcopy(saving) {
+  if (saving <= 0)
+    return "📋 現在の件数では電子契約費用が上回っています。件数が増えるほど逆転します。";
+  if (saving < 50000)
+    return `⚠️ 今のまま紙の契約を続けると、来年も再来年も同じ ${fmt(saving)}円 が紙代・印紙代・手間代として消え続けます。`;
+  if (saving < 150000)
+    return `💸 毎年 ${fmt(saving)}円 が印紙・郵送・事務作業に消えています。新入社員の研修費用が丸ごと消えている計算です。`;
+  if (saving < 300000)
+    return `🔥 年間 ${fmt(saving)}円 を紙の契約書のために損しています。これは担当者1人の月給相当額です。`;
+  if (saving < 600000)
+    return `🚨 毎年 ${fmt(saving)}円 が紙の書類処理に消えています。電子契約に切り替えなければ、3年で ${fmt(saving*3)}円 の損失になります。`;
+  if (saving < 1500000)
+    return `💰 年間 ${fmt(saving)}円 のコストが紙契約に食われています。5年続けると ${fmt(saving*5)}円 ── 優秀な中途採用1人分の人件費に相当します。`;
+  if (saving < 3000000)
+    return `🔴 毎年 ${fmt(saving)}円 が紙の契約書に消えています。今すぐ切り替えなければ、5年で ${fmt(saving*5)}円 の機会損失です。`;
+  return `🚫 年間 ${fmt(saving)}円 以上を印紙・郵送・事務で失い続けています。10年後には ${fmt(saving*10)}円 ── 不動産1件分の損失になります。`;
+}
+
+// ── メタ更新（pSEO） ─────────────────────────────────────────
+function updateMeta() {
+  const pref     = document.getElementById("sel-pref").value     || "";
+  const industry = document.getElementById("sel-industry").value || "不動産業";
+  const loc = pref ? `${pref}の${industry}` : `${industry}`;
+
+  document.title = `${loc} 電子契約コスト削減シミュレーター | All AI Toolbox`;
+  document.getElementById("page-h1").textContent = "不動産契約コスト削減シミュレーター";
+  document.getElementById("breadcrumb-text").textContent =
+    `${loc} 電子契約コスト削減シミュレーター`;
+
+  if (pref) {
+    history.replaceState({}, "", `/tools/realestate-ecost/?pref=${encodeURIComponent(pref)}&industry=${encodeURIComponent(industry)}`);
+  }
+}
+
+// ── リセット ─────────────────────────────────────────────────
+function resetForm() {
+  selectedPrice = null; selectedStamp = null;
+  document.querySelectorAll(".price-chip").forEach(c => c.classList.remove("selected"));
+  document.getElementById("calc-btn").disabled = true;
+  document.getElementById("result-area").className = "result-area";
+  document.getElementById("form-card").scrollIntoView({ behavior: "smooth" });
+}
+
+// ── ユーティリティ ───────────────────────────────────────────
+function fmt(n) { return Math.round(n).toLocaleString(); }
+
+// ── URLパラメータ初期化 ──────────────────────────────────────
+(function() {
+  const params = new URLSearchParams(location.search);
+  const pref = params.get("pref");
+  const ind  = params.get("industry");
+  if (pref) {
+    const sel = document.getElementById("sel-pref");
+    for (const opt of sel.options) { if (opt.value === pref) { sel.value = pref; break; } }
+  }
+  if (ind) {
+    const sel = document.getElementById("sel-industry");
+    for (const opt of sel.options) { if (opt.value === ind) { sel.value = ind; break; } }
+  }
+  if (pref || ind) updateMeta();
+})();
+</script>
+
+</body>
+</html>
