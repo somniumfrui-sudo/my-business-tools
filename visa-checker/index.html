@@ -1750,38 +1750,32 @@ function renderRelatedTools(currentId) {
   const chain = CHAIN_DATA[currentId];
   if (!chain) return;
 
-  el.innerHTML = `
-    <a href="${chain.url}" style="
-      display:block;
-      background:${chain.color};
-      border-radius:14px;
-      padding:22px 24px;
-      text-decoration:none;
-      margin-top:28px;
-      position:relative;
-      overflow:hidden;
-      transition:transform .2s,box-shadow .2s;
-    "
-    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
-    onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <!-- 背景装飾 -->
-      <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
-      <!-- 上部ラベル -->
-      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:${chain.accent};opacity:.85;margin-bottom:8px">
-        🔗 次にチェックすべきツール
-      </div>
-      <!-- キラーフレーズ -->
-      <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.55;margin-bottom:14px;max-width:540px">
-        「${chain.phrase}」
-      </div>
-      <!-- ツール名バッジ -->
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
-        <span style="font-size:18px">${chain.icon}</span>
-        <span style="font-size:13px;font-weight:700;color:#fff">${chain.title}</span>
-        <span style="font-size:13px;color:${chain.accent};font-weight:700;margin-left:4px">→</span>
-      </div>
-    </a>
-  `;
+// 変更後（3点修正: ラベル削除・括弧削除・改行をnowrapで段落崩れ防止）
+el.innerHTML = `
+  <a href="${chain.url}" style="
+    display:block;
+    background:${chain.color};
+    border-radius:14px;
+    padding:22px 24px;
+    text-decoration:none;
+    margin-top:28px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .2s,box-shadow .2s;
+  "
+  onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
+  onmouseout="this.style.transform='';this.style.boxShadow=''">
+    <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
+    <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;max-width:520px;word-break:keep-all">
+      ${chain.phrase}
+    </div>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
+      <span style="font-size:18px">${chain.icon}</span>
+      <span style="font-size:13px;font-weight:700;color:#fff">${chain.title}</span>
+      <span style="font-size:13px;color:${chain.accent};font-weight:700;margin-left:4px">→</span>
+    </div>
+  </a>
+`;
 }
 
 document.addEventListener('DOMContentLoaded',function(){
