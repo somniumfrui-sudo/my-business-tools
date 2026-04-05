@@ -586,17 +586,7 @@
     ]
   }
   </script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112"
-     crossorigin="anonymous"></script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1NSFNW2FB9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1NSFNW2FB9');
-</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -608,7 +598,6 @@
     <a href="/visa-checker/">📋 ビザ書類チェッカー</a>
     <a href="/grant-checker/" class="active">💴 助成金シミュレーター</a>
     <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
-    <a href="/realestate-ecost/">🏬 不動産契約コスト削減</a>
     <a href="/about/">運営者情報</a>
     <a href="/privacy/">プライバシーポリシー</a>
     <a href="/disclaimer/">免責事項</a>
@@ -641,11 +630,7 @@
 </div>
 
 <!-- ─── パンくず ───────────────────────────────────────────── -->
-<div class="breadcrumb">
-  <a href="/">All AI Toolbox</a>
-  <span>›</span>
-  <span id="breadcrumb-current">助成金シミュレーター</span>
-</div>
+<div style="font-size:12px;color:#6b7280;padding:10px 20px;max-width:900px;margin:0 auto"><a href="/" style="color:#6b7280;text-decoration:none">ホーム</a> <span style="margin:0 4px">›</span> <a href="/grant-checker/" style="color:#6b7280;text-decoration:none">外国人雇用</a> <span style="margin:0 4px">›</span> <span style="color:#111827;font-weight:500">助成金シミュレーター</span></div>
 
 <!-- ─── メイン ─────────────────────────────────────────────── -->
 <main class="main-wrap">
@@ -852,6 +837,7 @@
     </a>
   </div>
 
+<div id="related-tools"></div>
 <footer class="page-footer">
   <a href="/">All AI Toolbox</a> › 外国人雇用 助成金シミュレーター |
   ※本ツールは参考情報の提供を目的としています。正確な要件・金額は管轄のハローワークまたは社会保険労務士にご確認ください。
@@ -1045,5 +1031,93 @@ function resetForm() {
 </script>
 
 <script src="/data-grant.js" onload="initApp()"></script>
+<script>
+
+
+/* ─── 循環内部リンクウィジェット（固定キラーフレーズ版）─── */
+const CHAIN_DATA = {
+  "land-nav": {
+    "next_id": "realestate-ecost",
+    "title": "不動産契約コスト削減シミュレーター",
+    "icon": "🏢",
+    "url": "/tools/realestate-ecost/",
+    "phrase": "土地活用の契約で数万円の印紙代を捨てていませんか？電子契約なら印紙税0円になります。",
+    "color": "#0f172a",
+    "accent": "#d4a843"
+  },
+  "realestate-ecost": {
+    "next_id": "grant-checker",
+    "title": "外国人雇用 助成金シミュレーター",
+    "icon": "💴",
+    "url": "/grant-checker/",
+    "phrase": "コストを削るだけでなく、もらえるはずの資金も回収しましょう。受給可能額を30秒で診断。",
+    "color": "#064e3b",
+    "accent": "#6ee7b7"
+  },
+  "grant-checker": {
+    "next_id": "visa-checker",
+    "title": "外国人雇用・ビザ書類チェッカー",
+    "icon": "📋",
+    "url": "/visa-checker/",
+    "phrase": "助成金で雇用を強化するなら、ビザの不備による不法就労リスクをAIで即確認すべきです。",
+    "color": "#1e3a8a",
+    "accent": "#93c5fd"
+  },
+  "visa-checker": {
+    "next_id": "realestate-ecost",
+    "title": "不動産契約コスト削減シミュレーター",
+    "icon": "🏢",
+    "url": "/tools/realestate-ecost/",
+    "phrase": "外国人雇用に伴う大量の雇用契約書。郵送代と事務時間で年間何万円も損していませんか？",
+    "color": "#0f172a",
+    "accent": "#d4a843"
+  }
+};
+
+function renderRelatedTools(currentId) {
+  const el = document.getElementById('related-tools');
+  if (!el) return;
+  const chain = CHAIN_DATA[currentId];
+  if (!chain) return;
+
+  el.innerHTML = `
+    <a href="${chain.url}" style="
+      display:block;
+      background:${chain.color};
+      border-radius:14px;
+      padding:22px 24px;
+      text-decoration:none;
+      margin-top:28px;
+      position:relative;
+      overflow:hidden;
+      transition:transform .2s,box-shadow .2s;
+    "
+    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
+    onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <!-- 背景装飾 -->
+      <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
+      <!-- 上部ラベル -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:${chain.accent};opacity:.85;margin-bottom:8px">
+        🔗 次にチェックすべきツール
+      </div>
+      <!-- キラーフレーズ -->
+      <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.55;margin-bottom:14px;max-width:540px">
+        「${chain.phrase}」
+      </div>
+      <!-- ツール名バッジ -->
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
+        <span style="font-size:18px">${chain.icon}</span>
+        <span style="font-size:13px;font-weight:700;color:#fff">${chain.title}</span>
+        <span style="font-size:13px;color:${chain.accent};font-weight:700;margin-left:4px">→</span>
+      </div>
+    </a>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  renderRelatedTools('grant-checker');
+  injectBreadcrumbSchema([{"name": "ホーム", "url": "/"}, {"name": "外国人雇用", "url": "/grant-checker/"}, {"name": "助成金シミュレーター", "url": "/grant-checker/"}]);
+});
+</script>
 </body>
 </html>
