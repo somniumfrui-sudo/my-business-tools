@@ -592,17 +592,7 @@
     ]
   }
   </script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112"
-     crossorigin="anonymous"></script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1NSFNW2FB9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1NSFNW2FB9');
-</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -614,7 +604,6 @@
     <a href="/visa-checker/" class="active">📋 ビザ書類チェッカー</a>
     <a href="/grant-checker/">💴 助成金シミュレーター</a>
     <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
-    <a href="/realestate-ecost/">🏬 不動産契約コスト削減</a>
     <a href="/about/">運営者情報</a>
     <a href="/privacy/">プライバシーポリシー</a>
     <a href="/disclaimer/">免責事項</a>
@@ -796,17 +785,6 @@
 
 </div>
 
-<!-- ── フッター ── -->
-
-
-
-
-
-
-
-
-
-
 <style>
   .col-wrap article { background:#fff;border-radius:16px;border:1px solid #e5e7eb;padding:40px;margin:0 20px 40px;max-width:820px;margin-left:auto;margin-right:auto }
   .col-wrap .article-label { display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 12px;border-radius:99px;margin-bottom:16px }
@@ -977,6 +955,8 @@
 </article>
 </div>
 
+
+
 <!-- シェアボタン -->
 <div style="max-width:860px;margin:0 auto;padding:16px 20px;text-align:center">
   <p style="font-size:12px;color:#6b7280;margin-bottom:10px">診断結果をシェアする</p>
@@ -992,7 +972,8 @@
       LINE でシェア
     </a>
   </div>
-</div>
+
+<div id="related-tools"></div>
 <footer class="page-footer">
   <p>
     <a href="/">All AI Toolbox</a> &gt; ビザ書類チェッカー |
@@ -1718,11 +1699,10 @@ window.addEventListener("popstate", (e) => {
     }, 30);
   }
 });
-  
 </script>
 <script>
- 
- 
+
+
 /* ─── 循環内部リンクウィジェット（固定キラーフレーズ版）─── */
 const CHAIN_DATA = {
   "land-nav": {
@@ -1762,13 +1742,13 @@ const CHAIN_DATA = {
     "accent": "#d4a843"
   }
 };
- 
+
 function renderRelatedTools(currentId) {
   const el = document.getElementById('related-tools');
   if (!el) return;
   const chain = CHAIN_DATA[currentId];
   if (!chain) return;
- 
+
   el.innerHTML = `
     <a href="${chain.url}" style="
       display:block;
@@ -1802,7 +1782,7 @@ function renderRelatedTools(currentId) {
     </a>
   `;
 }
- 
+
 document.addEventListener('DOMContentLoaded',function(){
   renderRelatedTools('visa-checker');
   injectBreadcrumbSchema([{"name": "ホーム", "url": "/"}, {"name": "外国人雇用", "url": "/visa-checker/"}, {"name": "ビザ書類チェッカー", "url": "/visa-checker/"}]);
