@@ -1118,7 +1118,7 @@ function renderRelatedTools(currentId) {
   const chain = CHAIN_DATA[currentId];
   if (!chain) return;
 
- // 変更後（3点修正: ラベル削除・括弧削除・改行をnowrapで段落崩れ防止）
+// 変更後（3点修正: ラベル削除・括弧削除・改行をnowrapで段落崩れ防止）
 el.innerHTML = `
   <a href="${chain.url}" style="
     display:block;
