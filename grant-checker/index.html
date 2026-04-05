@@ -1085,6 +1085,7 @@ function renderRelatedTools(currentId) {
 el.innerHTML = `
   <a href="${chain.url}" style="
     display:block;
+    text-align:center;
     background:${chain.color};
     border-radius:14px;
     padding:22px 24px;
@@ -1097,7 +1098,7 @@ el.innerHTML = `
   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
   onmouseout="this.style.transform='';this.style.boxShadow=''">
     <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
-    <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;max-width:520px;word-break:keep-all">
+    <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;max-width:520px;word-break:keep-all;text-all;text-align:center;width:100%">
       ${chain.phrase}
     </div>
     <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
