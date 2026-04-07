@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KGR（キーワード・ゴールデン・レシオ）判定ツール｜SEOキーワード難易度を即スコア化 | All AI Toolbox</title>
+  <meta name="description" content="KGR（Keyword Golden Ratio）をリアルタイム計算。allintitle件数÷月間検索ボリュームで「お宝キーワード」を即判定。SEOブロガー・アフィリエイターに必須の無料ツール。">
+  <link rel="canonical" href="https://all-ai-toolbox.com/tools/kgr/">
+  <meta property="og:title" content="KGR判定シミュレーター | All AI Toolbox">
+  <meta property="og:description" content="allintitle÷検索ボリュームでKGRスコアを即計算。お宝キーワードを見つけよう。">
+  <meta property="og:type" content="website">
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7531267643624112" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0d1117;
+      --ink-soft: #24292f;
+      --ink-mute: #57606a;
+      --border:   #d0d7de;
+      --surface:  #f6f8fa;
+      --white:    #ffffff;
+
+      --great-bg:   #dff7ed;
+      --great-text: #0a6640;
+      --great-accent: #1a9e5c;
+      --great-glow:  rgba(26,158,92,.18);
+
+      --good-bg:    #fff8e1;
+      --good-text:  #7d4e00;
+      --good-accent:#e6a817;
+      --good-glow:  rgba(230,168,23,.18);
+
+      --bad-bg:     #ffeaea;
+      --bad-text:   #9e1a1a;
+      --bad-accent: #e63535;
+      --bad-glow:   rgba(230,53,53,.18);
+
+      --indigo:     #3730a3;
+      --indigo-light:#eef2ff;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.09);
+    }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── ナビ ─────────────────────────────────────── */
+    .portal-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .portal-logo { font-weight: 700; font-size: 15px; color: #1d4ed8; text-decoration: none; white-space: nowrap; }
+    .portal-nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .portal-nav::-webkit-scrollbar { display: none; }
+    .portal-nav a { font-size: 13px; color: var(--ink-mute); text-decoration: none; padding: 6px 12px; border-radius: 6px; white-space: nowrap; transition: background .15s; }
+    .portal-nav a:hover { background: var(--surface); }
+    .portal-nav a.active { background: var(--indigo-light); color: var(--indigo); font-weight: 600; }
+
+    /* ── ヒーロー ─────────────────────────────────── */
+    .hero {
+      background: var(--ink);
+      color: var(--white);
+      padding: 48px 20px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.03) 39px, rgba(255,255,255,.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.03) 39px, rgba(255,255,255,.03) 40px);
+    }
+    .hero::after {
+      content: "KGR";
+      position: absolute;
+      right: -20px;
+      bottom: -30px;
+      font-family: "Syne", sans-serif;
+      font-size: 160px;
+      font-weight: 800;
+      color: rgba(255,255,255,.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 860px; margin: 0 auto; position: relative; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.8);
+      border-radius: 99px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      margin-bottom: 16px;
+    }
+    .hero-title {
+      font-family: "Syne", "Noto Sans JP", sans-serif;
+      font-size: clamp(26px, 5vw, 44px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      letter-spacing: -.01em;
+    }
+    .hero-title span {
+      background: linear-gradient(90deg, #818cf8, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub { font-size: 14px; opacity: .75; max-width: 500px; line-height: 1.8; margin-bottom: 28px; }
+    .hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-tag {
+      font-size: 12px;
+      font-family: "DM Mono", monospace;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.7);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* ── パンくず ─────────────────────────────────── */
+    .breadcrumb { font-size: 12px; color: var(--ink-mute); padding: 12px 20px; max-width: 900px; margin: 0 auto; }
+    .breadcrumb a { color: var(--ink-mute); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--indigo); }
+    .breadcrumb span { margin: 0 6px; }
+
+    /* ── メイン ───────────────────────────────────── */
+    .main-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+    /* ── ツールカード ─────────────────────────────── */
+    .tool-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    /* ── インプットグリッド ───────────────────────── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 640px) { .input-grid { grid-template-columns: 1fr; } }
+
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-mute);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .input-group label span { color: #e63535; margin-left: 2px; }
+    .input-group input {
+      font-family: "DM Mono", monospace;
+      font-size: 15px;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      width: 100%;
+    }
+    .input-group input:focus {
+      border-color: var(--indigo);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(55,48,163,.1);
+    }
+    .input-group input::placeholder { color: #bbb; font-size: 13px; }
+    .input-hint { font-size: 11px; color: var(--ink-mute); }
+
+    /* ── 結果エリア ───────────────────────────────── */
+    .result-empty {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--ink-mute);
+      font-size: 13px;
+    }
+    .result-empty .empty-icon { font-size: 36px; margin-bottom: 10px; opacity: .4; }
+
+    .result-box {
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+      display: none;
+      animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .result-box.visible { display: block; }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.95) translateY(8px); }
+      to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+
+    /* 判定別カラー */
+    .result-great { background: var(--great-bg); border: 2px solid var(--great-accent); }
+    .result-good  { background: var(--good-bg);  border: 2px solid var(--good-accent); }
+    .result-bad   { background: var(--bad-bg);   border: 2px solid var(--bad-accent); }
+
+    .result-kw {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      opacity: .6;
+      margin-bottom: 6px;
+      font-family: "DM Mono", monospace;
+    }
+    .result-score-row {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .result-score {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(52px, 10vw, 80px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.02em;
+    }
+    .result-great .result-score { color: var(--great-accent); }
+    .result-good  .result-score { color: var(--good-accent); }
+    .result-bad   .result-score { color: var(--bad-accent); }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 99px;
+    }
+    .result-great .result-badge { background: var(--great-accent); color: #fff; }
+    .result-good  .result-badge { background: var(--good-accent);  color: #fff; }
+    .result-bad   .result-badge { background: var(--bad-accent);   color: #fff; }
+
+    .result-formula {
+      font-family: "DM Mono", monospace;
+      font-size: 13px;
+      opacity: .6;
+      margin-bottom: 14px;
+    }
+    .result-advice {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.65;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .result-great .result-advice { background: rgba(26,158,92,.12); color: var(--great-text); }
+    .result-good  .result-advice { background: rgba(230,168,23,.12); color: var(--good-text); }
+    .result-bad   .result-advice { background: rgba(230,53,53,.12);  color: var(--bad-text); }
+
+    /* ゲージバー */
+    .gauge-wrap { margin-bottom: 20px; }
+    .gauge-label { font-size: 11px; color: var(--ink-mute); margin-bottom: 5px; display: flex; justify-content: space-between; }
+    .gauge-track {
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(0,0,0,.08);
+      position: relative;
+      overflow: visible;
+    }
+    .gauge-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .5s cubic-bezier(.4,0,.2,1), background .3s;
+      position: relative;
+    }
+    .gauge-needle {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2.5px solid currentColor;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+      transition: left .5s cubic-bezier(.4,0,.2,1);
+    }
+    .gauge-zones {
+      display: flex;
+      margin-top: 5px;
+      height: 4px;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .zone-great { flex: 25; background: var(--great-accent); opacity: .3; }
+    .zone-good  { flex: 75; background: var(--good-accent);  opacity: .3; }
+    .zone-bad   { flex: 100; background: var(--bad-accent);   opacity: .3; }
+
+    /* アクションボタン */
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-family: "Noto Sans JP", sans-serif;
+      transition: all .15s;
+    }
+    .action-btn:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-light); }
+    .action-btn.copied { border-color: var(--great-accent); color: var(--great-accent); background: var(--great-bg); }
+
+    /* ── 判定基準カード ───────────────────────────── */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 540px) { .criteria-grid { grid-template-columns: 1fr; } }
+    .criteria-card {
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .criteria-card.great { background: var(--great-bg); border: 1.5px solid rgba(26,158,92,.25); }
+    .criteria-card.good  { background: var(--good-bg);  border: 1.5px solid rgba(230,168,23,.25); }
+    .criteria-card.bad   { background: var(--bad-bg);   border: 1.5px solid rgba(230,53,53,.25); }
+    .criteria-range { font-family: "DM Mono", monospace; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .criteria-card.great .criteria-range { color: var(--great-accent); }
+    .criteria-card.good  .criteria-range { color: var(--good-accent); }
+    .criteria-card.bad   .criteria-range { color: var(--bad-accent); }
+    .criteria-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .criteria-desc  { font-size: 11px; color: var(--ink-mute); line-height: 1.5; }
+
+    /* ── 複数キーワード比較 ───────────────────────── */
+    .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .history-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--ink-mute);
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    .history-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr:hover td { background: var(--surface); }
+    .score-pill {
+      display: inline-block;
+      font-family: "DM Mono", monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    .pill-great { background: var(--great-bg); color: var(--great-text); }
+    .pill-good  { background: var(--good-bg);  color: var(--good-text); }
+    .pill-bad   { background: var(--bad-bg);   color: var(--bad-text); }
+
+    .clear-btn {
+      font-size: 12px;
+      color: var(--ink-mute);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .clear-btn:hover { background: var(--surface); color: var(--bad-accent); }
+
+    /* ── コラムエリア ─────────────────────────────── */
+    .col-wrap article {
+      background: var(--white);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 40px;
+      margin-bottom: 40px;
+    }
+    .col-wrap .article-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 16px;
+    }
+    .col-wrap h1.article-title { font-size: clamp(18px,3vw,24px); font-weight: 700; line-height: 1.4; margin-bottom: 14px; color: var(--ink); }
+    .col-wrap .article-meta { font-size: 12px; color: var(--ink-mute); margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .col-wrap h2 { font-size: 17px; font-weight: 700; color: var(--ink); margin: 28px 0 10px; padding-left: 12px; border-left: 4px solid var(--indigo); }
+    .col-wrap h3 { font-size: 14px; font-weight: 700; color: var(--ink-soft); margin: 18px 0 8px; }
+    .col-wrap p { margin-bottom: 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.8; }
+    .col-wrap ul, .col-wrap ol { padding-left: 20px; margin-bottom: 14px; }
+    .col-wrap li { margin-bottom: 6px; color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
+    .col-wrap table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+    .col-wrap th, .col-wrap td { padding: 9px 12px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .col-wrap th { background: var(--surface); font-weight: 600; color: var(--ink-soft); }
+    .col-wrap strong { color: var(--ink); }
+    .col-wrap .info-box { border-radius: 10px; padding: 14px 18px; margin: 16px 0; }
+    .col-wrap .info-box p { margin: 0; font-size: 13px; }
+    .col-wrap .cta-box { border-radius: 12px; padding: 18px 20px; margin-top: 28px; text-align: center; }
+    .col-wrap .cta-box p { margin-bottom: 10px; font-weight: 600; font-size: 14px; }
+    .col-wrap .cta-btn { display: inline-block; padding: 11px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; color: #fff; }
+
+    /* ── フッター ─────────────────────────────────── */
+    .page-footer { font-size: 12px; color: var(--ink-mute); text-align: center; padding: 20px; border-top: 1px solid var(--border); max-width: 900px; margin: 0 auto; }
+    .page-footer a { color: var(--ink-mute); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .tool-card { padding: 20px; }
+      .hero { padding: 32px 16px 44px; }
+      .col-wrap article { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ナビ -->
+<nav class="portal-bar">
+  <a href="/" class="portal-logo">All AI Toolbox</a>
+  <div class="portal-nav">
+    <a href="/">🏠 ツール一覧</a>
+    <a href="/visa-checker/">📋 ビザ書類チェッカー</a>
+    <a href="/grant-checker/">💴 助成金シミュレーター</a>
+    <a href="/land-nav/">🗾 農地・山林活用ナビ</a>
+    <a href="/tools/realestate-ecost/">🏬 不動産契約コスト削減</a>
+    <a href="/tools/kgr/" class="active">🔍 KGR判定</a>
+    <a href="/about/">運営者情報</a>
+    <a href="/privacy/">プライバシーポリシー</a>
+    <a href="/disclaimer/">免責事項</a>
+    <a href="/contact/">お問い合わせ</a>
+  </div>
+</nav>
+
+<!-- ヒーロー -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🔍 SEOキーワード分析ツール</div>
+    <h1 class="hero-title">KGR <span>判定</span><br>シミュレーター</h1>
+    <p class="hero-sub">
+      allintitle件数 ÷ 月間検索ボリューム = KGRスコア。<br>
+      0.25未満の「お宝キーワード」を即座に見つけよう。
+    </p>
+    <div class="hero-tags">
+      <span class="hero-tag">KGR = allintitle / volume</span>
+      <span class="hero-tag">&lt; 0.25 → Great</span>
+      <span class="hero-tag">0.25〜1.00 → Good</span>
+      <span class="hero-tag">&gt; 1.00 → Bad</span>
+    </div>
+  </div>
+</div>
+
+<!-- パンくず -->
+<div class="breadcrumb">
+  <a href="/">ホーム</a><span>›</span>
+  <a href="/tools/kgr/">SEOツール</a><span>›</span>
+  <span style="color:var(--ink);font-weight:500">KGR判定シミュレーター</span>
+</div>
+
+<main class="main-wrap">
+
+  <!-- 判定基準カード -->
+  <div class="criteria-grid">
+    <div class="criteria-card great">
+      <div class="criteria-range">&lt; 0.25</div>
+      <div class="criteria-label">🟢 超お宝（Great!）</div>
+      <div class="criteria-desc">競合が少なく上位表示しやすい。即記事作成を推奨。</div>
+    </div>
+    <div class="criteria-card good">
+      <div class="criteria-range">0.25 〜 1.00</div>
+      <div class="criteria-label">🟡 狙い目（Good）</div>
+      <div class="criteria-desc">書き方次第で上位を狙える。質の高い記事が必要。</div>
+    </div>
+    <div class="criteria-card bad">
+      <div class="criteria-range">&gt; 1.00</div>
+      <div class="criteria-label">🔴 激戦区（Bad）</div>
+      <div class="criteria-desc">競合が多く初心者には厳しい。別KWを探そう。</div>
+    </div>
+  </div>
+
+  <!-- メインツールカード -->
+  <div class="tool-card">
+    <div style="font-size:14px;font-weight:700;color:var(--ink-soft);margin-bottom:18px;display:flex;align-items:center;gap:8px">
+      <span style="width:4px;height:18px;background:var(--indigo);border-radius:2px;display:inline-block"></span>
+      キーワードを入力してください（リアルタイム計算）
+    </div>
+
+    <!-- 入力フォーム -->
+    <div class="input-grid">
+      <div class="input-group" style="grid-column: 1 / -1">
+        <label>キーワード名</label>
+        <input type="text" id="inp-kw" placeholder="例：KGR キーワード 調べ方" oninput="calc()">
+        <span class="input-hint">任意。結果表示に使用します。</span>
+      </div>
+      <div class="input-group">
+        <label>月間検索ボリューム <span>*</span></label>
+        <input type="number" id="inp-vol" placeholder="例：500" min="1" oninput="calc()">
+        <span class="input-hint">Googleキーワードプランナー等で確認</span>
+      </div>
+      <div class="input-group">
+        <label>allintitle件数 <span>*</span></label>
+        <input type="number" id="inp-title" placeholder="例：45" min="0" oninput="calc()">
+        <span class="input-hint">Google検索: allintitle:キーワード</span>
+      </div>
+      <div class="input-group" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <button onclick="addToHistory()" style="
+          font-family:'Noto Sans JP',sans-serif;
+          font-size:13px;font-weight:700;
+          padding:11px 18px;
+          background:var(--ink);color:#fff;
+          border:none;border-radius:var(--radius);
+          cursor:pointer;transition:background .15s;
+          height:44px;
+        " onmouseover="this.style.background='#3730a3'" onmouseout="this.style.background='var(--ink)'">
+          + 比較リストに追加
+        </button>
+      </div>
+    </div>
+
+    <!-- 結果エリア -->
+    <div id="result-empty" class="result-empty">
+      <div class="empty-icon">🔍</div>
+      月間検索ボリュームと allintitle件数を入力するとスコアが表示されます
+    </div>
+
+    <div id="result-box" class="result-box">
+      <div id="res-kw" class="result-kw"></div>
+      <div class="result-score-row">
+        <div id="res-score" class="result-score"></div>
+        <div id="res-badge" class="result-badge"></div>
+      </div>
+      <div id="res-formula" class="result-formula"></div>
+
+      <!-- ゲージ -->
+      <div class="gauge-wrap">
+        <div class="gauge-label">
+          <span>0</span>
+          <span style="color:var(--great-accent)">0.25</span>
+          <span style="color:var(--good-accent)">1.00</span>
+          <span>1.50+</span>
+        </div>
+        <div class="gauge-track">
+          <div id="gauge-fill" class="gauge-fill">
+            <div id="gauge-needle" class="gauge-needle"></div>
+          </div>
+        </div>
+        <div class="gauge-zones">
+          <div class="zone-great"></div>
+          <div class="zone-good"></div>
+          <div class="zone-bad"></div>
+        </div>
+      </div>
+
+      <div id="res-advice" class="result-advice"></div>
+
+      <!-- アクション -->
+      <div class="action-row">
+        <button class="action-btn" id="copy-btn" onclick="copyResult()">📋 結果をコピー</button>
+        <button class="action-btn" onclick="resetForm()">↺ リセット</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 比較テーブル -->
+  <div class="tool-card" id="history-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;gap:8px">
+        <span style="width:4px;height:18px;background:var(--indigo);border-radius:2px;display:inline-block"></span>
+        キーワード比較リスト
+      </div>
+      <button class="clear-btn" onclick="clearHistory()">🗑 すべて削除</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>キーワード</th>
+            <th>検索ボリューム</th>
+            <th>allintitle</th>
+            <th>KGRスコア</th>
+            <th>判定</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- allintitle確認ガイド -->
+  <div class="tool-card" style="background:var(--indigo-light);border-color:#c7d2fe">
+    <div style="font-size:14px;font-weight:700;color:var(--indigo);margin-bottom:12px">💡 allintitle件数の調べ方</div>
+    <div style="font-size:13px;color:var(--ink-soft);line-height:1.8">
+      Googleの検索窓に <code style="background:var(--ink);color:#e6db74;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px">allintitle:調べたいキーワード</code> と入力して検索。
+      表示される「約○○件」がallintitle件数です。<br>
+      <span style="font-size:12px;color:var(--ink-mute)">※ Googleの結果数は変動します。調査日を記録しておくことを推奨します。</span>
+    </div>
+  </div>
+
+</main>
+
+<!-- コラム記事 -->
+<div class="col-wrap" style="max-width:900px;margin:0 auto;padding:0 20px">
+<article>
+  <span class="article-label" style="background:var(--indigo-light);color:var(--indigo)">🔍 SEO解説</span>
+  <h1 class="article-title">KGR（キーワード・ゴールデン・レシオ）完全ガイド：お宝キーワードの見つけ方と実践的な使い方</h1>
+  <div class="article-meta">
+    参考：Doug Cunnington「Keyword Golden Ratio」（原著）／Google検索セントラル ガイドライン（2026年版）　最終更新：2026年4月
+  </div>
+
+  <h2>KGRとは何か？SEO初心者が最初に覚えるべき指標</h2>
+  <p>
+    KGR（Keyword Golden Ratio）とは、アフィリエイターのDoug Cunningtonが考案したSEOキーワード選定の指標です。計算式はシンプルで、<strong>「allintitle件数 ÷ 月間検索ボリューム」</strong>で求められます。
+  </p>
+  <p>
+    この指標が革命的なのは、「検索ボリュームが小さくても勝てるキーワード」を定量的に見つけられる点です。ドメインパワーが弱い新規サイトでも、KGR0.25未満のキーワードを狙えば<strong>公開から数日〜数週間で上位表示</strong>できるケースがあります。
+  </p>
+
+  <h2>KGRの判定基準と意味</h2>
+  <table>
+    <tr><th>KGRスコア</th><th>判定</th><th>意味</th><th>推奨アクション</th></tr>
+    <tr><td><strong>&lt; 0.25</strong></td><td>🟢 超お宝（Great）</td><td>allintitleが少なく競合が薄い</td><td>即記事作成を推奨</td></tr>
+    <tr><td><strong>0.25〜1.00</strong></td><td>🟡 狙い目（Good）</td><td>競合はいるが勝てる可能性あり</td><td>質の高い記事で差別化</td></tr>
+    <tr><td><strong>&gt; 1.00</strong></td><td>🔴 激戦区（Bad）</td><td>競合が多く初心者には厳しい</td><td>別キーワードを探す</td></tr>
+  </table>
+
+  <h2>allintitleとは？正確な調べ方</h2>
+  <p>
+    <strong>allintitle:</strong>はGoogleの検索演算子で、「タイトルにすべての指定単語を含むページ数」を返します。これは直接の競合数に近い数値であり、KGR計算において最重要の入力値です。
+  </p>
+  <h3>allintitle件数の調べ手順</h3>
+  <ol>
+    <li>Googleの検索窓に <code>allintitle:調べたいキーワード</code> と入力</li>
+    <li>検索結果の上部に表示される「約○○件」を記録</li>
+    <li>ただし件数は変動するため、<strong>同日中に複数キーワードを調査</strong>することを推奨</li>
+  </ol>
+  <div class="info-box" style="background:#fffbeb;border-left:4px solid #e6a817">
+    <p>⚠️ <strong>注意</strong>：Googleのallintitle件数は日によって変動します。KGR調査は同じ日・同じ時間帯にまとめて行うと比較精度が上がります。</p>
+  </div>
+
+  <h2>月間検索ボリュームの取得方法</h2>
+  <p>KGR計算に使う検索ボリュームは以下のツールで取得できます。</p>
+  <table>
+    <tr><th>ツール名</th><th>費用</th><th>精度</th><th>特徴</th></tr>
+    <tr><td>Googleキーワードプランナー</td><td>無料</td><td>△</td><td>幅で表示（100〜1,000等）。広告アカウント必要</td></tr>
+    <tr><td>Ubersuggest</td><td>無料（制限あり）</td><td>○</td><td>日本語対応・初心者向け</td></tr>
+    <tr><td>Ahrefs / SEMrush</td><td>有料</td><td>◎</td><td>最も精度が高いが月額数万円</td></tr>
+    <tr><td>ラッコキーワード</td><td>無料</td><td>△</td><td>関連キーワード発見に優れる</td></tr>
+  </table>
+  <p>
+    KGRは<strong>厳密な数値でなくても有効</strong>です。Googleキーワードプランナーの幅表示（例：100〜1,000）であれば、保守的に上限値（1,000）で計算するとリスクが低くなります。
+  </p>
+
+  <h2>KGRを使ったキーワード選定の実践フロー</h2>
+  <ol>
+    <li><strong>ラッコキーワードでサジェストを一括取得</strong>：メインキーワードを入力して関連語を全収集</li>
+    <li><strong>検索ボリュームを取得</strong>：Googleキーワードプランナーで月間ボリューム確認</li>
+    <li><strong>ボリューム250以下に絞る</strong>：KGRは低ボリューム（250以下）のキーワードで特に有効</li>
+    <li><strong>allintitle件数を取得</strong>：候補キーワードをまとめてallintitle検索</li>
+    <li><strong>KGR計算</strong>：本ツールで一括スコア計算・比較</li>
+    <li><strong>KGR 0.25未満から優先的に記事化</strong></li>
+  </ol>
+
+  <h2>KGRの限界と注意点</h2>
+  <p>
+    KGRは強力な指標ですが、万能ではありません。以下の点に注意が必要です。
+  </p>
+  <ul>
+    <li><strong>検索意図との一致が必須</strong>：KGRが低くても、検索意図に合わない記事は上位に来ません</li>
+    <li><strong>低ボリューム前提の指標</strong>：月間検索数が1,000を超えるキーワードではKGRの有効性が下がります</li>
+    <li><strong>YMYLジャンルは別</strong>：医療・金融・法律系はGoogleが専門性・権威性を重視するため、KGRだけでは判断できません</li>
+    <li><strong>allintitle件数の変動</strong>：Googleのインデックス変動により件数が変わることがあります</li>
+  </ul>
+
+  <h2>KGRとpSEOの組み合わせ戦略</h2>
+  <p>
+    KGRとpSEO（プログラマティックSEO）を組み合わせると、大量の「お宝キーワード」を効率的に攻略できます。たとえば「[都道府県名] + [ニッチなサービス名]」という組み合わせは、個別のボリュームは小さくても、47都道府県分を一括作成すると合計で大きな流入を生み出せます。
+  </p>
+  <p>
+    本サイト（All AI Toolbox）もこの戦略を採用しており、ビザ書類チェッカーや農地・山林活用ナビでpSEOページを500ページ以上作成しています。
+  </p>
+
+  <div class="cta-box" style="background:var(--indigo-light);border:1.5px solid #c7d2fe">
+    <p>お宝キーワードを今すぐ判定する</p>
+    <a href="/tools/kgr/" class="cta-btn" style="background:var(--indigo)">🔍 KGR判定シミュレーターを使う</a>
+  </div>
+</article>
+</div>
+
+<!-- SNSシェア -->
+<div style="max-width:900px;margin:0 auto;padding:16px 20px;text-align:center">
+  <p style="font-size:12px;color:var(--ink-mute);margin-bottom:10px">このツールをシェアする</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <a href="https://twitter.com/intent/tweet?text=KGRスコアを即計算できる無料ツール。allintitle÷検索ボリュームでお宝キーワードを発見しよう。%20%23AllAIToolbox%20%23SEO&url=https://all-ai-toolbox.com/tools/kgr/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#000;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      𝕏 でシェア
+    </a>
+    <a href="https://line.me/R/msg/text/?KGRスコアを即計算できる無料ツール。allintitle÷検索ボリュームでお宝キーワードを発見しよう。%20https://all-ai-toolbox.com/tools/kgr/"
+       target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;background:#06c755;color:#fff;text-decoration:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600">
+      LINE でシェア
+    </a>
+  </div>
+</div>
+
+<!-- 循環リンク -->
+<div style="max-width:900px;margin:0 auto;padding:0 20px">
+  <div id="related-tools"></div>
+</div>
+
+<footer class="page-footer">
+  &copy; 2026 All AI Toolbox ―
+  <a href="/">ホーム</a> /
+  <a href="/about/">運営者情報</a> /
+  <a href="/privacy/">プライバシーポリシー</a> /
+  <a href="/disclaimer/">免責事項</a>
+</footer>
+
+<script>
+/* ════════════════════════════════════════
+   KGR計算ロジック
+════════════════════════════════════════ */
+let history_list = [];
+
+const RATINGS = {
+  great: {
+    cls:    'result-great',
+    badge:  '🟢 超お宝（Great!）',
+    pillCls:'pill-great',
+    label:  'Great',
+    gaugeColor: '#1a9e5c',
+    advice: '競合がほとんどいないお宝キーワードです。今すぐ記事を書きましょう。新規サイトでも公開から数週間以内の上位表示が期待できます。',
+  },
+  good: {
+    cls:    'result-good',
+    badge:  '🟡 狙い目（Good）',
+    pillCls:'pill-good',
+    label:  'Good',
+    gaugeColor: '#e6a817',
+    advice: '十分に狙えるキーワードです。検索意図に完全に一致した、質の高い記事を書けば上位を狙えます。競合記事を分析してから執筆しましょう。',
+  },
+  bad: {
+    cls:    'result-bad',
+    badge:  '🔴 激戦区（Bad）',
+    pillCls:'pill-bad',
+    label:  'Bad',
+    gaugeColor: '#e63535',
+    advice: '競合が多く、新規サイトには厳しいキーワードです。より具体的な複合キーワード（ロングテール）に絞り込むか、別のキーワードを探しましょう。',
+  },
+};
+
+function getRating(kgr) {
+  if (kgr < 0.25)  return 'great';
+  if (kgr <= 1.00) return 'good';
+  return 'bad';
+}
+
+function calc() {
+  const vol   = parseFloat(document.getElementById('inp-vol').value);
+  const title = parseFloat(document.getElementById('inp-title').value);
+  const kw    = document.getElementById('inp-kw').value.trim();
+
+  const empty = document.getElementById('result-empty');
+  const box   = document.getElementById('result-box');
+
+  if (!vol || vol <= 0 || isNaN(title) || title < 0) {
+    empty.style.display = 'block';
+    box.className = 'result-box';
+    return;
+  }
+
+  const kgr    = title / vol;
+  const rating = getRating(kgr);
+  const R      = RATINGS[rating];
+
+  empty.style.display = 'none';
+  box.className = `result-box visible ${R.cls}`;
+
+  document.getElementById('res-kw').textContent    = kw ? `キーワード: ${kw}` : '';
+  document.getElementById('res-score').textContent = kgr.toFixed(4);
+  document.getElementById('res-badge').textContent = R.badge;
+  document.getElementById('res-badge').className   = `result-badge`;
+  document.getElementById('res-formula').textContent =
+    `KGR = ${title} ÷ ${vol} = ${kgr.toFixed(4)}`;
+  document.getElementById('res-advice').textContent = R.advice;
+
+  // ゲージ（最大1.5でクランプ）
+  const pct = Math.min(kgr / 1.5, 1) * 100;
+  const fill   = document.getElementById('gauge-fill');
+  const needle = document.getElementById('gauge-needle');
+  fill.style.width      = pct + '%';
+  fill.style.background = R.gaugeColor;
+  needle.style.left     = '100%';
+  needle.style.color    = R.gaugeColor;
+}
+
+function copyResult() {
+  const vol   = parseFloat(document.getElementById('inp-vol').value);
+  const title = parseFloat(document.getElementById('inp-title').value);
+  const kw    = document.getElementById('inp-kw').value.trim();
+  if (!vol || isNaN(title)) return;
+
+  const kgr    = (title / vol).toFixed(4);
+  const rating = getRating(title / vol);
+  const text = [
+    '【KGR判定結果 - All AI Toolbox】',
+    kw ? `キーワード: ${kw}` : '',
+    `KGRスコア: ${kgr}`,
+    `判定: ${RATINGS[rating].label}`,
+    `計算: ${title} ÷ ${vol} = ${kgr}`,
+    `判定基準: <0.25=Great / 0.25〜1.00=Good / >1.00=Bad`,
+    `ツールURL: https://all-ai-toolbox.com/tools/kgr/`,
+  ].filter(Boolean).join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 結果をコピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function addToHistory() {
+  const vol   = parseFloat(document.getElementById('inp-vol').value);
+  const title = parseFloat(document.getElementById('inp-title').value);
+  const kw    = document.getElementById('inp-kw').value.trim() || '（未入力）';
+  if (!vol || vol <= 0 || isNaN(title)) return;
+
+  const kgr    = title / vol;
+  const rating = getRating(kgr);
+  history_list.push({ kw, vol, title, kgr, rating });
+  renderHistory();
+}
+
+function renderHistory() {
+  const card = document.getElementById('history-card');
+  const body = document.getElementById('history-body');
+  if (!history_list.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  body.innerHTML = history_list.map((item, i) => `
+    <tr>
+      <td style="font-weight:600">${item.kw}</td>
+      <td style="font-family:'DM Mono',monospace">${item.vol.toLocaleString()}</td>
+      <td style="font-family:'DM Mono',monospace">${item.title}</td>
+      <td><span class="score-pill ${RATINGS[item.rating].pillCls}">${item.kgr.toFixed(4)}</span></td>
+      <td>${RATINGS[item.rating].badge}</td>
+      <td><button class="clear-btn" onclick="removeHistory(${i})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function removeHistory(i) {
+  history_list.splice(i, 1);
+  renderHistory();
+}
+
+function clearHistory() {
+  history_list = [];
+  renderHistory();
+}
+
+function resetForm() {
+  document.getElementById('inp-kw').value    = '';
+  document.getElementById('inp-vol').value   = '';
+  document.getElementById('inp-title').value = '';
+  document.getElementById('result-empty').style.display = 'block';
+  document.getElementById('result-box').className = 'result-box';
+}
+
+/* ════════════════════════════════════════
+   循環リンクウィジェット
+════════════════════════════════════════ */
+const CHAIN_DATA = {
+  "kgr": {
+    url: "/tools/realestate-ecost/",
+    title: "不動産契約コスト削減シミュレーター",
+    icon: "🏬",
+    phrase: "SEOでアクセスを集めたら、コスト削減も同時に進めましょう。年間いくら節約できるか30秒で試算。",
+    color: "#0f172a",
+    accent: "#d4a843"
+  }
+};
+
+function renderRelatedTools(currentId) {
+  const el = document.getElementById('related-tools');
+  if (!el) return;
+  const chain = CHAIN_DATA[currentId];
+  if (!chain) return;
+  el.innerHTML = `
+    <a href="${chain.url}" style="
+      display:block;text-align:center;
+      background:${chain.color};
+      border-radius:14px;
+      padding:22px 24px;
+      text-decoration:none;
+      margin-top:28px;
+      position:relative;
+      overflow:hidden;
+      transition:transform .2s,box-shadow .2s;
+    "
+    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
+    onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
+      <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;max-width:520px;word-break:keep-all;text-align:center;width:100%;margin-left:auto;margin-right:auto">
+        ${chain.phrase}
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
+        <span style="font-size:18px">${chain.icon}</span>
+        <span style="font-size:13px;font-weight:700;color:#fff">${chain.title}</span>
+        <span style="font-size:13px;color:${chain.accent};font-weight:700;margin-left:4px">→</span>
+      </div>
+    </a>
+  `;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderRelatedTools('kgr');
+});
+</script>
+
+</body>
+</html>
