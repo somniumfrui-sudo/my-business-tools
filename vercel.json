@@ -49,6 +49,22 @@
       "destination": "/disclaimer/index.html"
     },
     {
+      "source": "/columns/",
+      "destination": "/columns/index.html"
+    },
+    {
+      "source": "/contact/",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/tools/realestate-ecost/",
+      "destination": "/tools/realestate-ecost/index.html"
+    },
+    {
+      "source": "/tools/kgr/",
+      "destination": "/tools/kgr/index.html"
+    },
+    {
       "source": "/visa-checker/:path*",
       "destination": "/visa-checker/index.html"
     }
