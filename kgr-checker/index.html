@@ -911,51 +911,7 @@ function resetForm() {
   document.getElementById('result-box').className = 'result-box';
 }
 
-/* ════════════════════════════════════════
-   循環リンクウィジェット
-════════════════════════════════════════ */
-const CHAIN_DATA = {
-  "kgr": {
-    url: "/tools/realestate-ecost/",
-    title: "不動産契約コスト削減シミュレーター",
-    icon: "🏬",
-    phrase: "SEOでアクセスを集めたら、コスト削減も同時に進めましょう。年間いくら節約できるか30秒で試算。",
-    color: "#0f172a",
-    accent: "#d4a843"
-  }
-};
 
-function renderRelatedTools(currentId) {
-  const el = document.getElementById('related-tools');
-  if (!el) return;
-  const chain = CHAIN_DATA[currentId];
-  if (!chain) return;
-  el.innerHTML = `
-    <a href="${chain.url}" style="
-      display:block;text-align:center;
-      background:${chain.color};
-      border-radius:14px;
-      padding:22px 24px;
-      text-decoration:none;
-      margin-top:28px;
-      position:relative;
-      overflow:hidden;
-      transition:transform .2s,box-shadow .2s;
-    "
-    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,.25)'"
-    onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.07;line-height:1;pointer-events:none">${chain.icon}</div>
-      <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.6;margin-bottom:16px;max-width:520px;word-break:keep-all;text-align:center;width:100%;margin-left:auto;margin-right:auto">
-        ${chain.phrase}
-      </div>
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px">
-        <span style="font-size:18px">${chain.icon}</span>
-        <span style="font-size:13px;font-weight:700;color:#fff">${chain.title}</span>
-        <span style="font-size:13px;color:${chain.accent};font-weight:700;margin-left:4px">→</span>
-      </div>
-    </a>
-  `;
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   // 追加処理があればここに
