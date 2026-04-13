@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>館林グルメマップ｜支払い方法で探せる飲食店マップ</title>
-  <meta name="description" content="館林駅周辺の個人経営飲食店の支払い方法（現金・カード・PayPay等）がひと目でわかる地図アプリ。">
+  <title>飲食店お支払い方法マップ｜現金・カード・PayPay対応店舗を地図で検索</title>
+  <meta name="description" content="全国の飲食店の支払い方法（現金・カード・PayPay・交通系IC等）がひと目でわかる地図アプリ。お店を探すときの参考に。">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
@@ -340,13 +340,9 @@
 
 <!-- ヘッダー -->
 <header class="app-header">
-  <div class="app-logo">🍽 館林<span>グルメマップ</span></div>
+  <div class="app-logo">🗺 飲食店<span>お支払い方法マップ</span></div>
   <div class="header-filters" id="filter-bar">
-    <button class="filter-chip active" data-filter="all" onclick="filterStores('all', this)">🗺 すべて</button>
-    <button class="filter-chip" data-filter="paypay" onclick="filterStores('paypay', this)">PayPay</button>
-    <button class="filter-chip" data-filter="card" onclick="filterStores('card', this)">カード</button>
-    <button class="filter-chip" data-filter="ic" onclick="filterStores('ic', this)">交通系IC</button>
-    <button class="filter-chip" data-filter="cash" onclick="filterStores('cash', this)">現金のみ</button>
+    <!-- JSで動的生成 -->
   </div>
   <div class="store-count" id="store-count"></div>
 </header>
@@ -378,12 +374,9 @@
 </div>
 
 <!-- 凡例 -->
-<div class="legend">
-  <div class="legend-title">カテゴリー</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#c4622d"></div>和食・定食</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#2d6a8a"></div>ラーメン・麺</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#2d4a3e"></div>カフェ・喫茶</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#8a2d6a"></div>洋食・その他</div>
+<div class="legend" id="legend">
+  <div class="legend-title">ジャンル</div>
+  <!-- JSで動的生成 -->
 </div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -393,13 +386,23 @@
 /* ════════════════════════════════════
    店舗データ
 ════════════════════════════════════ */
+const GENRES = [
+  { id: "japanese", label: "和食・定食",    icon: "🍣" },
+  { id: "ramen",    label: "ラーメン・麺類", icon: "🍜" },
+  { id: "fast",     label: "ファストフード", icon: "🍔" },
+  { id: "asian",    label: "中華・アジアン", icon: "🥟" },
+  { id: "cafe",     label: "カフェ・喫茶",  icon: "☕" },
+  { id: "western",  label: "洋食・西洋",    icon: "🍝" },
+  { id: "izakaya",  label: "居酒屋・バー",  icon: "🍷" },
+  { id: "sweets",   label: "スイーツ",      icon: "🍰" },
+  { id: "other",    label: "その他",        icon: "🍽️" },
+];
+
 const STORES = [
   {
     id: 1,
     name: "食堂 たてばやし",
-    category: "和食・定食",
-    categoryColor: "#c4622d",
-    icon: "🍱",
+    genreId: "japanese",
     lat: 36.2448,
     lng: 139.5392,
     address: "館林市本町2丁目",
@@ -415,9 +418,7 @@ const STORES = [
   {
     id: 2,
     name: "らーめん 弐六家",
-    category: "ラーメン・麺",
-    categoryColor: "#2d6a8a",
-    icon: "🍜",
+    genreId: "ramen",
     lat: 36.2432,
     lng: 139.5418,
     address: "館林市仲町",
@@ -434,9 +435,7 @@ const STORES = [
   {
     id: 3,
     name: "喫茶 くすのき",
-    category: "カフェ・喫茶",
-    categoryColor: "#2d4a3e",
-    icon: "☕",
+    genreId: "cafe",
     lat: 36.2461,
     lng: 139.5375,
     address: "館林市城町",
@@ -450,9 +449,7 @@ const STORES = [
   {
     id: 4,
     name: "ビストロ マルシェ",
-    category: "洋食・その他",
-    categoryColor: "#8a2d6a",
-    icon: "🍽",
+    genreId: "western",
     lat: 36.2439,
     lng: 139.5403,
     address: "館林市楠町",
@@ -470,9 +467,7 @@ const STORES = [
   {
     id: 5,
     name: "うどん 麦の里",
-    category: "和食・定食",
-    categoryColor: "#c4622d",
-    icon: "🍜",
+    genreId: "japanese",
     lat: 36.2455,
     lng: 139.5430,
     address: "館林市緑町",
@@ -494,8 +489,8 @@ let activeMarker = null;
    地図初期化
 ════════════════════════════════════ */
 const map = L.map('map', {
-  center: [36.2445, 139.5400],
-  zoom: 16,
+  center: [35.6812, 139.7671],
+  zoom: 13,
   zoomControl: true,
 });
 
@@ -507,20 +502,26 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 /* ════════════════════════════════════
    マーカー生成
 ════════════════════════════════════ */
+function getGenre(store) {
+  return GENRES.find(g => g.id === store.genreId) || GENRES[GENRES.length - 1];
+}
+
 function createMarkerIcon(store, isActive = false) {
-  const size = isActive ? 44 : 36;
+  const genre = getGenre(store);
+  const size = isActive ? 48 : 40;
+  const bg = isActive ? '#c4622d' : '#2d4a3e';
   const html = `
     <div style="
       width:${size}px;height:${size}px;
       border-radius:50% 50% 50% 0;
       transform:rotate(-45deg);
-      background:${store.categoryColor};
+      background:${bg};
       display:flex;align-items:center;justify-content:center;
-      box-shadow:0 3px 10px rgba(0,0,0,.3);
-      border:2px solid rgba(255,255,255,.8);
+      box-shadow:0 3px 12px rgba(0,0,0,.35);
+      border:2px solid rgba(255,255,255,.9);
       transition:all .2s;
     ">
-      <span style="transform:rotate(45deg);font-size:${isActive?18:14}px;line-height:1">${store.icon}</span>
+      <span style="transform:rotate(45deg);font-size:${isActive?20:16}px;line-height:1">${genre.icon}</span>
     </div>
   `;
   return L.divIcon({
@@ -539,6 +540,7 @@ function renderMarkers() {
 
   const filtered = STORES.filter(s => {
     if (activeFilter === 'all') return true;
+    if (filterMode === 'genre') return s.genreId === activeFilter;
     if (activeFilter === 'cash') return s.payments.length === 1 && s.payments[0].id === 'cash';
     return s.payments.some(p => p.id === activeFilter);
   });
@@ -571,7 +573,8 @@ function openPanel(store, marker) {
   activeMarker = marker;
 
   // パネルに情報を入れる
-  document.getElementById('p-category').innerHTML = `${store.icon} ${store.category}`;
+  const genre = getGenre(store);
+  document.getElementById('p-category').innerHTML = `${genre.icon} ${genre.label}`;
   document.getElementById('p-name').textContent = store.name;
   document.getElementById('p-address').innerHTML = `📍 ${store.address}`;
   document.getElementById('p-note').textContent = store.note;
@@ -605,14 +608,13 @@ function closePanel() {
 /* ════════════════════════════════════
    フィルター
 ════════════════════════════════════ */
-function filterStores(filter, btn) {
-  activeFilter = filter;
+let filterMode = 'payment'; // 'payment' or 'genre'
 
-  // チップのアクティブ状態
+function filterStores(filter, btn, mode) {
+  activeFilter = filter;
+  filterMode = mode || 'payment';
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
-
-  // パネルを閉じてマーカー再描画
   closePanel();
   renderMarkers();
 }
@@ -626,6 +628,48 @@ map.on('click', () => closePanel());
    初期化
 ════════════════════════════════════ */
 window.addEventListener('load', function() {
+  // フィルターチップを動的生成
+  const bar = document.getElementById('filter-bar');
+  const payFilters = [
+    { id: 'all',    label: '🗺 すべて' },
+    { id: 'paypay', label: 'PayPay' },
+    { id: 'card',   label: 'カード' },
+    { id: 'ic',     label: '交通系IC' },
+    { id: 'cash',   label: '現金のみ' },
+  ];
+  payFilters.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (i === 0 ? ' active' : '');
+    btn.dataset.filter = f.id;
+    btn.textContent = f.label;
+    btn.onclick = () => filterStores(f.id, btn, 'payment');
+    bar.appendChild(btn);
+  });
+
+  // ジャンルフィルター
+  const sep = document.createElement('span');
+  sep.style.cssText = 'color:rgba(255,255,255,.3);font-size:12px;align-self:center;flex-shrink:0';
+  sep.textContent = '｜';
+  bar.appendChild(sep);
+
+  GENRES.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip';
+    btn.dataset.filter = g.id;
+    btn.textContent = g.icon + ' ' + g.label;
+    btn.onclick = () => filterStores(g.id, btn, 'genre');
+    bar.appendChild(btn);
+  });
+
+  // 凡例を動的生成
+  const legend = document.getElementById('legend');
+  GENRES.forEach(g => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span style="font-size:14px">${g.icon}</span>${g.label}`;
+    legend.appendChild(item);
+  });
+
   renderMarkers();
 });
 </script>
