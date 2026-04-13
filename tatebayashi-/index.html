@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>館林グルメマップ｜支払い方法で探せる飲食店マップ</title>
+  <meta name="description" content="館林駅周辺の個人経営飲食店の支払い方法（現金・カード・PayPay等）がひと目でわかる地図アプリ。">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Kaisei+Decol:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:    #faf6ef;
+      --cream-d:  #f0e8d8;
+      --terra:    #c4622d;
+      --terra-l:  #e07848;
+      --green:    #2d4a3e;
+      --green-l:  #3d6b5a;
+      --ink:      #1a1208;
+      --muted:    #7a6a58;
+      --white:    #ffffff;
+      --shadow:   0 4px 24px rgba(26,18,8,.14);
+      --shadow-lg:0 8px 40px rgba(26,18,8,.18);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background: var(--green);
+    }
+
+    /* ── ヘッダー ─────────────────────────── */
+    .app-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: var(--green);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    }
+    .app-logo {
+      font-family: "Kaisei Decol", serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cream);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .app-logo span { color: var(--terra-l); }
+
+    .header-filters {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex: 1;
+    }
+    .header-filters::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1.5px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.75);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .filter-chip:hover { border-color: var(--terra-l); color: var(--cream); }
+    .filter-chip.active {
+      background: var(--terra);
+      border-color: var(--terra);
+      color: var(--white);
+    }
+
+    .store-count {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      white-space: nowrap;
+    }
+
+    /* ── 地図 ─────────────────────────────── */
+    #map {
+      position: fixed;
+      top: 52px;
+      left: 0; right: 0; bottom: 0;
+    }
+
+    /* ── 店舗パネル ───────────────────────── */
+    .store-panel {
+      position: fixed;
+      top: 64px;
+      left: 12px;
+      width: 320px;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      z-index: 900;
+      overflow: hidden;
+      transform: translateX(-360px);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .store-panel.open { transform: translateX(0); }
+
+    @media (max-width: 480px) {
+      .store-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .store-panel.open { transform: translateY(0); }
+    }
+
+    /* パネルヘッダー */
+    .panel-header {
+      background: var(--green);
+      padding: 16px 18px 14px;
+      position: relative;
+    }
+    .panel-category {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: rgba(255,255,255,.55);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .panel-name {
+      font-family: "Kaisei Decol", serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .panel-address {
+      font-size: 11px;
+      color: rgba(255,255,255,.5);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .panel-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      border: none;
+      color: rgba(255,255,255,.7);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: background .15s;
+    }
+    .panel-close:hover { background: rgba(255,255,255,.22); }
+
+    /* パネルボディ */
+    .panel-body { padding: 16px 18px; }
+
+    .panel-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* 支払い方法グリッド */
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .payment-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+      transition: transform .1s;
+    }
+    .payment-badge:hover { transform: scale(1.04); }
+    .payment-badge .pay-icon { font-size: 22px; line-height: 1; }
+
+    .pay-cash    { background: #f0fdf4; color: #166534; }
+    .pay-card    { background: #eff6ff; color: #1e40af; }
+    .pay-paypay  { background: #fff1f2; color: #be123c; }
+    .pay-ic      { background: #faf5ff; color: #6b21a8; }
+    .pay-line    { background: #f0fdf4; color: #15803d; }
+    .pay-qr      { background: #fff7ed; color: #c2410c; }
+    .pay-none    { background: #f3f4f6; color: #9ca3af; }
+
+    /* 備考 */
+    .panel-note {
+      background: var(--cream);
+      border-left: 3px solid var(--terra);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    /* 営業時間・定休日 */
+    .panel-info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+    .panel-info-row .info-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+    /* ── カスタムマーカー ─────────────────── */
+    .custom-marker {
+      width: 36px;
+      height: 42px;
+      position: relative;
+      cursor: pointer;
+    }
+    .marker-pin {
+      width: 36px;
+      height: 36px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,.25);
+      transition: transform .15s;
+    }
+    .marker-pin:hover { transform: rotate(-45deg) scale(1.15); }
+    .marker-icon {
+      transform: rotate(45deg);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* ── 凡例 ─────────────────────────────── */
+    .legend {
+      position: fixed;
+      bottom: 24px;
+      right: 12px;
+      background: var(--white);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      z-index: 800;
+      font-size: 11px;
+    }
+    .legend-title {
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+    .legend-item:last-child { margin-bottom: 0; }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      flex-shrink: 0;
+    }
+
+    /* ── 件数バッジ ───────────────────────── */
+    .map-overlay-count {
+      position: fixed;
+      bottom: 24px;
+      left: 12px;
+      background: var(--green);
+      color: var(--cream);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 800;
+      box-shadow: var(--shadow);
+    }
+    .map-overlay-count span {
+      font-size: 20px;
+      font-family: "Kaisei Decol", serif;
+      color: var(--terra-l);
+      margin-right: 4px;
+    }
+
+    /* Leafletのデフォルトスタイル調整 */
+    .leaflet-control-attribution { font-size: 10px !important; }
+    .leaflet-popup { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="app-header">
+  <div class="app-logo">🍽 館林<span>グルメマップ</span></div>
+  <div class="header-filters" id="filter-bar">
+    <button class="filter-chip active" data-filter="all" onclick="filterStores('all', this)">🗺 すべて</button>
+    <button class="filter-chip" data-filter="paypay" onclick="filterStores('paypay', this)">PayPay</button>
+    <button class="filter-chip" data-filter="card" onclick="filterStores('card', this)">カード</button>
+    <button class="filter-chip" data-filter="ic" onclick="filterStores('ic', this)">交通系IC</button>
+    <button class="filter-chip" data-filter="cash" onclick="filterStores('cash', this)">現金のみ</button>
+  </div>
+  <div class="store-count" id="store-count"></div>
+</header>
+
+<!-- 地図 -->
+<div id="map"></div>
+
+<!-- 店舗パネル -->
+<div class="store-panel" id="store-panel">
+  <div class="panel-header">
+    <div class="panel-category" id="p-category"></div>
+    <div class="panel-name" id="p-name"></div>
+    <div class="panel-address" id="p-address"></div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section-label">💳 支払い方法</div>
+    <div class="payment-grid" id="p-payments"></div>
+    <div class="panel-section-label">📝 備考</div>
+    <div class="panel-note" id="p-note"></div>
+    <div class="panel-info-row" id="p-hours"></div>
+    <div class="panel-info-row" id="p-closed"></div>
+  </div>
+</div>
+
+<!-- 件数 -->
+<div class="map-overlay-count">
+  <span id="visible-count">0</span>件表示中
+</div>
+
+<!-- 凡例 -->
+<div class="legend">
+  <div class="legend-title">カテゴリー</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c4622d"></div>和食・定食</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2d6a8a"></div>ラーメン・麺</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2d4a3e"></div>カフェ・喫茶</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8a2d6a"></div>洋食・その他</div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ════════════════════════════════════
+   店舗データ
+════════════════════════════════════ */
+const STORES = [
+  {
+    id: 1,
+    name: "食堂 たてばやし",
+    category: "和食・定食",
+    categoryColor: "#c4622d",
+    icon: "🍱",
+    lat: 36.2448,
+    lng: 139.5392,
+    address: "館林市本町2丁目",
+    payments: [
+      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
+      { id: "card",   icon: "💳", label: "カード",      cls: "pay-card" },
+    ],
+    note: "ランチタイムは現金のみの場合あり。1,000円以上でカード利用可。",
+    hours: "11:00〜14:00 / 17:30〜21:00",
+    closed: "日曜・祝日",
+  },
+  {
+    id: 2,
+    name: "らーめん 弐六家",
+    category: "ラーメン・麺",
+    categoryColor: "#2d6a8a",
+    icon: "🍜",
+    lat: 36.2432,
+    lng: 139.5418,
+    address: "館林市仲町",
+    payments: [
+      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
+      { id: "ic",     icon: "🚃", label: "交通系IC",   cls: "pay-ic" },
+      { id: "qr",     icon: "📱", label: "各種QR",     cls: "pay-qr" },
+    ],
+    note: "Suica・PASMOなど交通系ICカード対応。LINE Payも使えます。",
+    hours: "11:00〜15:00 / 18:00〜22:00",
+    closed: "火曜日",
+  },
+  {
+    id: 3,
+    name: "喫茶 くすのき",
+    category: "カフェ・喫茶",
+    categoryColor: "#2d4a3e",
+    icon: "☕",
+    lat: 36.2461,
+    lng: 139.5375,
+    address: "館林市城町",
+    payments: [
+      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+    ],
+    note: "現金のみ。ATMは駅前にあります。モーニングが人気のレトロ喫茶。",
+    hours: "7:30〜18:00",
+    closed: "月曜日・第3火曜日",
+  },
+  {
+    id: 4,
+    name: "ビストロ マルシェ",
+    category: "洋食・その他",
+    categoryColor: "#8a2d6a",
+    icon: "🍽",
+    lat: 36.2439,
+    lng: 139.5403,
+    address: "館林市楠町",
+    payments: [
+      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+      { id: "card",   icon: "💳", label: "カード",      cls: "pay-card" },
+      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
+      { id: "ic",     icon: "🚃", label: "交通系IC",   cls: "pay-ic" },
+      { id: "line",   icon: "💚", label: "LINE Pay",   cls: "pay-line" },
+    ],
+    note: "全主要キャッシュレス対応。ランチコースは要予約。",
+    hours: "12:00〜14:30 / 18:00〜22:00",
+    closed: "水曜日",
+  },
+  {
+    id: 5,
+    name: "うどん 麦の里",
+    category: "和食・定食",
+    categoryColor: "#c4622d",
+    icon: "🍜",
+    lat: 36.2455,
+    lng: 139.5430,
+    address: "館林市緑町",
+    payments: [
+      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
+    ],
+    note: "地元産小麦を使った手打ちうどん。テイクアウト可（現金のみ）。",
+    hours: "11:00〜15:00（売り切れ次第終了）",
+    closed: "月・火曜日",
+  },
+];
+
+let activeFilter = 'all';
+let markers = [];
+let activeMarker = null;
+
+/* ════════════════════════════════════
+   地図初期化
+════════════════════════════════════ */
+const map = L.map('map', {
+  center: [36.2445, 139.5400],
+  zoom: 16,
+  zoomControl: true,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  maxZoom: 19,
+}).addTo(map);
+
+/* ════════════════════════════════════
+   マーカー生成
+════════════════════════════════════ */
+function createMarkerIcon(store, isActive = false) {
+  const size = isActive ? 44 : 36;
+  const html = `
+    <div style="
+      width:${size}px;height:${size}px;
+      border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      background:${store.categoryColor};
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 3px 10px rgba(0,0,0,.3);
+      border:2px solid rgba(255,255,255,.8);
+      transition:all .2s;
+    ">
+      <span style="transform:rotate(45deg);font-size:${isActive?18:14}px;line-height:1">${store.icon}</span>
+    </div>
+  `;
+  return L.divIcon({
+    html,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size/2, size],
+    popupAnchor: [0, -size],
+  });
+}
+
+function renderMarkers() {
+  // 既存マーカーを削除
+  markers.forEach(({ marker }) => map.removeLayer(marker));
+  markers = [];
+
+  const filtered = STORES.filter(s => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'cash') return s.payments.length === 1 && s.payments[0].id === 'cash';
+    return s.payments.some(p => p.id === activeFilter);
+  });
+
+  document.getElementById('visible-count').textContent = filtered.length;
+  document.getElementById('store-count').textContent = `${filtered.length}件`;
+
+  filtered.forEach(store => {
+    const marker = L.marker([store.lat, store.lng], {
+      icon: createMarkerIcon(store),
+    }).addTo(map);
+
+    marker.on('click', () => openPanel(store, marker));
+    markers.push({ marker, store });
+  });
+}
+
+/* ════════════════════════════════════
+   パネル操作
+════════════════════════════════════ */
+function openPanel(store, marker) {
+  // 前のアクティブマーカーをリセット
+  if (activeMarker) {
+    const prev = markers.find(m => m.marker === activeMarker);
+    if (prev) prev.marker.setIcon(createMarkerIcon(prev.store, false));
+  }
+
+  // 新しいマーカーをアクティブに
+  marker.setIcon(createMarkerIcon(store, true));
+  activeMarker = marker;
+
+  // パネルに情報を入れる
+  document.getElementById('p-category').innerHTML = `${store.icon} ${store.category}`;
+  document.getElementById('p-name').textContent = store.name;
+  document.getElementById('p-address').innerHTML = `📍 ${store.address}`;
+  document.getElementById('p-note').textContent = store.note;
+  document.getElementById('p-hours').innerHTML = `<span class="info-icon">🕐</span> 営業時間：${store.hours}`;
+  document.getElementById('p-closed').innerHTML = `<span class="info-icon">🚫</span> 定休日：${store.closed}`;
+
+  // 支払い方法グリッド
+  document.getElementById('p-payments').innerHTML = store.payments.map(p => `
+    <div class="payment-badge ${p.cls}">
+      <span class="pay-icon">${p.icon}</span>
+      ${p.label}
+    </div>
+  `).join('');
+
+  // パネルを開く
+  document.getElementById('store-panel').classList.add('open');
+
+  // 地図を少し移動
+  map.panTo([store.lat - 0.001, store.lng], { animate: true });
+}
+
+function closePanel() {
+  document.getElementById('store-panel').classList.remove('open');
+  if (activeMarker) {
+    const prev = markers.find(m => m.marker === activeMarker);
+    if (prev) prev.marker.setIcon(createMarkerIcon(prev.store, false));
+    activeMarker = null;
+  }
+}
+
+/* ════════════════════════════════════
+   フィルター
+════════════════════════════════════ */
+function filterStores(filter, btn) {
+  activeFilter = filter;
+
+  // チップのアクティブ状態
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+
+  // パネルを閉じてマーカー再描画
+  closePanel();
+  renderMarkers();
+}
+
+/* ════════════════════════════════════
+   地図クリックでパネルを閉じる
+════════════════════════════════════ */
+map.on('click', () => closePanel());
+
+/* ════════════════════════════════════
+   初期化
+════════════════════════════════════ */
+window.addEventListener('load', function() {
+  renderMarkers();
+});
+</script>
+</body>
+</html>
