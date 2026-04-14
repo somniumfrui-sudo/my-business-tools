@@ -37,61 +37,32 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 52px;
-      background: var(--green);
+      background: var(--white);
+      border-bottom: 2px solid var(--green);
       display: flex;
       align-items: center;
       padding: 0 16px;
       gap: 12px;
       z-index: 1000;
-      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+      box-shadow: 0 2px 8px rgba(45,74,62,.12);
     }
     .app-logo {
       font-family: "Kaisei Decol", serif;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 700;
-      color: var(--cream);
+      color: var(--green);
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 7px;
-    }
-    .app-logo span { color: var(--terra-l); }
-
-    .header-filters {
-      display: flex;
       gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      flex: 1;
     }
-    .header-filters::-webkit-scrollbar { display: none; }
-
-    .filter-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 99px;
-      border: 1.5px solid rgba(255,255,255,.2);
-      background: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.75);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .15s;
-    }
-    .filter-chip:hover { border-color: var(--terra-l); color: var(--cream); }
-    .filter-chip.active {
-      background: var(--terra);
-      border-color: var(--terra);
-      color: var(--white);
-    }
+    .app-logo span { color: var(--terra); }
 
     .store-count {
       font-size: 12px;
-      color: rgba(255,255,255,.5);
+      color: var(--muted);
       white-space: nowrap;
+      margin-left: auto;
     }
 
     /* ── 地図 ─────────────────────────────── */
@@ -102,11 +73,120 @@
     }
 
     /* ── 店舗パネル ───────────────────────── */
+    /* ── 絞り込みサイドパネル ── */
+    .filter-panel {
+      position: fixed;
+      top: 52px;
+      left: 0;
+      width: 240px;
+      height: calc(100vh - 52px);
+      background: var(--white);
+      border-right: 1px solid #e0e0e0;
+      z-index: 850;
+      overflow-y: auto;
+      box-shadow: 2px 0 12px rgba(0,0,0,.08);
+      padding: 0 0 40px;
+    }
+    .filter-panel::-webkit-scrollbar { width: 4px; }
+    .filter-panel::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+    .fp-section {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .fp-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* 支払い方法チェックボックス */
+    .pay-check-list { display: flex; flex-direction: column; gap: 7px; }
+    .pay-check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .pay-check-item input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--green);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .pay-check-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    /* ジャンルボタン */
+    .genre-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .genre-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1.5px solid #e0e0e0;
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all .13s;
+      font-family: "Noto Sans JP", sans-serif;
+    }
+    .genre-btn:hover { border-color: var(--green); color: var(--green); }
+    .genre-btn.active { background: var(--green); border-color: var(--green); color: var(--white); }
+    .genre-btn-all {
+      grid-column: 1 / -1;
+      justify-content: center;
+      background: var(--green);
+      border-color: var(--green);
+      color: var(--white);
+    }
+
+    /* リセットボタン */
+    .fp-reset {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 12px 16px 0;
+      padding: 9px;
+      background: none;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: "Noto Sans JP", sans-serif;
+      transition: all .13s;
+    }
+    .fp-reset:hover { border-color: var(--terra); color: var(--terra); }
+
+    /* 地図をfilter-panelの幅だけずらす */
+    #map {
+      left: 240px !important;
+    }
+    .map-overlay-count {
+      left: 252px !important;
+    }
+
     .store-panel {
       position: fixed;
       top: 64px;
-      left: 12px;
-      width: 320px;
+      left: 252px;
+      width: 290px;
       background: var(--white);
       border-radius: 16px;
       box-shadow: var(--shadow-lg);
@@ -221,10 +301,8 @@
     .pay-cash    { background: #f0fdf4; color: #166534; }
     .pay-card    { background: #eff6ff; color: #1e40af; }
     .pay-paypay  { background: #fff1f2; color: #be123c; }
-    .pay-ic      { background: #faf5ff; color: #6b21a8; }
-    .pay-line    { background: #f0fdf4; color: #15803d; }
+    .pay-emoney  { background: #faf5ff; color: #6b21a8; }
     .pay-qr      { background: #fff7ed; color: #c2410c; }
-    .pay-none    { background: #f3f4f6; color: #9ca3af; }
 
     /* 備考 */
     .panel-note {
@@ -340,15 +418,51 @@
 
 <!-- ヘッダー -->
 <header class="app-header">
-  <div class="app-logo">🗺 飲食店<span>お支払い方法マップ</span></div>
-  <div class="header-filters" id="filter-bar">
-    <!-- JSで動的生成 -->
-  </div>
+  <div class="app-logo">飲食店<span>お支払い方法マップ</span></div>
+
   <div class="store-count" id="store-count"></div>
 </header>
 
 <!-- 地図 -->
 <div id="map"></div>
+
+<!-- 絞り込みサイドパネル -->
+<div class="filter-panel" id="filter-panel">
+  <div class="fp-section">
+    <div class="fp-title">💳 支払い方法</div>
+    <div class="pay-check-list" id="pay-check-list">
+      <label class="pay-check-item">
+        <input type="checkbox" value="cash" onchange="applyFilters()">
+        <span class="pay-check-badge pay-cash">💴 現金</span>
+      </label>
+      <label class="pay-check-item">
+        <input type="checkbox" value="card" onchange="applyFilters()">
+        <span class="pay-check-badge pay-card">💳 クレジットカード</span>
+      </label>
+      <label class="pay-check-item">
+        <input type="checkbox" value="paypay" onchange="applyFilters()">
+        <span class="pay-check-badge pay-paypay">🔴 PayPay</span>
+      </label>
+      <label class="pay-check-item">
+        <input type="checkbox" value="qr" onchange="applyFilters()">
+        <span class="pay-check-badge pay-qr">📱 QRコード決済</span>
+      </label>
+      <label class="pay-check-item">
+        <input type="checkbox" value="emoney" onchange="applyFilters()">
+        <span class="pay-check-badge pay-emoney">🚃 電子マネー</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-title">🍽 ジャンル</div>
+    <div class="genre-grid" id="genre-grid">
+      <button class="genre-btn genre-btn-all active" onclick="setGenre('all', this)">すべてのジャンル</button>
+    </div>
+  </div>
+
+  <button class="fp-reset" onclick="resetFilters()">↺ 絞り込みをリセット</button>
+</div>
 
 <!-- 店舗パネル -->
 <div class="store-panel" id="store-panel">
@@ -407,9 +521,9 @@ const STORES = [
     lng: 139.5392,
     address: "館林市本町2丁目",
     payments: [
-      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
-      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
-      { id: "card",   icon: "💳", label: "カード",      cls: "pay-card" },
+      { id: "cash",  icon: "💴", label: "現金",              cls: "pay-cash" },
+      { id: "card",  icon: "💳", label: "クレジットカード",    cls: "pay-card" },
+      { id: "paypay",icon: "🔴", label: "PayPay",              cls: "pay-paypay" },
     ],
     note: "ランチタイムは現金のみの場合あり。1,000円以上でカード利用可。",
     hours: "11:00〜14:00 / 17:30〜21:00",
@@ -423,12 +537,12 @@ const STORES = [
     lng: 139.5418,
     address: "館林市仲町",
     payments: [
-      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
-      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
-      { id: "ic",     icon: "🚃", label: "交通系IC",   cls: "pay-ic" },
-      { id: "qr",     icon: "📱", label: "各種QR",     cls: "pay-qr" },
+      { id: "cash",   icon: "💴", label: "現金",              cls: "pay-cash" },
+      { id: "paypay", icon: "🔴", label: "PayPay",              cls: "pay-paypay" },
+      { id: "qr",     icon: "📱", label: "QRコード決済",         cls: "pay-qr" },
+      { id: "emoney", icon: "🚃", label: "電子マネー",           cls: "pay-emoney" },
     ],
-    note: "Suica・PASMOなど交通系ICカード対応。LINE Payも使えます。",
+    note: "Suica・PASMOなど電子マネー対応。各種QRコード決済も使えます。",
     hours: "11:00〜15:00 / 18:00〜22:00",
     closed: "火曜日",
   },
@@ -440,7 +554,7 @@ const STORES = [
     lng: 139.5375,
     address: "館林市城町",
     payments: [
-      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
+      { id: "cash",   icon: "💴", label: "現金",              cls: "pay-cash" },
     ],
     note: "現金のみ。ATMは駅前にあります。モーニングが人気のレトロ喫茶。",
     hours: "7:30〜18:00",
@@ -454,11 +568,11 @@ const STORES = [
     lng: 139.5403,
     address: "館林市楠町",
     payments: [
-      { id: "cash",   icon: "💴", label: "現金",       cls: "pay-cash" },
-      { id: "card",   icon: "💳", label: "カード",      cls: "pay-card" },
-      { id: "paypay", icon: "🔴", label: "PayPay",     cls: "pay-paypay" },
-      { id: "ic",     icon: "🚃", label: "交通系IC",   cls: "pay-ic" },
-      { id: "line",   icon: "💚", label: "LINE Pay",   cls: "pay-line" },
+      { id: "cash",   icon: "💴", label: "現金",              cls: "pay-cash" },
+      { id: "card",   icon: "💳", label: "クレジットカード",    cls: "pay-card" },
+      { id: "paypay", icon: "🔴", label: "PayPay",              cls: "pay-paypay" },
+      { id: "qr",     icon: "📱", label: "QRコード決済",         cls: "pay-qr" },
+      { id: "emoney", icon: "🚃", label: "電子マネー",           cls: "pay-emoney" },
     ],
     note: "全主要キャッシュレス対応。ランチコースは要予約。",
     hours: "12:00〜14:30 / 18:00〜22:00",
@@ -494,9 +608,9 @@ const map = L.map('map', {
   zoomControl: true,
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-  maxZoom: 19,
+L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+  attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>',
+  maxZoom: 18,
 }).addTo(map);
 
 /* ════════════════════════════════════
@@ -539,10 +653,13 @@ function renderMarkers() {
   markers = [];
 
   const filtered = STORES.filter(s => {
-    if (activeFilter === 'all') return true;
-    if (filterMode === 'genre') return s.genreId === activeFilter;
-    if (activeFilter === 'cash') return s.payments.length === 1 && s.payments[0].id === 'cash';
-    return s.payments.some(p => p.id === activeFilter);
+    // ジャンルフィルター
+    if (selectedGenre !== 'all' && s.genreId !== selectedGenre) return false;
+    // 支払いフィルター（チェックされたもの全部を含む店舗）
+    if (selectedPayments.length > 0) {
+      return selectedPayments.every(pid => s.payments.some(p => p.id === pid));
+    }
+    return true;
   });
 
   document.getElementById('visible-count').textContent = filtered.length;
@@ -608,13 +725,31 @@ function closePanel() {
 /* ════════════════════════════════════
    フィルター
 ════════════════════════════════════ */
-let filterMode = 'payment'; // 'payment' or 'genre'
+let selectedPayments = []; // 選択中の支払い方法
+let selectedGenre    = 'all'; // 選択中のジャンル
 
-function filterStores(filter, btn, mode) {
-  activeFilter = filter;
-  filterMode = mode || 'payment';
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+function applyFilters() {
+  selectedPayments = Array.from(
+    document.querySelectorAll('#pay-check-list input:checked')
+  ).map(cb => cb.value);
+  closePanel();
+  renderMarkers();
+}
+
+function setGenre(genreId, btn) {
+  selectedGenre = genreId;
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  closePanel();
+  renderMarkers();
+}
+
+function resetFilters() {
+  selectedPayments = [];
+  selectedGenre = 'all';
+  document.querySelectorAll('#pay-check-list input').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.genre-btn-all').classList.add('active');
   closePanel();
   renderMarkers();
 }
@@ -628,37 +763,14 @@ map.on('click', () => closePanel());
    初期化
 ════════════════════════════════════ */
 window.addEventListener('load', function() {
-  // フィルターチップを動的生成
-  const bar = document.getElementById('filter-bar');
-  const payFilters = [
-    { id: 'all',    label: '🗺 すべて' },
-    { id: 'paypay', label: 'PayPay' },
-    { id: 'card',   label: 'カード' },
-    { id: 'ic',     label: '交通系IC' },
-    { id: 'cash',   label: '現金のみ' },
-  ];
-  payFilters.forEach((f, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-chip' + (i === 0 ? ' active' : '');
-    btn.dataset.filter = f.id;
-    btn.textContent = f.label;
-    btn.onclick = () => filterStores(f.id, btn, 'payment');
-    bar.appendChild(btn);
-  });
-
-  // ジャンルフィルター
-  const sep = document.createElement('span');
-  sep.style.cssText = 'color:rgba(255,255,255,.3);font-size:12px;align-self:center;flex-shrink:0';
-  sep.textContent = '｜';
-  bar.appendChild(sep);
-
+  // ジャンルボタンを動的生成
+  const genreGrid = document.getElementById('genre-grid');
   GENRES.forEach(g => {
     const btn = document.createElement('button');
-    btn.className = 'filter-chip';
-    btn.dataset.filter = g.id;
-    btn.textContent = g.icon + ' ' + g.label;
-    btn.onclick = () => filterStores(g.id, btn, 'genre');
-    bar.appendChild(btn);
+    btn.className = 'genre-btn';
+    btn.innerHTML = `${g.icon} ${g.label}`;
+    btn.onclick = () => setGenre(g.id, btn);
+    genreGrid.appendChild(btn);
   });
 
   // 凡例を動的生成
